@@ -19,8 +19,8 @@ T_cell_val = Union[Number, Cell]
 # ===============
 
 
-class Spreadsheet(Serialization):
-    """Simple spreadsheet that keeps tracks of each operations in defined
+class Sheet(Serialization):
+    """Simple sheet that keeps tracks of each operations in defined
         languages.
 
     Logic allows export sheets to Excel files (and see how each cell is
@@ -42,7 +42,8 @@ class Spreadsheet(Serialization):
 
     def __init__(self,
                  cell_indices: CellIndices,
-                 warning_logger: Optional[Callable[[str], None]] = None):
+                 warning_logger: Optional[Callable[[str], None]] = None,
+                 name: str = "Results"):
         """Initialize the spreadsheet object
 
         Args:
@@ -50,9 +51,10 @@ class Spreadsheet(Serialization):
                 and rows labels, help texts and descriptors.
             warning_logger (Optional[Callable[[str], None]]): Function that
                 logs the warnings (or None if skipped).
+            name (str): Name of this sheet.
         """
         # Initialise functionality for serialization:
-        super().__init__(warning_logger=warning_logger)
+        super().__init__(warning_logger=warning_logger, name=name)
 
         self._cell_indices: CellIndices = copy.deepcopy(cell_indices)
 
@@ -66,12 +68,14 @@ class Spreadsheet(Serialization):
         # Variables of the sheet
         self.var: _SheetVariables = _SheetVariables(self)
 
-    @staticmethod
+    @classmethod
     def create_new_sheet(
+            cls,
             number_of_rows: int,
             number_of_columns: int,
             rows_columns: Optional[T_lg_col_row] = None,
             /, *,  # noqa E999
+            name: str = "Results",
             rows_labels: List[Union[str, 'SkippedLabel']] = None,
             columns_labels: List[Union[str, 'SkippedLabel']] = None,
             rows_help_text: List[str] = None,
@@ -79,7 +83,7 @@ class Spreadsheet(Serialization):
             excel_append_row_labels: bool = True,
             excel_append_column_labels: bool = True,
             warning_logger: Optional[Callable[[str], None]] = None
-    ) -> 'Spreadsheet':
+    ) -> 'Sheet':
         """Direct way of creating instance.
 
         Args:
@@ -87,6 +91,7 @@ class Spreadsheet(Serialization):
             number_of_columns (int): Number of columns.
             rows_columns (T_lg_col_row): List of all row names and column names
                 for each user defined language.
+            name (str): Name of this sheet.
             rows_labels (List[Union[str, SkippedLabel]]): List of masks
                 (aliases) for row names. If the instance of SkippedLabel is
                 used, the export skips this label.
@@ -103,7 +108,7 @@ class Spreadsheet(Serialization):
                 logs the warnings (or None if skipped).
 
         Returns:
-            Spreadsheet: New instance of spreadsheet.
+            Sheet: New instance of spreadsheet.
         """
         class_index = CellIndices(
             number_of_rows,
@@ -117,7 +122,7 @@ class Spreadsheet(Serialization):
             excel_append_column_labels=excel_append_column_labels,
             warning_logger=warning_logger
         )
-        return Spreadsheet(class_index, warning_logger)
+        return cls(class_index, warning_logger, name)
 
     def _initialise_array(self) -> T_sheet:
         """Initialise the first empty spreadsheet array on the beginning.

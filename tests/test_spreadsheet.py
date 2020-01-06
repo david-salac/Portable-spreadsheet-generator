@@ -5,7 +5,7 @@ import os
 
 import numpy as np
 
-from portable_spreadsheet.spreadsheet import Spreadsheet
+from portable_spreadsheet.sheet import Sheet
 from portable_spreadsheet.cell import Cell
 from portable_spreadsheet.cell_type import CellType
 from portable_spreadsheet.cell_slice import CellSlice
@@ -14,7 +14,7 @@ from portable_spreadsheet.cell_indices_templates import excel_generator
 from portable_spreadsheet import __version__
 
 
-class TestSpreadsheetBasicFunctionality(unittest.TestCase):
+class TestSheetBasicFunctionality(unittest.TestCase):
     """Test the basic spreadsheet basic functionality."""
     def setUp(self) -> None:
         self.warnings = []
@@ -26,7 +26,7 @@ class TestSpreadsheetBasicFunctionality(unittest.TestCase):
         self.columns_help_text = [f"HT_C_{c_i}" for c_i in range(self.nr_col)]
         self.native_rows = [f"NL_R_{r_i}" for r_i in range(self.nr_row)]
         self.native_cols = [f"NL_C_{c_i}" for c_i in range(self.nr_col)]
-        self.sheet = Spreadsheet.create_new_sheet(
+        self.sheet = Sheet.create_new_sheet(
             self.nr_row, self.nr_col, {
                 'native': (
                     self.native_rows,
@@ -65,7 +65,7 @@ class TestSpreadsheetBasicFunctionality(unittest.TestCase):
 
     def test_create_new_sheet(self):
         """Test the instance sheet"""
-        self.assertTrue(isinstance(self.sheet, Spreadsheet))
+        self.assertTrue(isinstance(self.sheet, Sheet))
 
     def test_expand_sheet(self):
         """Test the expanding of the sheet size"""
@@ -73,7 +73,7 @@ class TestSpreadsheetBasicFunctionality(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.sheet.cell_indices.expand_size(5, 3)
 
-        old_sheet: Spreadsheet = copy.deepcopy(self.sheet)
+        old_sheet: Sheet = copy.deepcopy(self.sheet)
         expand_row = 3
         expand_col = 5
         new_native_rows = [f'eR_{r_i}' for r_i in range(expand_row)]
@@ -172,14 +172,14 @@ class TestSpreadsheetBasicFunctionality(unittest.TestCase):
         self.assertEqual(len(self.warnings), 1)
 
 
-class TestSpreadsheetSelection(unittest.TestCase):
+class TestSheetSelection(unittest.TestCase):
     """Test the selecting (slicing) from the spreadsheet."""
     def setUp(self) -> None:
         self.n_row = 13
         self.n_col = 27
         self.row_labels = [f"R_{r_i}" for r_i in range(self.n_row)]
         self.col_labels = [f"C_{c_i}" for c_i in range(self.n_col)]
-        self.sheet = Spreadsheet.create_new_sheet(
+        self.sheet = Sheet.create_new_sheet(
             self.n_row, self.n_col,
             rows_labels=self.row_labels,
             columns_labels=self.col_labels

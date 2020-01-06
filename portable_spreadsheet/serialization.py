@@ -11,6 +11,8 @@ from .cell import Cell, CellValueError
 from .cell_type import CellType
 from .cell_indices import CellIndices
 from .skipped_label import SkippedLabel
+from .serialization_interface import SerializationInterface
+from .utils import NumPyEncoder
 
 # ==== TYPES ====
 # Type for the output dictionary with the logic:
@@ -68,7 +70,7 @@ T_out_dict = Dict[
 # ===============
 
 
-class Serialization(abc.ABC):
+class Serialization(SerializationInterface, abc.ABC):
     """Provides basic functionality for exporting to required formats.
 
     Attributes:
@@ -78,21 +80,24 @@ class Serialization(abc.ABC):
         warning_logger (Callable[[str], None]): Function that logs the
             warnings.
         export_subset (bool): If true, warning are raised when exporting.
+        name (Optional[str]): Name of this object (typically sheet).
     """
 
     def __init__(self, *,
                  export_offset: Tuple[int, int] = (0, 0),
                  export_subset: bool = False,
-                 warning_logger: Optional[Callable[[str], None]] = None):
+                 warning_logger: Optional[Callable[[str], None]] = None,
+                 name: Optional[str] = "Results"):
         """Initialise functionality for serialization.
 
         Args:
             export_offset (Tuple[int, int]): Defines how many rows and
-                columns are skiped from the left top corner. First index is
+                columns are skipped from the left top corner. First index is
                 number of rows, second number of columns.
             export_subset (bool): If true, warning are raised when exporting.
             warning_logger (Optional[Callable[[str], None]]): Function that
                 logs the warnings (or None if skipped).
+            name (Optional[str]): Name of this object (typically sheet).
         """
         # Export offset of rows, columns
         self.export_offset: Tuple[int, int] = export_offset
@@ -102,6 +107,7 @@ class Serialization(abc.ABC):
             # Silent logger
             self.warning_logger: Callable[[str], None] = lambda _mess: _mess
         self.export_subset: bool = export_subset
+        self.name: Optional[str] = name
 
     @property
     def shape(self) -> Tuple[int, int]:
@@ -146,32 +152,28 @@ class Serialization(abc.ABC):
             self.warning_logger("Slice is being exported => there is"
                                 " a possibility of data losses.")
 
-    def to_excel(self,
-                 file_path: str,
-                 /, *,  # noqa: E225, E999
-                 sheet_name: str = "Results",
-                 spaces_replacement: str = ' ',
-                 label_row_format: dict = {'bold': True},
-                 label_column_format: dict = {'bold': True},
-                 variables_sheet_name: Optional[str] = None,
-                 variables_sheet_header: Dict[str, str] = MappingProxyType(
-                     {
-                         "name": "Name",
-                         "value": "Value",
-                         "description": "Description"
-                     }),
-                 values_only: bool = False,
-                 skipped_label_replacement: str = '',
-                 row_height: List[float] = [],
-                 column_width: List[float] = [],
-                 top_left_corner_text: str = ""
-                 ) -> None:
+    def _to_excel(self, *,
+                  spaces_replacement: str = ' ',
+                  label_row_format: dict = {'bold': True},
+                  label_column_format: dict = {'bold': True},
+                  variables_sheet_name: Optional[str] = None,
+                  variables_sheet_header: Dict[str, str] = MappingProxyType(
+                      {
+                          "name": "Name",
+                          "value": "Value",
+                          "description": "Description"
+                      }),
+                  values_only: bool = False,
+                  skipped_label_replacement: str = '',
+                  row_height: List[float] = [],
+                  column_width: List[float] = [],
+                  top_left_corner_text: str = "",
+                  workbook: xlsxwriter.Workbook,
+                  ) -> xlsxwriter.Workbook:
         """Export the values inside Spreadsheet instance to the
             Excel 2010 compatible .xslx file
 
         Args:
-            file_path (str): Path to the target .xlsx file.
-            sheet_name (str): The name of the sheet inside the file.
             spaces_replacement (str): All the spaces in the rows and columns
                 descriptions (labels) are replaced with this string.
             label_row_format (dict): Excel styles for the label of rows,
@@ -180,7 +182,8 @@ class Serialization(abc.ABC):
                 documentation: https://xlsxwriter.readthedocs.io/format.html
             variables_sheet_name (Optional[str]): If set, creates the new
                 sheet with variables and their description and possibility
-                to set them up (directly from the sheet).
+                to set them up (directly from the sheet). If None, does not
+                write any sheet (also when there is no variable).
             variables_sheet_header (Dict[str, str]): Define the labels (header)
                 for the sheet with variables (first row in the sheet).
             values_only (bool): If true, only values (and not formulas) are
@@ -197,23 +200,22 @@ class Serialization(abc.ABC):
                 on the first position in array.
             top_left_corner_text (str): Text in the top left corner. Apply
                 only when the row and column labels are included.
+            workbook (xlsxwriter.Workbook): Handler of the file.
+
+        Return:
+            xlsxwriter.Workbook: Modified workbook.
         """
-        # Quick sanity check
-        if ".xlsx" not in file_path[-5:]:
-            raise ValueError("Suffix of the file has to be '.xslx'!")
-        if not isinstance(sheet_name, str) or len(sheet_name) < 1:
-            raise ValueError("Sheet name has to be non-empty string!")
         # Log warning if needed
         self.log_export_subset_warning_if_needed()
 
-        # Open or create an Excel file and create a sheet inside:
-        workbook = xlsxwriter.Workbook(file_path)
-        worksheet = workbook.add_worksheet(name=sheet_name)
-        # Register the style for the labels:
+        # A) Create a sheet inside Excel file:
+        worksheet = workbook.add_worksheet(name=self.name)
+
+        # B) Register the style for the labels:
         col_label_format = workbook.add_format(label_column_format)
         row_label_format = workbook.add_format(label_row_format)
 
-        # Register all variables:
+        # C) Register all variables:
         if self._get_variables().empty:
             pass
         elif variables_sheet_name is None:
@@ -249,7 +251,7 @@ class Serialization(abc.ABC):
                 )
                 row_idx += 1
 
-        # Iterate through all columns and rows and add data
+        # D) Iterate through all columns and rows and add data
         for row_idx in range(self.shape[0]):
             for col_idx in range(self.shape[1]):
                 cell: Cell = self._get_cell_at(row_idx, col_idx)
@@ -289,7 +291,7 @@ class Serialization(abc.ABC):
                                                 cell.parse['excel'],
                                                 value=cell.value,
                                                 cell_format=cell_format)
-        # Add the labels for rows and columns
+        # E) Add the labels for rows and columns
         if self.cell_indices.excel_append_column_labels:
             # Add labels of column
             for col_idx in range(self.shape[1]):
@@ -336,20 +338,91 @@ class Serialization(abc.ABC):
             if s_col_width is not None:
                 worksheet.set_column(col_position, col_position, s_col_width)
 
-        # Store results
-        workbook.close()
+        # Return results
+        return workbook
+
+    def to_excel(self,
+                 file_path: str,
+                 *,
+                 spaces_replacement: str = ' ',
+                 label_row_format: dict = {'bold': True},
+                 label_column_format: dict = {'bold': True},
+                 variables_sheet_name: Optional[str] = None,
+                 variables_sheet_header: Dict[str, str] = MappingProxyType(
+                     {
+                         "name": "Name",
+                         "value": "Value",
+                         "description": "Description"
+                     }),
+                 values_only: bool = False,
+                 skipped_label_replacement: str = '',
+                 row_height: List[float] = [],
+                 column_width: List[float] = [],
+                 top_left_corner_text: str = ""
+                 ) -> None:
+        """Export the values inside Spreadsheet instance to the
+            Excel 2010 compatible .xslx file
+
+        Args:
+            file_path (str): Path to the target .xlsx file.
+            spaces_replacement (str): All the spaces in the rows and columns
+                descriptions (labels) are replaced with this string.
+            label_row_format (dict): Excel styles for the label of rows,
+                documentation: https://xlsxwriter.readthedocs.io/format.html
+            label_column_format (dict): Excel styles for the label of columns,
+                documentation: https://xlsxwriter.readthedocs.io/format.html
+            variables_sheet_name (Optional[str]): If set, creates the new
+                sheet with variables and their description and possibility
+                to set them up (directly from the sheet).
+            variables_sheet_header (Dict[str, str]): Define the labels (header)
+                for the sheet with variables (first row in the sheet).
+            values_only (bool): If true, only values (and not formulas) are
+                exported.
+            skipped_label_replacement (str): Replacement for the SkippedLabel
+                instances.
+            row_height (List[float]): List of row heights, or empty for the
+                default height (or None for default height in the series).
+                If row labels are included, there is a label row height on the
+                first position in array.
+            column_width (List[float]): List of column widths, or empty for the
+                default widths (or None for the default width in the series).
+                If column labels are included, there is a label column width
+                on the first position in array.
+            top_left_corner_text (str): Text in the top left corner. Apply
+                only when the row and column labels are included.
+        """
+        # Quick sanity check
+        if ".xlsx" not in file_path[-5:]:
+            raise ValueError("Suffix of the file has to be '.xslx'!")
+        if not isinstance(self.name, str) or len(self.name) < 1:
+            raise ValueError("Sheet name has to be non-empty string!")
+
+        workbook = xlsxwriter.Workbook(file_path)
+        self._to_excel(
+            spaces_replacement=spaces_replacement,
+            label_row_format=label_row_format,
+            label_column_format=label_column_format,
+            variables_sheet_name=variables_sheet_name,
+            variables_sheet_header=variables_sheet_header,
+            values_only=values_only,
+            skipped_label_replacement=skipped_label_replacement,
+            row_height=row_height,
+            column_width=column_width,
+            top_left_corner_text=top_left_corner_text,
+            workbook=workbook
+        ).close()
 
     def to_dictionary(self,
                       languages: List[str] = None,
                       use_language_for_description: Optional[str] = None,
-                      /, *,  # noqa E999
+                      *,
                       by_row: bool = True,
                       languages_pseudonyms: List[str] = None,
                       spaces_replacement: str = ' ',
                       skip_nan_cell: bool = False,
                       nan_replacement: object = None,
                       error_replacement: object = None,
-                      append_dict: dict = {},
+                      append_dict: dict = MappingProxyType({}),
                       generate_schema: bool = False
                       ) -> T_out_dict:
         """Export this spreadsheet to the dictionary.
@@ -556,14 +629,14 @@ class Serialization(abc.ABC):
     def to_json(self,
                 languages: List[str] = None,
                 use_language_for_description: Optional[str] = None,
-                /, *,  # noqa E999
+                *,
                 by_row: bool = True,
                 languages_pseudonyms: List[str] = None,
                 spaces_replacement: str = ' ',
                 skip_nan_cell: bool = False,
                 nan_replacement: object = None,
                 error_replacement: object = None,
-                append_dict: dict = {},
+                append_dict: dict = MappingProxyType({}),
                 generate_schema: bool = False) -> str:
         """Dumps the exported dictionary to the JSON object.
 
@@ -593,17 +666,6 @@ class Serialization(abc.ABC):
                 columns/rows/help_text->Column/Row label->
                 cell keys (value, description, language alias)->value
         """
-        class _NumPyEncoder(json.JSONEncoder):
-            """Encodes the NumPy variables to export"""
-            def default(self, obj):
-                if isinstance(obj, numpy.integer):
-                    return int(obj)
-                elif isinstance(obj, numpy.floating):
-                    return float(obj)
-                elif isinstance(obj, numpy.ndarray):
-                    return obj.tolist()
-                else:
-                    return super(_NumPyEncoder, self).default(obj)
         # Return correctly encoded JSON
         return json.dumps(
             self.to_dictionary(languages, use_language_for_description,
@@ -615,7 +677,7 @@ class Serialization(abc.ABC):
                                error_replacement=error_replacement,
                                append_dict=append_dict,
                                generate_schema=generate_schema),
-            cls=_NumPyEncoder
+            cls=NumPyEncoder
         )
 
     @staticmethod
@@ -824,21 +886,19 @@ class Serialization(abc.ABC):
                 export += ",\n"
         return export + "]"
 
-    def to_2d_list(self, *,
-                   language: Optional[str] = None,
-                   top_left_corner_text: str = "Sheet",
-                   skip_labels: bool = False,
-                   na_rep: Optional[object] = None,
-                   spaces_replacement: str = ' ',
-                   skipped_label_replacement: str = '') -> List[List[object]]:
-        """Export values 2 dimensional Python array.
+    def to_list(self, *,
+                language: Optional[str] = None,
+                skip_labels: bool = False,
+                na_rep: Optional[object] = None,
+                spaces_replacement: str = ' ',
+                skipped_label_replacement: str = '') -> List[List[object]]:
+        """Export values to two dimensional Python array.
 
         Args:
             language (Optional[str]): If set-up, export the word in this
                 language in each cell instead of values.
             spaces_replacement (str): All the spaces in the rows and columns
                 descriptions (labels) are replaced with this string.
-            top_left_corner_text (str): Text in the top left corner.
             na_rep (str): Replacement for the missing data (cells with value
                 equals to None).
             skip_labels (bool): If true, first row and column with labels is
@@ -858,7 +918,7 @@ class Serialization(abc.ABC):
             if row_idx == -1:
                 if skip_labels:
                     continue
-                row.append(top_left_corner_text)
+                row.append(self.name)
                 # Insert labels of columns:
                 for col_i in range(self.shape[1]):
                     col_lbl = self.cell_indices.columns_labels[
@@ -896,7 +956,6 @@ class Serialization(abc.ABC):
 
     def to_csv(self, *,
                language: Optional[str] = None,
-               top_left_corner_text: str = "Sheet",
                skip_labels: bool = False,
                na_rep: Optional[object] = '',
                spaces_replacement: str = ' ',
@@ -912,7 +971,6 @@ class Serialization(abc.ABC):
                 language in each cell instead of values.
             spaces_replacement (str): All the spaces in the rows and columns
                 descriptions (labels) are replaced with this string.
-            top_left_corner_text (str): Text in the top left corner.
             sep (str): Separator of values in a row.
             line_terminator (str): Ending sequence (character) of a row.
             na_rep (str): Replacement for the missing data.
@@ -924,8 +982,7 @@ class Serialization(abc.ABC):
         Returns:
             str: CSV of the values
         """
-        sheet_as_array = self.to_2d_list(
-            top_left_corner_text=top_left_corner_text,
+        sheet_as_array = self.to_list(
             na_rep=na_rep,
             skip_labels=skip_labels,
             spaces_replacement=spaces_replacement,
@@ -944,7 +1001,6 @@ class Serialization(abc.ABC):
 
     def to_markdown(self, *,
                     language: Optional[str] = None,
-                    top_left_corner_text: str = "Sheet",
                     skip_labels: bool = False,
                     na_rep: Optional[object] = '',
                     spaces_replacement: str = ' ',
@@ -957,7 +1013,6 @@ class Serialization(abc.ABC):
                 language in each cell instead of values.
             spaces_replacement (str): All the spaces in the rows and columns
                 descriptions (labels) are replaced with this string.
-            top_left_corner_text (str): Text in the top left corner.
             na_rep (str): Replacement for the missing data.
             skip_labels (bool): If true, first row and column with labels is
                 skipped
@@ -967,8 +1022,7 @@ class Serialization(abc.ABC):
         Returns:
             str: Markdown (MD) compatible table of the values
         """
-        sheet_as_array = self.to_2d_list(
-            top_left_corner_text=top_left_corner_text,
+        sheet_as_array = self.to_list(
             na_rep=na_rep,
             skip_labels=skip_labels,
             spaces_replacement=spaces_replacement,
@@ -1047,7 +1101,6 @@ class Serialization(abc.ABC):
 
     def to_html_table(self, *,
                       spaces_replacement: str = ' ',
-                      top_left_corner_text: str = "Sheet",
                       na_rep: str = '',
                       language_for_description: str = None,
                       skip_labels: bool = False,
@@ -1080,7 +1133,7 @@ class Serialization(abc.ABC):
             export += "<tr>"
             if row_idx == -1:
                 export += "<th>"
-                export += top_left_corner_text
+                export += self.name
                 export += "</th>"
                 # Insert labels of columns:
                 for col_i in range(self.shape[1]):

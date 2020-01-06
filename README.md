@@ -137,8 +137,9 @@ a language called 'native' ready to be used.
 
 ### How to create a spreadsheet
 The easiest function is to use the built-in static method `create_new_sheet`:
+
 ```python
-sheet = ps.Spreadsheet.create_new_sheet(
+sheet = ps.Sheet.create_new_sheet(
     number_of_rows, number_of_columns, [rows_columns]
 )
 ```
@@ -150,11 +151,12 @@ language).
 
 For example, if you choose to add _'native'_ language (already available in
 grammars), you can use a shorter version:
+
 ```python
-sheet = ps.Spreadsheet.create_new_sheet(
-    number_of_rows, number_of_columns, 
+sheet = ps.Sheet.create_new_sheet(
+    number_of_rows, number_of_columns,
     {
-        "native": cell_indices_generators['native'](number_of_rows, 
+        "native": cell_indices_generators['native'](number_of_rows,
                                                     number_of_columns),
     }
 )
@@ -1235,6 +1237,7 @@ python setup.py test
 In order to run package unit-tests you need to clone package first.
 ### Demo
 The following demo contains a simple example with aggregations.
+
 ```python
 import portable_spreadsheet as ps
 import numpy as np
@@ -1242,7 +1245,7 @@ import numpy as np
 # This is a simple demo that represents the possibilities of the package
 #   The purpose of this demo is to create a class rooms and monitor students
 
-sheet = ps.Spreadsheet.create_new_sheet(
+sheet = ps.Sheet.create_new_sheet(
     # Size of the table (rows, columns):
     24, 8,
     rows_labels=['Adam', 'Oliver', 'Harry', 'George', 'John', 'Jack', 'Jacob',
