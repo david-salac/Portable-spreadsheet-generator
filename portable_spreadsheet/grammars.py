@@ -177,6 +177,10 @@ EXCEL = {
             "prefix": "IRR(",
             "suffix": ")",
         },
+        "match-negative-before-positive": {
+            "prefix": "MATCH(0,",
+            "suffix": ")",
+        },
         # BASIC OPERATIONS
         "exponential": {
             "prefix": "EXP(",
@@ -450,11 +454,16 @@ NATIVE = {
             "suffix": "",
         },
         "count": {
-            "prefix": " number of items in the slice ",
+            "prefix": "number of items in the slice ",
             "suffix": "",
         },
         "irr": {
-            "prefix": " Internal Rate of Return of ",
+            "prefix": "Internal Rate of Return of ",
+            "suffix": "",
+        },
+        "match-negative-before-positive": {
+            "prefix": "position of the step where numbers "
+                      "become to be positive of ",
             "suffix": "",
         },
         # BASIC OPERATIONS
@@ -736,6 +745,10 @@ PYTHON_NUMPY = {
         "irr": {
             "prefix": "npf.irr(",
             "suffix": ")",
+        },
+        "match-negative-before-positive": {
+            "prefix": "(np.argmin(",
+            "suffix": "<0)-1)",
         },
         # BASIC OPERATIONS
         "exponential": {

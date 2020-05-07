@@ -670,6 +670,15 @@ class TestCellAggregationFunctionality(unittest.TestCase):
         self._check_aggregate_function(Cell.irr, npf.irr, "IRR(", ")",
                                        "npf.irr(", ")")
 
+    def test_match_negative_before_positive(self):
+        """Test of finding the position of the last negative number in the
+            series that is located just before the first non-negative number.
+        """
+        self._check_aggregate_function(Cell.match_negative_before_positive,
+                                       lambda x: (np.argmin(x) - 1),
+                                       "MATCH(0,", ")",
+                                       "(np.argmin(", "<0)-1)")
+
 
 class TestCellUnaryFunctionality(unittest.TestCase):
     """Test unary operators (functions with just one parameter).
