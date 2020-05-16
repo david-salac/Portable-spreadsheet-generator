@@ -13,3 +13,6 @@
 13. Add comprehensive README.md
 14. Resizing
 15. Independent package with setup
+16. Ofset for label (at least for excel)
+17. Replace of spaces in to_dictionary (new parameter), maybe also regexp what
+    to pass
