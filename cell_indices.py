@@ -42,3 +42,12 @@ class CellIndices(object):
     def shape(self) -> Tuple[int]:
         language = list(self.columns.keys())[0]
         return len(self.rows[language]), len(self.columns[language])
+
+    @property
+    def languages(self) -> List[str]:
+        """Return all supported languages.
+
+        Returns:
+            List[str]: List of all supported languages.
+        """
+        return [str(lan) for lan in cell_indices_generators.keys()]

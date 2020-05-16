@@ -1,4 +1,4 @@
-from typing import Tuple, List, Optional
+from typing import Tuple, List, Optional, Dict, Union
 import copy
 
 import xlsxwriter
@@ -7,7 +7,13 @@ from cell import Cell
 from cell_indices import CellIndices
 from cell_type import CellType
 
+# ==== TYPES ====
+# Type for the sheet (list of the list of the cells)
 T_sheet = List[List[Cell]]
+# Type for the output dictionary with the
+#   logic: col/row key -> row/col key -> (pseudo)language -> value
+T_out_dict = Dict[object, Dict[object, Dict[str, Union[str, float]]]]
+# ===============
 
 
 class Spreadsheet(object):
@@ -98,7 +104,7 @@ class Spreadsheet(object):
             sheet_name (str): The name of the sheet inside the file.
         """
         # Quick sanity check
-        if ".xlsx" not in file_path[:-5]:
+        if ".xlsx" not in file_path[-5:]:
             raise ValueError("Suffix of the file has to be '.xslx'!")
         if not isinstance(sheet_name, str) or len(sheet_name) < 1:
             raise ValueError("Sheet name has to be non-empty string!")
@@ -123,11 +129,66 @@ class Spreadsheet(object):
         workbook.close()
 
     def to_dictionary(self,
-                      languages: List[str], /, *,
+                      languages: List[str] = None, /, *,
                       by_row: bool = True,
-                      languages_pseudonyms: List[str] = None) -> dict:
-        # TODO
-        pass
+                      languages_pseudonyms: List[str] = None) -> T_out_dict:
+        """Export this spreadsheet to the dictionary that can be parsed to the
+            JSON format.
+
+        Args:
+            languages (List[str]): List of languages that should be exported.
+        :param languages:
+        :param by_row:
+        :param languages_pseudonyms:
+        :return:
+        """
+        # Assign all languages if languages is None:
+        if languages is None:
+            languages = self.cell_indices.languages
+        # Quick sanity check:
+        if (
+                languages_pseudonyms is not None
+                and len(languages_pseudonyms) != len(languages)
+        ):
+            raise ValueError("Language pseudonyms does not have the same size "
+                             "as the language array!")
+        # Language array (use pseudonyms if possible, language otherwise)
+        languages_used = languages
+        if languages_pseudonyms is not None:
+            languages_used = languages_pseudonyms
+        # If by column (not by_row)
+        x_range = self.shape[1]
+        x = self.cell_indices.columns_nicknames
+        y_range = self.shape[0]
+        y = self.cell_indices.rows_nicknames
+        if by_row:
+            x_range = self.shape[0]
+            x = self.cell_indices.rows_nicknames
+            y_range = self.shape[1]
+            y = self.cell_indices.columns_nicknames
+        # Export the spreadsheet to the dictionary (that can by JSON-ified)
+        values = {}
+        for idx_x in range(x_range):
+            x_values = {}
+            for idx_y in range(y_range):
+                # Select the correct cell
+                if by_row:
+                    cell = self.iloc[idx_x, idx_y]
+                else:
+                    cell = self.iloc[idx_y, idx_x]
+                # Skip if cell value is None:
+                if cell.value is None:
+                    continue
+                parsed_cell = cell.parse
+                pseudolang_and_val = {}
+                for i, language in enumerate(languages):
+                    pseudolang_and_val[languages_used[i]] = \
+                        parsed_cell[language]
+                # Append the value:
+                pseudolang_and_val['value'] = cell.value
+                x_values[y[idx_y]] = pseudolang_and_val
+            values[x[idx_x]] = x_values
+        return values
 
     def values_to_string(self):
         export = "["
@@ -143,7 +204,9 @@ class Spreadsheet(object):
         return export + "]"
 
 
-indices = CellIndices(5, 6)
+# Some quick tests
+indices = CellIndices(5, 6, rows_nicknames=['row_a', 'row_ab', 'row_ac', 'row_ad', 'row_ae'],
+                      columns_nicknames=['col_a', 'col_b', 'col_c', 'col_d', 'col_e', 'col_f'])
 
 sheet = Spreadsheet(indices)
 sheet.iloc[0,0] = 7
@@ -156,3 +219,9 @@ sheet.iloc[0,1] = sheet.iloc[0,0] + sheet.iloc[1,0]
 
 print(sheet.values_to_string())
 sheet.to_excel("/home/david/Temp/excopu/excel.xlsx")
+print(sheet.to_dictionary(
+    ['native', 'excel'],
+    languages_pseudonyms=['description', 'xlsx'],
+    by_row=True
+)
+      )
