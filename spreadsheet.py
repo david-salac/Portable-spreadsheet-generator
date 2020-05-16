@@ -1,8 +1,11 @@
 from typing import Tuple, List, Optional
 import copy
 
+import xlsxwriter
+
 from cell import Cell
 from cell_indices import CellIndices
+from cell_type import CellType
 
 T_sheet = List[List[Cell]]
 
@@ -83,11 +86,41 @@ class Spreadsheet(object):
     def reshape(self,
                 cell_indices: CellIndices,
                 in_place: bool = True) -> Optional['Spreadsheet']:
-        pass
-
-    def to_excel(self, file_path: str, sheet_name: str = "Results"):
         # TODO
         pass
+
+    def to_excel(self, file_path: str, sheet_name: str = "Results") -> None:
+        """Export the values inside Spreadsheet instance to the
+            Excel 2010 compatible .xslx file
+
+        Args:
+            file_path (str): Path to the target .xlsx file.
+            sheet_name (str): The name of the sheet inside the file.
+        """
+        # Quick sanity check
+        if ".xlsx" not in file_path[:-5]:
+            raise ValueError("Suffix of the file has to be '.xslx'!")
+        if not isinstance(sheet_name, str) or len(sheet_name) < 1:
+            raise ValueError("Sheet name has to be non-empty string!")
+        # Open or create an Excel file and create a sheet inside:
+        workbook = xlsxwriter.Workbook(file_path)
+        worksheet = workbook.add_worksheet(name=sheet_name)
+        # Iterate through all columns and rows and add data
+        for row_idx in range(self.shape[0]):
+            for col_idx in range(self.shape[1]):
+                cell: Cell = self.iloc[row_idx, col_idx]
+                if cell.value is not None:
+                    if cell.cell_type == CellType.value_only:
+                        # If the cell is a value only, use method 'write'
+                        worksheet.write(row_idx, col_idx, cell.value)
+                    else:
+                        # If the cell is a formula, use method 'write_formula'
+                        worksheet.write_formula(row_idx,
+                                                col_idx,
+                                                cell.parse['excel'],
+                                                value=cell.value)
+        # Store results
+        workbook.close()
 
     def to_dictionary(self,
                       languages: List[str], /, *,
@@ -122,3 +155,4 @@ sheet.iloc[4,0] = 11
 sheet.iloc[0,1] = sheet.iloc[0,0] + sheet.iloc[1,0]
 
 print(sheet.values_to_string())
+sheet.to_excel("/home/david/Temp/excopu/excel.xlsx")
