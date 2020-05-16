@@ -204,9 +204,13 @@ class Spreadsheet(object):
         return export + "]"
 
 
+# -----------------------------------------------------------------------------
 # Some quick tests
-indices = CellIndices(5, 6, rows_nicknames=['row_a', 'row_ab', 'row_ac', 'row_ad', 'row_ae'],
-                      columns_nicknames=['col_a', 'col_b', 'col_c', 'col_d', 'col_e', 'col_f'])
+indices = CellIndices(
+    5, 6,
+    rows_nicknames=['row_a', 'row_ab', 'row_ac', 'row_ad', 'row_ae'],
+    columns_nicknames=['col_a', 'col_b', 'col_c', 'col_d', 'col_e', 'col_f']
+)
 
 sheet = Spreadsheet(indices)
 sheet.iloc[0,0] = 7
@@ -219,9 +223,10 @@ sheet.iloc[0,1] = sheet.iloc[0,0] + sheet.iloc[1,0]
 
 print(sheet.values_to_string())
 sheet.to_excel("/home/david/Temp/excopu/excel.xlsx")
-print(sheet.to_dictionary(
-    ['native', 'excel'],
-    languages_pseudonyms=['description', 'xlsx'],
-    by_row=True
+print(
+    sheet.to_dictionary(
+        ['native', 'excel'],
+        languages_pseudonyms=['description', 'xlsx'],
+        by_row=True
+        )
 )
-      )

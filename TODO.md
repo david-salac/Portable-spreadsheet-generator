@@ -11,3 +11,5 @@
 11. help texts for column/row indicies
 12. Possiblity to add some text to spreadsheet
 13. Add comprehensive README.md
+14. Resizing
+15. Independent package with setup

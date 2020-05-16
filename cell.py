@@ -114,6 +114,8 @@ class Cell(object):
     def parse(self) -> Dict[str, str]:
         return self.words.parse(self.cell_type, constant_value=self.value)
 
+
+# TODO: delete following:
 """
 indices = CellIndices(5, 5)
 A1 = Cell(0, 0, 2, cell_indices=indices)
