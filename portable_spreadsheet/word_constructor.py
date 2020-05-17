@@ -185,7 +185,7 @@ class WordConstructor(object):
     def aggregation(self,
                     start_idx: Tuple[int, int],
                     end_idx: Tuple[int, int],
-                    grammar_method: str, ):
+                    grammar_method: str) -> 'WordConstructor':
         words: T_word = {key: self.words[key] for key in self.languages}
         for language in self.languages:
             prefix = GRAMMARS[language]['cells']['aggregation']['prefix']

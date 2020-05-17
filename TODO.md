@@ -1,12 +1,12 @@
 # TODO:
-1. Add 'set' method (and operator <<=) to cell (to set itself to value or other
-    cell reference)
-1. Add set method (and operator <<=) to slices
+1. Add passing the lists to the slice
 1. Fix logarithm and exponential
-1. Update grammar to accept close left statement in some languages
+1. Update grammar to accept close-left statement in some languages
 1. Regexp to check the values of row and col index
 1. Replace of spaces in to_dictionary (new parameter), maybe also regexp what
     to pass, this for keys of columns, rows
+1. Refactor managing of references (add field for defining if cell is flying or
+    fixed in the grid)
 ---
 1. possibility to add some text to spreadsheet (?)
 1. styles for excel
@@ -18,8 +18,6 @@
 1. demo
 ---
 1. Independent package with setup
-
-
 
 # DONE:
 1. Help texts for column/row indicies

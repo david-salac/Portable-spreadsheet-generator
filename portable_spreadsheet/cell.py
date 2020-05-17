@@ -160,11 +160,13 @@ class Cell(object):
                     words=subset[0].words.aggregation(start_idx, end_idx,
                                                       grammar_method))
 
-    def reference(self, other: 'Cell', /):  # noqa E225
-        return Cell(value=other._value,
+    @staticmethod
+    def reference(other: 'Cell', /):  # noqa E225
+        return Cell(other.row, other.column,
+                    value=other.value,
                     words=WordConstructor.init_from_values(
                         other.column, other.row,
                         other.cell_indices, CellType.computational
                     ),
-                    cell_indices=self.cell_indices,
+                    cell_indices=other.cell_indices,
                     cell_type=CellType.computational)

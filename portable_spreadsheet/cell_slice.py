@@ -55,11 +55,7 @@ class CellSlice(object):
             # If the reference to a single cell is set
             for row in range(self.start_idx[0], self.end_idx[0] + 1):
                 for col in range(self.start_idx[1], self.end_idx[1] + 1):
-                    new_cell = Cell(row, col,
-                                    cell_indices=other.cell_indices)
-                    self.driving_sheet.iloc[row, col] = new_cell.reference(
-                        other
-                    )
+                    self.driving_sheet.iloc[row, col] = other
 
     def __ilshift__(self, other):
         self.set(other)

@@ -130,6 +130,7 @@ class Spreadsheet(object):
             if not isinstance(value, Cell):
                 _value = Cell(index_integer[0], index_integer[1],
                               value=value, cell_indices=self.cell_indices)
+
             self._sheet[index_integer[0]][index_integer[1]] = _value
 
     def _get_item(self,
