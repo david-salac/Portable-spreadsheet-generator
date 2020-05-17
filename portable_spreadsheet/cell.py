@@ -2,9 +2,9 @@ from typing import Dict, Optional, Iterable, Tuple, Callable
 
 import numpy as np
 
-from word_constructor import WordConstructor
-from cell_type import CellType
-from cell_indices import CellIndices
+from .word_constructor import WordConstructor
+from .cell_type import CellType
+from .cell_indices import CellIndices
 
 
 class Cell(object):

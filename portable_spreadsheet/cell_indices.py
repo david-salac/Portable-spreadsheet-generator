@@ -1,7 +1,7 @@
 from typing import List, Tuple, Dict, Optional
 import copy
 
-from cell_indices_templates import cell_indices_generators, system_languages
+from .cell_indices_templates import cell_indices_generators, system_languages
 
 # ==== TYPES ====
 # mapping from language to list, used for mapping from language to list rows

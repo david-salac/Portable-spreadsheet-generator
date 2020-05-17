@@ -3,10 +3,10 @@ import copy
 
 import xlsxwriter
 
-from cell import Cell
-from cell_indices import CellIndices
-from cell_type import CellType
-from cell_slice import CellSlice
+from .cell import Cell
+from .cell_indices import CellIndices
+from .cell_type import CellType
+from .cell_slice import CellSlice
 
 # ==== TYPES ====
 # Type for the sheet (list of the list of the cells)

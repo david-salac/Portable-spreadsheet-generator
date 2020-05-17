@@ -1,10 +1,10 @@
 import copy
 from typing import Optional, Dict, Set, Tuple
 
-from grammars import GRAMMARS
+from .grammars import GRAMMARS
 
-from cell_indices import CellIndices
-from cell_type import CellType
+from .cell_indices import CellIndices
+from .cell_type import CellType
 
 # ==== TYPES ====
 # Type for the word of some language, logic: key: language, value: word

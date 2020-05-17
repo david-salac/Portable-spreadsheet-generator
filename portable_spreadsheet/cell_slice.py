@@ -1,6 +1,6 @@
 from typing import Iterable, Tuple
 
-from cell import Cell
+from .cell import Cell
 
 
 class CellSlice(object):
