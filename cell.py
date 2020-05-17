@@ -23,7 +23,7 @@ class Cell(object):
         self.column: Optional[int] = column
         self._value: Optional[float] = value
         self.cell_type: CellType = cell_type
-        self.cell_indices: cell_indices = cell_indices
+        self.cell_indices: cell_indices = cell_indices  # pass only reference
 
         if words is not None:
             self.words: WordConstructor = words

@@ -55,6 +55,12 @@ class Spreadsheet(object):
 
     def __init__(self,
                  cell_indices: CellIndices):
+        """Initialize the spreadsheet object
+
+        Args:
+            cell_indices (CellIndices): The definition of the shape and columns
+                and rows labels, help texts and descriptors.
+        """
         self.cell_indices: CellIndices = copy.deepcopy(cell_indices)
 
         self._sheet: T_sheet = self._initialise_array()
@@ -65,9 +71,9 @@ class Spreadsheet(object):
 
     def _initialise_array(self) -> T_sheet:
         array: T_sheet = []
-        for row in range(self.cell_indices.shape[0]):
+        for row_idx in range(self.cell_indices.shape[0]):
             row: List[Cell] = []
-            for col in range(self.cell_indices.shape[1]):
+            for col_idx in range(self.cell_indices.shape[1]):
                 row.append(Cell(cell_indices=self.cell_indices))
             array.append(row)
         return array
@@ -102,9 +108,33 @@ class Spreadsheet(object):
         if index_integer is not None:
             return self._sheet[index_integer[0]][index_integer[1]]
 
+    def expand_size(self, cell_indices: CellIndices):
+        """Resize the spreadsheet object to the greather size
+
+        Args:
+            cell_indices (CellIndices): The definition of the shape and columns
+                and rows labels, help texts and descriptors.
+        """
+        shape_origin = self.shape
+        self.cell_indices = copy.deepcopy(cell_indices)
+        for row_idx in range(self.shape[0]):
+            if row_idx >= shape_origin[0]:
+                # Append wholly new rows
+                row: List[Cell] = []
+                for col in range(self.cell_indices.shape[1]):
+                    row.append(Cell(cell_indices=self.cell_indices))
+                self._sheet.append(row)
+            else:
+                # Expand columns:
+                for col in range(self.cell_indices.shape[1] - shape_origin[1]):
+                    self._sheet[row_idx].append(
+                        Cell(cell_indices=self.cell_indices)
+                    )
+                pass
+
     @property
     def shape(self) -> Tuple[int]:
-        return self.cell_indices.shape[0], self.cell_indices.shape[1]
+        return self.cell_indices.shape
 
     def to_excel(self, file_path: str, sheet_name: str = "Results") -> None:
         """Export the values inside Spreadsheet instance to the
@@ -289,3 +319,17 @@ print(
         by_row=True,
         )
 )
+
+number_of_rows = 1
+number_of_columns = 1
+indices.expand_size(number_of_rows, number_of_columns,
+    {
+        "native": cell_indices_generators['native'](number_of_rows, number_of_columns),
+    },
+    new_rows_nicknames=['row_ex',],
+    new_columns_nicknames=['col_x',],
+    new_rows_help_text=['Hx',] # 'h2', 'h3', 'h4', 'h5']
+                    )
+sheet.expand_size(indices)
+print(sheet.shape)
+print(sheet.values_to_string())
