@@ -1,18 +1,27 @@
-1. regexp to check the values of row and col index
-2. adding the rows and colls (as in pandas)
-3. slicing
-4. simple test to avoid write to itself(?)
-5. styles for excel
-6. unittest for everything
-7. docstrings for everything
-8. demo
-9. aggregation
-10. brackets for aggregations
-11. help texts for column/row indicies
-12. Possiblity to add some text to spreadsheet
-13. Add comprehensive README.md
-14. Resizing
-15. Independent package with setup
-16. Ofset for label (at least for excel)
-17. Replace of spaces in to_dictionary (new parameter), maybe also regexp what
-    to pass
+# TODO:
+1. Expanding:
+    Dow we want to expand at all? Very partially
+    We just want to add row and column, nothing else
+    Nothing can be deleted
+1. Slicing + aggregation + brackets for aggregations
+1. Regexp to check the values of row and col index
+1. Replace of spaces in to_dictionary (new parameter), maybe also regexp what
+    to pass, this for keys of columns, rows
+
+
+1. possibility to add some text to spreadsheet (?)
+
+1. styles for excel
+1. unittest for everything
+1. docstrings for everything
+1. add comprehensive README.md
+1. demo
+
+1. Independent package with setup
+
+1. simple test to avoid write to itself(?)
+
+# DONE:
+1. Help texts for column/row indicies
+1. Indices generator rather as a parameter (not global parameter)
+1. Offset for label (at least for excel) and add labels to file

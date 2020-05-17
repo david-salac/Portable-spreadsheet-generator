@@ -6,7 +6,10 @@ from grammars import GRAMMARS
 from cell_indices import CellIndices
 from cell_type import CellType
 
+# ==== TYPES ====
+# Type for the word of some language, logic: key: language, value: word
 T_word = Dict[str, str]
+# ===============
 
 
 class WordConstructor(object):
@@ -103,7 +106,8 @@ class WordConstructor(object):
                                languages=self.languages,
                                cell_indices=self.cell_indices)
 
-    def parse(self, cell_type: CellType, *, constant_value=None) -> T_word:
+    def parse(self, cell_type: CellType, *,
+              constant_value: Optional[float] = None) -> T_word:
         if cell_type == CellType.value_only:
             return copy.deepcopy(self.constant(constant_value).words)
         elif cell_type == CellType.computational:

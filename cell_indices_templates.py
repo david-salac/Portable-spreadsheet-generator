@@ -46,3 +46,4 @@ cell_indices_generators = {
     "python_numpy": python_numpy_generator,
     "native": native_generator,
 }
+system_languages = ['excel', 'python_numpy']
