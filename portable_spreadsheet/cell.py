@@ -160,10 +160,11 @@ class Cell(object):
                     words=subset[0].words.aggregation(start_idx, end_idx,
                                                       grammar_method))
 
-    # Set to scalar / Other cells:
-    def set(self, other):
-        # TODO:
-        pass
-
-    def __ilshift__(self, other):
-        self.set(other)
+    def reference(self, other: 'Cell', /):  # noqa E225
+        return Cell(value=other._value,
+                    words=WordConstructor.init_from_values(
+                        other.column, other.row,
+                        other.cell_indices, CellType.computational
+                    ),
+                    cell_indices=self.cell_indices,
+                    cell_type=CellType.computational)

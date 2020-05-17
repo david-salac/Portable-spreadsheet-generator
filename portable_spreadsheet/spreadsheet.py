@@ -56,7 +56,10 @@ class Spreadsheet(object):
                 else:
                     self.spreadsheet._set_item(val, None, index)
             else:
-                pass
+                if self.by_integer:
+                    return self.spreadsheet._set_slice(val, index, None)
+                else:
+                    return self.spreadsheet._set_slice(val, None, index)
 
         def __getitem__(self, index):
             has_slice = isinstance(index[0], slice) or \
@@ -243,8 +246,16 @@ class Spreadsheet(object):
                 cell_subset.append(self.iloc[x, y])
         cell_slice: CellSlice = CellSlice((_x_start, _y_start),
                                           (_x_end - 1, _y_end - 1),
-                                          cell_subset)
+                                          cell_subset,
+                                          self)
         return cell_slice
+
+    def _set_slice(self,
+                   value: T_cell_val,
+                   index_integer: Tuple[int, int] = None,
+                   index_nickname: Tuple[object, object] = None) -> None:
+        cell_slice: CellSlice = self._get_slice(index_integer, index_nickname)
+        cell_slice.set(value)
 
     def expand_size(self, cell_indices: CellIndices) -> None:
         """Resize the spreadsheet object to the greather size
