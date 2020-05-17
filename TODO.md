@@ -3,17 +3,16 @@
 1. Regexp to check the values of row and col index
 1. Replace of spaces in to_dictionary (new parameter), maybe also regexp what
     to pass, this for keys of columns, rows
-
-
+---
 1. possibility to add some text to spreadsheet (?)
 1. styles for excel
 1. simple test to avoid write to itself(?)
-
+---
 1. unittest for everything
 1. docstrings for everything
 1. add comprehensive README.md
 1. demo
-
+---
 1. Independent package with setup
 
 

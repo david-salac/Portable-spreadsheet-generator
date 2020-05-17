@@ -6,6 +6,7 @@ import xlsxwriter
 from cell import Cell
 from cell_indices import CellIndices
 from cell_type import CellType
+from cell_slice import CellSlice
 
 # ==== TYPES ====
 # Type for the sheet (list of the list of the cells)
@@ -30,11 +31,16 @@ T_out_dict = Dict[
             ]
     ]
 ]
+# Sheet cell value
+T_cell_val = Union[float, Cell]
 # ===============
 
 
 class Spreadsheet(object):
     class _Location(object):
+        """Private class that enables indexing and slicing of values using
+            obj.loc[col, row] or obj.iloc[col_idx, row_idx] logic.
+        """
         def __init__(self,
                      spreadsheet: 'Spreadsheet',
                      by_integer: bool):
@@ -42,16 +48,26 @@ class Spreadsheet(object):
             self.by_integer: str = by_integer
 
         def __setitem__(self, index, val):
-            if self.by_integer:
-                self.spreadsheet._set_item(val, index, None)
+            has_slice = isinstance(index[0], slice) or \
+                        isinstance(index[1], slice)
+            if not has_slice:
+                if self.by_integer:
+                    self.spreadsheet._set_item(val, index, None)
+                else:
+                    self.spreadsheet._set_item(val, None, index)
             else:
-                self.spreadsheet._set_item(val, None, index)
+                pass
 
         def __getitem__(self, index):
-            if self.by_integer:
-                return self.spreadsheet._get_item(index, None)
+            has_slice = isinstance(index[0], slice) or \
+                        isinstance(index[1], slice)
+            if not has_slice:
+                if self.by_integer:
+                    return self.spreadsheet._get_item(index, None)
+                else:
+                    return self.spreadsheet._get_item(None, index)
             else:
-                return self.spreadsheet._get_item(None, index)
+                pass
 
     def __init__(self,
                  cell_indices: CellIndices):
@@ -68,8 +84,15 @@ class Spreadsheet(object):
         self.iloc = self._Location(self, True)
         # To make cells accessible using obj.iloc[pos_x, pos_y]
         self.loc = self._Location(self, False)
+        # To make aggregation possible:
+        self._is_slice = _is_slice
 
     def _initialise_array(self) -> T_sheet:
+        """Initialise the first empty spreadsheet array on the beginning.
+
+        Returns:
+            T_sheet: New empty spreadsheet.
+        """
         array: T_sheet = []
         for row_idx in range(self.cell_indices.shape[0]):
             row: List[Cell] = []
@@ -78,15 +101,25 @@ class Spreadsheet(object):
             array.append(row)
         return array
 
-    def _set_item(self, value,
+    def _set_item(self,
+                  value: T_cell_val,
                   index_integer: Tuple[int, int] = None,
-                  index_nickname: Tuple[object, object] = None):
+                  index_nickname: Tuple[object, object] = None) -> None:
+        """Set the spreadsheet cell on the desired index to the new value.
+
+        Args:
+            value (T_cell_val): New value to be inserted.
+            index_integer (Tuple[int, int]): Return the value on the integer
+                index (row, column) inside spreadsheet (indexed from 0).
+            index_integer (Tuple[int, int]): Return the value on the nicknamed
+                index (row, column) inside spreadsheet.
+        """
         if index_integer is not None and index_nickname is not None:
             raise ValueError("Only one of parameters 'index_integer' and"
                              "'index_nickname' has to be set!")
         if index_nickname is not None:
             _x = self.cell_indices.rows_nicknames.index(index_nickname[0])
-            _y = self.cell_indices.rows_nicknames.index(index_nickname[1])
+            _y = self.cell_indices.columns_nicknames.index(index_nickname[1])
             index_integer = (_x, _y)
         if index_integer is not None:
             _value = value
@@ -98,17 +131,33 @@ class Spreadsheet(object):
     def _get_item(self,
                   index_integer: Tuple[int, int] = None,
                   index_nickname: Tuple[object, object] = None) -> Cell:
+        """Get the cell on the particular index.
+
+        Args:
+            index_integer (Tuple[int, int]): Return the value on the integer
+                index (row, column) inside spreadsheet (indexed from 0).
+            index_integer (Tuple[int, int]): Return the value on the nicknamed
+                index (row, column) inside spreadsheet.
+
+        Returns:
+            Cell: The Cell on the desired index.
+        """
         if index_integer is not None and index_nickname is not None:
             raise ValueError("Only one of parameters 'index_integer' and"
                              "'index_nickname' has to be set!")
         if index_nickname is not None:
             _x = self.cell_indices.rows_nicknames.index(index_nickname[0])
-            _y = self.cell_indices.rows_nicknames.index(index_nickname[1])
+            _y = self.cell_indices.columns_nicknames.index(index_nickname[1])
             index_integer = (_x, _y)
         if index_integer is not None:
             return self._sheet[index_integer[0]][index_integer[1]]
 
-    def expand_size(self, cell_indices: CellIndices):
+    def _get_slice(self,
+                   index_integer: Tuple[slice, slice],
+                   index_nickname: Tuple[slice, slice]) -> 'CellSlice':
+        pass
+
+    def expand_size(self, cell_indices: CellIndices) -> None:
         """Resize the spreadsheet object to the greather size
 
         Args:
@@ -134,6 +183,11 @@ class Spreadsheet(object):
 
     @property
     def shape(self) -> Tuple[int]:
+        """Return the shape of the object in the NumPy logic.
+
+        Returns:
+            Tuple[int]: Number of rows, Number of columns
+        """
         return self.cell_indices.shape
 
     def to_excel(self, file_path: str, sheet_name: str = "Results") -> None:
@@ -271,7 +325,12 @@ class Spreadsheet(object):
                 values[x_start_key][x[idx_x]]['help_text'] = x_helptext[idx_x]
         return values
 
-    def values_to_string(self):
+    def values_to_string(self) -> str:
+        """Export values inside table to the Python array definition string.
+
+        Returns:
+            str: Python list definition string.
+        """
         export = "["
         for row_idx in range(self.cell_indices.shape[0]):
             export += "["
@@ -309,6 +368,8 @@ sheet.iloc[3,0] = 10
 sheet.iloc[4,0] = 11
 
 sheet.iloc[0,1] = sheet.iloc[0,0] + sheet.iloc[1,0]
+
+print(sheet.loc['row_a', 'col_a'])
 
 print(sheet.values_to_string())
 sheet.to_excel("/home/david/Temp/excopu/excel.xlsx")

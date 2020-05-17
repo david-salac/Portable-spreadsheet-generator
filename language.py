@@ -1,13 +1,24 @@
 # TODO: delete this file
 import operator
+import ast
+import  assign
 
 
 class Language(object):
     def __getattribute__(self, *item):
         print(item)
-        pass
+
+
+
     def __getitem__(self, item):
         print(item)
+
+class XX():
+    def __ilshift__(self, other):
+        print(other)
+
+h = XX()
+h <<= 7
 
 x = Language()
 x['a', 'b']

@@ -38,6 +38,7 @@ EXCEL = {
                 "separator": "",
                 "rows_only": False,
                 "cols_only": False,
+                "row_first": False,
             },
             "end_cell": {
                 "prefix": "",
@@ -45,6 +46,7 @@ EXCEL = {
                 "separator": "",
                 "rows_only": False,
                 "cols_only": False,
+                "row_first": False,
             }
         }
     },
@@ -147,8 +149,8 @@ NATIVE = {
         },
         # like values from (1.1.2015, 25%) to (1.1.2015, 50%)
         "aggregation": {
-            "prefix": "values from",
-            "separator": "to",
+            "prefix": "values from ",
+            "separator": " to ",
             "suffix": "",
             "start_cell": {
                 "prefix": "(",
@@ -156,6 +158,7 @@ NATIVE = {
                 "separator": ", ",
                 "rows_only": False,
                 "cols_only": False,
+                "row_first": True,
             },
             "end_cell": {
                 "prefix": "(",
@@ -163,6 +166,7 @@ NATIVE = {
                 "separator": ", ",
                 "rows_only": False,
                 "cols_only": False,
+                "row_first": True,
             }
         }
     },
@@ -200,32 +204,32 @@ NATIVE = {
         },
         # AGGREGATE FUNCTIONS
         "sum": {
-            "prefix": "sum",
+            "prefix": "sum of ",
             "suffix": "",
         },
         "product": {
-            "prefix": "product",
+            "prefix": "product of ",
             "suffix": "",
         },
         "mean": {
-            "prefix": "mean-average",
+            "prefix": "mean-average of ",
             "suffix": "",
         },
         "minimum": {
-            "prefix": "minimum",
+            "prefix": "minimum of ",
             "suffix": "",
         },
         "maximum": {
-            "prefix": "maximum",
+            "prefix": "maximum of ",
             "suffix": "",
         },
         # BASIC OPERATIONS
         "exponential": {
-            "prefix": "exponential function of",
+            "prefix": "exponential function of ",
             "suffix": "",
         },
         "logarithm": {
-            "prefix": "logarithm of",
+            "prefix": "logarithm of ",
             "suffix": "",
         },
     },
@@ -274,6 +278,7 @@ PYTHON_NUMPY = {
                 "separator": ":",
                 "rows_only": True,
                 "cols_only": False,
+                "row_first": True
             },
             "end_cell": {
                 "prefix": "",
@@ -281,6 +286,7 @@ PYTHON_NUMPY = {
                 "separator": ":",
                 "rows_only": False,
                 "cols_only": True,
+                "row_first": True
             }
         }
     },

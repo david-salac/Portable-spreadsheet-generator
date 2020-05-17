@@ -39,14 +39,15 @@ class CellIndices(object):
                 on the beginning of the sheet as a offset for labels.
         """
         # Quick sanity check:
-        for language in rows_columns.keys():
-            rows, columns = rows_columns[language]
-            if len(rows) != number_of_rows:
-                raise ValueError("Number of rows is not the same for every "
-                                 "language!")
-            if len(columns) != number_of_columns:
-                raise ValueError("Number of columns is not the same for every "
-                                 "language!")
+        if rows_columns is not None:
+            for language in rows_columns.keys():
+                rows, columns = rows_columns[language]
+                if len(rows) != number_of_rows:
+                    raise ValueError("Number of rows is not the same for every"
+                                     " language!")
+                if len(columns) != number_of_columns:
+                    raise ValueError("Number of columns is not the same for "
+                                     "every language!")
         if number_of_rows < 1 or number_of_columns < 1:
             raise ValueError("Number of rows and columns has to at least 1!")
         # check the columns and rows nicknames sizes
@@ -86,11 +87,12 @@ class CellIndices(object):
             self.columns[language] = cols[offset:]
         # Append the not-system languages and user defined languages
         self.user_defined_languages: List[str] = []
-        for language, values in rows_columns.items():
-            rows, cols = values
-            self.rows[language] = rows
-            self.columns[language] = cols
-            self.user_defined_languages.append(language)
+        if rows_columns is not None:
+            for language, values in rows_columns.items():
+                rows, cols = values
+                self.rows[language] = rows
+                self.columns[language] = cols
+                self.user_defined_languages.append(language)
         # Define user defined names for rows and columns
         self.rows_nicknames: List[str] = copy.deepcopy(rows_nicknames)
         self.columns_nicknames: List[str] = copy.deepcopy(columns_nicknames)
@@ -102,6 +104,15 @@ class CellIndices(object):
         # assign the help texts
         self.rows_help_text: List[str] = copy.deepcopy(rows_help_text)
         self.columns_help_text: List[str] = copy.deepcopy(columns_help_text)
+
+    @property
+    def supported_languages(self) -> List[str]:
+        """Returns all languages supported by the indicies.
+
+        Returns:
+            List[str]: All languages supported by this indices.
+        """
+        return [].extend(self.user_defined_languages, system_languages)
 
     @property
     def shape(self) -> Tuple[int]:
