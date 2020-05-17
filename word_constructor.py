@@ -29,7 +29,6 @@ class WordConstructor(object):
         else:
             self.words: T_word = {key: "" for key in self.languages}
 
-
         self.cell_indices: CellIndices = cell_indices
 
     @staticmethod

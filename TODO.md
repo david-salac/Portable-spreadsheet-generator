@@ -1,5 +1,9 @@
 # TODO:
-1. Slicing + aggregation + brackets for aggregations
+1. Add 'set' method (and operator <<=) to cell (to set itself to value or other
+    cell reference)
+1. Add set method (and operator <<=) to slices
+1. Fix logarithm and exponential
+1. Update grammar to accept close left statement in some languages
 1. Regexp to check the values of row and col index
 1. Replace of spaces in to_dictionary (new parameter), maybe also regexp what
     to pass, this for keys of columns, rows
@@ -25,3 +29,4 @@
     Dow we want to expand at all? Very partially
     We just want to add row and column, nothing else
     Nothing can be deleted
+1. Slicing + _aggregation_ + _brackets for aggregations_ (sorted natively)

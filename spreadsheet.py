@@ -67,7 +67,10 @@ class Spreadsheet(object):
                 else:
                     return self.spreadsheet._get_item(None, index)
             else:
-                pass
+                if self.by_integer:
+                    return self.spreadsheet._get_slice(index, None)
+                else:
+                    return self.spreadsheet._get_slice(None, index)
 
     def __init__(self,
                  cell_indices: CellIndices):
@@ -84,8 +87,6 @@ class Spreadsheet(object):
         self.iloc = self._Location(self, True)
         # To make cells accessible using obj.iloc[pos_x, pos_y]
         self.loc = self._Location(self, False)
-        # To make aggregation possible:
-        self._is_slice = _is_slice
 
     def _initialise_array(self) -> T_sheet:
         """Initialise the first empty spreadsheet array on the beginning.
@@ -155,7 +156,95 @@ class Spreadsheet(object):
     def _get_slice(self,
                    index_integer: Tuple[slice, slice],
                    index_nickname: Tuple[slice, slice]) -> 'CellSlice':
-        pass
+        if index_integer is not None and index_nickname is not None:
+            raise ValueError("Only one of parameters 'index_integer' and"
+                             "'index_nickname' has to be set!")
+
+        if index_nickname is not None:
+            if isinstance(index_nickname[0], slice):
+                # If the first index is slice
+                _x_start = 0
+                if index_nickname[0].start:
+                    _x_start = self.cell_indices.rows_nicknames.index(
+                        index_nickname[0].start)
+                _x_end = self.shape[0]
+                if index_nickname[0].stop:
+                    _x_end = self.cell_indices.rows_nicknames.index(
+                        index_nickname[0].stop)
+                _x_step = 1
+                if index_nickname[0].step:
+                    _x_step = int(index_nickname[0].step)
+            else:
+                # If the first index is scalar
+                _x_start = self.cell_indices.rows_nicknames.index(
+                    index_nickname[0])
+                _x_end = _x_start + 1
+                _x_step = 1
+
+            if isinstance(index_nickname[1], slice):
+                # If the second index is slice
+                _y_start = 0
+                if index_nickname[1].start:
+                    _y_start = self.cell_indices.columns_nicknames.index(
+                        index_nickname[1].start)
+                _y_end = self.shape[1]
+                if index_nickname[1].stop:
+                    _y_end = self.cell_indices.columns_nicknames.index(
+                        index_nickname[1].stop)
+                _y_step = 1
+                if index_nickname[1].step:
+                    _y_step = int(index_nickname[1].step)
+            else:
+                # If the first index is scalar
+                _y_start = self.cell_indices.columns_nicknames.index(
+                    index_nickname[1])
+                _y_end = _y_start + 1
+                _y_step = 1
+
+        if index_integer is not None:
+            if isinstance(index_integer[0], slice):
+                # If the first index is slice
+                _x_start = 0
+                if index_integer[0].start:
+                    _x_start = int(index_integer[0].start)
+                _x_end = self.shape[0]
+                if index_integer[0].stop:
+                    _x_end = int(index_integer[0].stop)
+                _x_step = 1
+                if index_integer[0].step:
+                    _x_step = int(index_integer[0].step)
+            else:
+                # If the first index is scalar
+                _x_start = index_integer[0]
+                _x_end = _x_start + 1
+                _x_step = 1
+
+            if isinstance(index_integer[1], slice):
+                # If the second index is slice
+                _y_start = 0
+                if index_integer[1].start:
+                    _y_start = int(index_integer[1].start)
+                _y_end = self.shape[1]
+                if index_integer[1].stop:
+                    _y_end = int(index_integer[1].stop)
+                _y_step = 1
+                if index_integer[1].step:
+                    _y_step = int(index_integer[1].step)
+            else:
+                # If the first index is scalar
+                _y_start = index_integer[1]
+                _y_end = _y_start + 1
+                _y_step = 1
+
+        # Create the CellSlice object
+        cell_subset = []
+        for x in range(_x_start, _x_end, _x_step):
+            for y in range(_y_start, _y_end, _y_step):
+                cell_subset.append(self.iloc[x, y])
+        cell_slice: CellSlice = CellSlice((_x_start, _y_start),
+                                          (_x_end - 1, _y_end - 1),
+                                          cell_subset)
+        return cell_slice
 
     def expand_size(self, cell_indices: CellIndices) -> None:
         """Resize the spreadsheet object to the greather size
@@ -179,7 +268,12 @@ class Spreadsheet(object):
                     self._sheet[row_idx].append(
                         Cell(cell_indices=self.cell_indices)
                     )
-                pass
+            for col_idx in range(self.shape[1]):
+                # Has to refresh cell indices everywhere inside
+                self.iloc[row_idx,
+                          col_idx].cell_indices = self.cell_indices
+                self.iloc[row_idx,
+                          col_idx].words.cell_indices = self.cell_indices
 
     @property
     def shape(self) -> Tuple[int]:
@@ -348,7 +442,7 @@ class Spreadsheet(object):
 from cell_indices_templates import cell_indices_generators
 # Some quick tests
 number_of_rows = 5
-number_of_columns = 6
+number_of_columns = 3
 
 indices = CellIndices(
     number_of_rows, number_of_columns,
@@ -356,7 +450,7 @@ indices = CellIndices(
         "native": cell_indices_generators['native'](number_of_rows, number_of_columns),
     },
     rows_nicknames=['row_a', 'row_ab', 'row_ac', 'row_ad', 'row_ae'],
-    columns_nicknames=['col_a', 'col_b', 'col_c', 'col_d', 'col_e', 'col_f'],
+    columns_nicknames=['col_a', 'col_b', 'col_c',], # 'col_d', 'col_e', 'col_f'],
     rows_help_text=['H1', 'h2', 'h3', 'h4', 'h5'],
 )
 
@@ -393,4 +487,10 @@ indices.expand_size(number_of_rows, number_of_columns,
                     )
 sheet.expand_size(indices)
 print(sheet.shape)
+sheet.iloc[5,0] = 12
 print(sheet.values_to_string())
+
+slicet = sheet.iloc[0, 0:2]
+print(type(slicet))
+print(slicet.sum().value)
+print(slicet.sum().parse)

@@ -20,6 +20,12 @@ class XX():
 h = XX()
 h <<= 7
 
+sl = slice(7,8)
+print(sl.start)
+print(sl.stop)
+print(sl.step)
+
+
 x = Language()
 x['a', 'b']
 

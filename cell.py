@@ -162,7 +162,7 @@ class Cell(object):
 
 
 # TODO: delete following:
-from cell_indices_templates import cell_indices_generators, system_languages
+from cell_indices_templates import cell_indices_generators
 indices = CellIndices(5, 5, {
         "native": cell_indices_generators['native'](5, 5),
     },)
@@ -189,3 +189,4 @@ A3 = Cell(0, 2, 89, cell_indices=indices)
 
 XYZ = Cell.sum((0,0), (0,2), [A1, A2, A3])
 print(XYZ.parse)
+# print(Cell.logarithm(7).parse)
