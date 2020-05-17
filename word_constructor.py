@@ -32,7 +32,7 @@ class WordConstructor(object):
         self.cell_indices: CellIndices = cell_indices
 
     @staticmethod
-    def brackets(other: 'WordConstructor', /) -> 'WordConstructor':
+    def brackets(other: 'WordConstructor', /) -> 'WordConstructor':  # noqa E225
         words: T_word = {key: other.words[key] for key in other.languages}
         for language in other.languages:
             prefix = GRAMMARS[language]['brackets']['prefix']
@@ -82,22 +82,22 @@ class WordConstructor(object):
                                languages=self.languages,
                                cell_indices=self.cell_indices)
 
-    def add(self, other: 'WordConstructor', /) -> 'WordConstructor':
+    def add(self, other: 'WordConstructor', /) -> 'WordConstructor':  # noqa E225
         return self._binary_operation(other, "add")
 
-    def subtract(self, other: 'WordConstructor', /) -> 'WordConstructor':
+    def subtract(self, other: 'WordConstructor', /) -> 'WordConstructor':  # noqa E225
         return self._binary_operation(other, "subtract")
 
-    def multiply(self, other: 'WordConstructor', /) -> 'WordConstructor':
+    def multiply(self, other: 'WordConstructor', /) -> 'WordConstructor':  # noqa E225
         return self._binary_operation(other, "multiply")
 
-    def divide(self, other: 'WordConstructor', /) -> 'WordConstructor':
+    def divide(self, other: 'WordConstructor', /) -> 'WordConstructor':  # noqa E225
         return self._binary_operation(other, "divide")
 
-    def power(self, other: 'WordConstructor', /) -> 'WordConstructor':
+    def power(self, other: 'WordConstructor', /) -> 'WordConstructor':  # noqa E225
         return self._binary_operation(other, "power")
 
-    def constant(self, number: float, /) -> 'WordConstructor':
+    def constant(self, number: float, /) -> 'WordConstructor':  # noqa E225
         words: T_word = {key: self.words[key] for key in self.languages}
         for language in self.languages:
             prefix = GRAMMARS[language]['cells']['constant']['prefix']

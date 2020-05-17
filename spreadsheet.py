@@ -333,7 +333,8 @@ class Spreadsheet(object):
         workbook.close()
 
     def to_dictionary(self,
-                      languages: List[str] = None, /, *,
+                      languages: List[str] = None,
+                      /, *,  # noqa E999
                       by_row: bool = True,
                       languages_pseudonyms: List[str] = None) -> T_out_dict:
         """Export this spreadsheet to the dictionary that can be parsed to the
@@ -436,61 +437,3 @@ class Spreadsheet(object):
             if row_idx < self.cell_indices.shape[0] - 1:
                 export += ",\n"
         return export + "]"
-
-
-# -----------------------------------------------------------------------------
-from cell_indices_templates import cell_indices_generators
-# Some quick tests
-number_of_rows = 5
-number_of_columns = 3
-
-indices = CellIndices(
-    number_of_rows, number_of_columns,
-    {
-        "native": cell_indices_generators['native'](number_of_rows, number_of_columns),
-    },
-    rows_nicknames=['row_a', 'row_ab', 'row_ac', 'row_ad', 'row_ae'],
-    columns_nicknames=['col_a', 'col_b', 'col_c',], # 'col_d', 'col_e', 'col_f'],
-    rows_help_text=['H1', 'h2', 'h3', 'h4', 'h5'],
-)
-
-sheet = Spreadsheet(indices)
-sheet.iloc[0,0] = 7
-sheet.iloc[1,0] = 8
-sheet.iloc[2,0] = 9
-sheet.iloc[3,0] = 10
-sheet.iloc[4,0] = 11
-
-sheet.iloc[0,1] = sheet.iloc[0,0] + sheet.iloc[1,0]
-
-print(sheet.loc['row_a', 'col_a'])
-
-print(sheet.values_to_string())
-sheet.to_excel("/home/david/Temp/excopu/excel.xlsx")
-print(
-    sheet.to_dictionary(
-        #['native', 'excel'],
-        #languages_pseudonyms=['description', 'xlsx'],
-        by_row=True,
-        )
-)
-
-number_of_rows = 1
-number_of_columns = 1
-indices.expand_size(number_of_rows, number_of_columns,
-    {
-        "native": cell_indices_generators['native'](number_of_rows, number_of_columns),
-    },
-    new_rows_nicknames=['row_ex',],
-    new_columns_nicknames=['col_x',],
-    new_rows_help_text=['Hx',] # 'h2', 'h3', 'h4', 'h5']
-                    )
-sheet.expand_size(indices)
-print(sheet.shape)
-sheet.iloc[5,0] = 12
-print(sheet.values_to_string())
-
-slicet = sheet.iloc[0, 0:2]
-print(type(slicet))
-print(slicet.sum().value)
-print(slicet.sum().parse)

@@ -15,7 +15,8 @@ class CellIndices(object):
     def __init__(self,
                  number_of_rows: int,
                  number_of_columns: int,
-                 rows_columns: Optional[T_lg_col_row] = None, /, *,
+                 rows_columns: Optional[T_lg_col_row] = None,
+                 /, *, # noqa E999
                  rows_nicknames: List[str] = None,
                  columns_nicknames: List[str] = None,
                  rows_help_text: List[str] = None,
@@ -136,7 +137,8 @@ class CellIndices(object):
     def expand_size(self,
                     new_number_of_rows: int,
                     new_number_of_columns: int,
-                    new_rows_columns: Optional[T_lg_col_row] = None, /, *,
+                    new_rows_columns: Optional[T_lg_col_row] = None,
+                    /, *,  # noqa E225
                     new_rows_nicknames: List[str] = None,
                     new_columns_nicknames: List[str] = None,
                     new_rows_help_text: List[str] = None,

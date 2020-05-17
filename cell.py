@@ -10,7 +10,7 @@ from cell_indices import CellIndices
 class Cell(object):
     def __init__(self,
                  row: Optional[int] = None,
-                 column: Optional[int] = None, /,
+                 column: Optional[int] = None, /,  # noqa E999
                  value: Optional[float] = None, *,
                  words: Optional[WordConstructor] = None,
                  cell_type: CellType = CellType.value_only,
@@ -38,50 +38,50 @@ class Cell(object):
         return self._value
 
     @staticmethod
-    def brackets(other: 'Cell', /):
+    def brackets(other: 'Cell', /):  # noqa E225
         return Cell(value=other._value,
                     words=WordConstructor.brackets(other.words),
                     cell_indices=other.cell_indices,
                     cell_type=CellType.computational)
 
-    def add(self, other: 'Cell', /):
+    def add(self, other: 'Cell', /):  # noqa E225
         return Cell(value=self._value + other._value,
                     words=self.words.add(other.words),
                     cell_indices=self.cell_indices,
                     cell_type=CellType.computational)
 
-    def subtract(self, other: 'Cell', /):
+    def subtract(self, other: 'Cell', /):  # noqa E225
         return Cell(value=self._value - other._value,
                     words=self.words.subtract(other.words),
                     cell_indices=self.cell_indices,
                     cell_type=CellType.computational)
 
-    def multiply(self, other: 'Cell', /):
+    def multiply(self, other: 'Cell', /):  # noqa E225
         return Cell(value=self._value * other._value,
                     words=self.words.multiply(other.words),
                     cell_indices=self.cell_indices,
                     cell_type=CellType.computational)
 
-    def divide(self, other: 'Cell', /):
+    def divide(self, other: 'Cell', /):  # noqa E225
         return Cell(value=self._value / other._value,
                     words=self.words.divide(other.words),
                     cell_indices=self.cell_indices,
                     cell_type=CellType.computational)
 
-    def power(self, other: 'Cell', /):
+    def power(self, other: 'Cell', /):  # noqa E225
         return Cell(value=self._value ** other._value,
                     words=self.words.power(other.words),
                     cell_indices=self.cell_indices,
                     cell_type=CellType.computational)
 
-    def logarithm(self, number: float, /):
+    def logarithm(self, number: float, /):  # noqa E225
         # TODO: Check this word creation
         return Cell(value=np.log(number),
                     words=self.words.constant(np.log(number)),
                     cell_indices=self.cell_indices,
                     cell_type=CellType.computational)
 
-    def exponential(self, number: float, /):
+    def exponential(self, number: float, /):  # noqa E225
         # TODO: Check this word creation
         return Cell(value=np.exp(number),
                     words=self.words.constant(np.log(number)),
@@ -160,33 +160,10 @@ class Cell(object):
                     words=subset[0].words.aggregation(start_idx, end_idx,
                                                       grammar_method))
 
+    # Set to scalar / Other cells:
+    def set(self, other):
+        # TODO:
+        pass
 
-# TODO: delete following:
-from cell_indices_templates import cell_indices_generators
-indices = CellIndices(5, 5, {
-        "native": cell_indices_generators['native'](5, 5),
-    },)
-A1 = Cell(0, 0, 2, cell_indices=indices)
-B2 = Cell(1, 1, 5, cell_indices=indices)
-C1 = Cell(0, 2, 6, cell_indices=indices)
-
-A3 = Cell.brackets(B2 + C1) * A1 / B2
-A4 = Cell.brackets(B2)
-print(A1.parse)
-print(B2.parse)
-print(A3.parse)
-print(A3)
-print(A4)
-print(A3.value)
-print(B2.parse)
-A1 = B2 * Cell(value=8.0, cell_type=CellType.value_only, cell_indices=indices)
-print(A1.parse)
-print(A1.value)
-
-A1 = Cell(0, 0, 2, cell_indices=indices)
-A2 = Cell(0, 1, 2, cell_indices=indices)
-A3 = Cell(0, 2, 89, cell_indices=indices)
-
-XYZ = Cell.sum((0,0), (0,2), [A1, A2, A3])
-print(XYZ.parse)
-# print(Cell.logarithm(7).parse)
+    def __ilshift__(self, other):
+        self.set(other)
