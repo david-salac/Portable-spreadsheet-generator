@@ -1,5 +1,5 @@
 import copy
-from typing import Optional, Dict, Set, Tuple
+from typing import Dict, Set, Tuple
 
 from .grammars import GRAMMARS
 

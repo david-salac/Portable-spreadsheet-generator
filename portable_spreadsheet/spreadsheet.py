@@ -126,11 +126,17 @@ class Spreadsheet(object):
             _y = self.cell_indices.columns_nicknames.index(index_nickname[1])
             index_integer = (_x, _y)
         if index_integer is not None:
-            _value = value
-            if not isinstance(value, Cell):
+            if isinstance(value, Cell):
+                if value.anchored:
+                    _value = Cell.reference(value)
+                else:
+                    # Create a deep copy
+                    _value = copy.deepcopy(value)
+                    # Anchor it:
+                    _value.coordinates = (index_integer[0], index_integer[1])
+            else:
                 _value = Cell(index_integer[0], index_integer[1],
                               value=value, cell_indices=self.cell_indices)
-
             self._sheet[index_integer[0]][index_integer[1]] = _value
 
     def _get_item(self,
@@ -159,7 +165,18 @@ class Spreadsheet(object):
 
     def _get_slice(self,
                    index_integer: Tuple[slice, slice],
-                   index_nickname: Tuple[slice, slice]) -> 'CellSlice':
+                   index_nickname: Tuple[slice, slice]) -> CellSlice:
+        """Get the values in the slice.
+
+        Args:
+            index_integer (Tuple[int, int]): The position of the slice in the
+                spreadsheet. Mutually exclusive with parameter index_nickname
+            index_nickname (Tuple[object, object]): The position of the slice
+                in the spreadsheet. Mutually exclusive with parameter
+                index_integer (only one can be set to not None).
+        Returns:
+            CellSlice: Slice of the cells (aggregate).
+        """
         if index_integer is not None and index_nickname is not None:
             raise ValueError("Only one of parameters 'index_integer' and"
                              "'index_nickname' has to be set!")
@@ -253,8 +270,18 @@ class Spreadsheet(object):
 
     def _set_slice(self,
                    value: T_cell_val,
-                   index_integer: Tuple[int, int] = None,
-                   index_nickname: Tuple[object, object] = None) -> None:
+                   index_integer: Tuple[int, int],
+                   index_nickname: Tuple[object, object]) -> None:
+        """Set the value of each cell in the slice
+
+        Args:
+            value (T_cell_val): New value to be set.
+            index_integer (Tuple[int, int]): The position of the slice in the
+                spreadsheet. Mutually exclusive with parameter index_nickname
+            index_nickname (Tuple[object, object]): The position of the slice
+                in the spreadsheet. Mutually exclusive with parameter
+                index_integer (only one can be set to not None).
+        """
         cell_slice: CellSlice = self._get_slice(index_integer, index_nickname)
         cell_slice.set(value)
 
@@ -284,13 +311,10 @@ class Spreadsheet(object):
                 # Has to refresh cell indices everywhere inside
                 self.iloc[row_idx,
                           col_idx].cell_indices = self.cell_indices
-                self.iloc[row_idx,
-                          col_idx]._constructing_words.cell_indices = \
-                    self.cell_indices
 
     @property
     def shape(self) -> Tuple[int]:
-        """Return the shape of the object in the NumPy logic.
+        """Return the shape of the sheet in the NumPy logic.
 
         Returns:
             Tuple[int]: Number of rows, Number of columns
