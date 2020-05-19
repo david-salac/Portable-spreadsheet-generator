@@ -2,12 +2,11 @@
 ## BUGS
 
 ## IMPORTANT FEATURES
-1. To CSV (Values)
-1. Regexp to check the values of row and col index
----
-1. possibility to add some text to spreadsheet (?)
 1. styles for excel
-1. simple test to avoid write to itself(?)
+1. Check grammars
+1. Sheet as a grammar controller
+1. Add grammar (from Sheet as a grammar controller - some 
+    static method)
 ---
 1. unittest for everything
 1. docstrings for everything
@@ -15,7 +14,8 @@
 1. demo
 ---
 1. Independent package with setup
-
+---
+1. simple test to avoid write to itself(?)
 # DONE:
 1. Help texts for column/row indicies
 1. Indices generator rather as a parameter (not global parameter)
@@ -31,3 +31,7 @@
 1. Update grammar to accept right-open slices statement in some languages
 1. Replace of spaces in to_dictionary (new parameter), maybe also regexp what
     to pass, this for keys of columns, rows
+1. To CSV (Values)
+1. possibility to add some text to spreadsheet (?)
+1. markdown export
+1. Functionality shortcuts

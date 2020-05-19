@@ -76,6 +76,36 @@ class Spreadsheet(object):
                 else:
                     return self.spreadsheet._get_slice(None, index)
 
+    class _Functionality(object):
+        """Class encapsulating some shortcuts for functionality.
+        """
+        def __init__(self, spreadsheet: 'Spreadsheet'):
+            self.spreadsheet = spreadsheet
+
+        def const(self, value: Number) -> Cell:
+            """Create the constant for computation (un-anchored cell).
+
+            Args:
+                value (Number): Constant value.
+
+            Returns:
+                Cell: un-anchored cell with constant value.
+            """
+            return Cell(value=value,
+                        cell_indices=self.spreadsheet.cell_indices)
+
+        @staticmethod
+        def brackets(body: Cell) -> Cell:
+            """Shortcut for adding bracket around body.
+
+            Args:
+                body (Cell): Body of the expression.
+
+            Returns:
+                Cell: Expression with brackets
+            """
+            return Cell.brackets(body)
+
     def __init__(self,
                  cell_indices: CellIndices):
         """Initialize the spreadsheet object
@@ -91,6 +121,8 @@ class Spreadsheet(object):
         self.iloc = self._Location(self, True)
         # To make cells accessible using obj.iloc[pos_x, pos_y]
         self.loc = self._Location(self, False)
+        # To make accesible shortcuts for functionality
+        self.fn = self._Functionality(self)
 
     def _initialise_array(self) -> T_sheet:
         """Initialise the first empty spreadsheet array on the beginning.
@@ -491,11 +523,18 @@ class Spreadsheet(object):
                 export += ",\n"
         return export + "]"
 
-    def to_csv(self,*,
+    def to_csv(self, *,
                spaces_replacement: str = ' ',
                sep: str = ',',
-               line_terminator: str = '\n') -> str:
+               line_terminator: str = '\n',
+               na_rep: str = '') -> str:
         """Export values to the string in the CSV logic
+
+        Args:
+            spaces_replacement (str): String replacement for spaces.
+            sep (str): Separator of values in a row.
+            line_terminator (str): Ending sequence (character) of a rows.
+            na_rep (str): Replacement for the missing data.
 
         Returns:
             str: CSV of the values
@@ -513,9 +552,61 @@ class Spreadsheet(object):
                     ' ', spaces_replacement
                 ) + sep
                 for col_idx in range(self.cell_indices.shape[1]):
-                    export += str(self.iloc[row_idx, col_idx].value)
+                    value = self.iloc[row_idx, col_idx].value
+                    if value is None:
+                        value = na_rep
+                    export += str(value)
                     if col_idx < self.cell_indices.shape[1] - 1:
                         export += sep
             if row_idx < self.cell_indices.shape[0] - 1:
                 export += line_terminator
+        return export
+
+    def to_markdown(self, *,
+                    spaces_replacement: str = ' ',
+                    top_right_corner_text: str = "Sheet",
+                    na_rep: str = ''):
+        """Export values to the string in the Markdown (MD) file logic
+
+        Args:
+            spaces_replacement (str): String replacement for spaces.
+            top_right_corner_text (str): Text in the top right corner.
+            na_rep (str): Replacement for the missing data.
+
+        Returns:
+            str: Markdown (MD) compatible table of the values
+        """
+        export = ""
+        for row_idx in range(-2, self.cell_indices.shape[0]):
+            if row_idx == -2:
+                # Add the labels and top right corner text
+                export += "| " + top_right_corner_text + " |"
+                for col_i, col in enumerate(self.cell_indices.columns_labels):
+                    export += "*" + col.replace(' ', spaces_replacement) + "*"
+                    if col_i < self.cell_indices.shape[1] - 1:
+                        export += " | "
+                    elif col_i == self.cell_indices.shape[1] - 1:
+                        export += " |\n"
+
+            elif row_idx == -1:
+                # Add the separator to start the table body:
+                export += "|----|"
+                for col_i, col in enumerate(self.cell_indices.columns_labels):
+                    export += "----|"
+                    if col_i == self.cell_indices.shape[1] - 1:
+                        export += "\n"
+            else:
+                export += "| *" + \
+                          self.cell_indices.rows_labels[row_idx].replace(
+                              ' ', spaces_replacement
+                          ) + "*" + " | "
+                for col_idx in range(self.cell_indices.shape[1]):
+                    value = self.iloc[row_idx, col_idx].value
+                    if value is None:
+                        value = na_rep
+                    export += str(value)
+                    if col_idx < self.cell_indices.shape[1] - 1:
+                        export += " | "
+                    elif col_idx == self.cell_indices.shape[1] - 1:
+                        export += " |\n"
         return export
