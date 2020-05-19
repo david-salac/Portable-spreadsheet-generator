@@ -9,9 +9,9 @@ cell_indices = ps.CellIndices(
         "native": ([str(i + 1) for i in range(nr_row)],
                    [str(i + 1) for i in range(nr_col)])
     },
-    rows_nicknames=['first row', 'second row', 'third row', 'fourth row',
+    rows_labels=['first row', 'second row', 'third row', 'fourth row',
                     'fifth row'],
-    columns_nicknames=['first column', 'second column', 'third column',
+    columns_labels=['first column', 'second column', 'third column',
                        'fourth column', 'fifth column', 'sixth column'],
     rows_help_text=['Super row 1', 'Super row 2', 'Super row 3', 'Super row 4',
                     'Super row 5'],

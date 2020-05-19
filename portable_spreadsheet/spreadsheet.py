@@ -123,8 +123,8 @@ class Spreadsheet(object):
             raise ValueError("Only one of parameters 'index_integer' and"
                              "'index_nickname' has to be set!")
         if index_nickname is not None:
-            _x = self.cell_indices.rows_nicknames.index(index_nickname[0])
-            _y = self.cell_indices.columns_nicknames.index(index_nickname[1])
+            _x = self.cell_indices.rows_labels.index(index_nickname[0])
+            _y = self.cell_indices.columns_labels.index(index_nickname[1])
             index_integer = (_x, _y)
         if index_integer is not None:
             if isinstance(value, Cell):
@@ -158,8 +158,8 @@ class Spreadsheet(object):
             raise ValueError("Only one of parameters 'index_integer' and"
                              "'index_nickname' has to be set!")
         if index_nickname is not None:
-            _x = self.cell_indices.rows_nicknames.index(index_nickname[0])
-            _y = self.cell_indices.columns_nicknames.index(index_nickname[1])
+            _x = self.cell_indices.rows_labels.index(index_nickname[0])
+            _y = self.cell_indices.columns_labels.index(index_nickname[1])
             index_integer = (_x, _y)
         if index_integer is not None:
             return self._sheet[index_integer[0]][index_integer[1]]
@@ -187,18 +187,18 @@ class Spreadsheet(object):
                 # If the first index is slice
                 _x_start = 0
                 if index_nickname[0].start:
-                    _x_start = self.cell_indices.rows_nicknames.index(
+                    _x_start = self.cell_indices.rows_labels.index(
                         index_nickname[0].start)
                 _x_end = self.shape[0]
                 if index_nickname[0].stop:
-                    _x_end = self.cell_indices.rows_nicknames.index(
+                    _x_end = self.cell_indices.rows_labels.index(
                         index_nickname[0].stop)
                 _x_step = 1
                 if index_nickname[0].step:
                     _x_step = int(index_nickname[0].step)
             else:
                 # If the first index is scalar
-                _x_start = self.cell_indices.rows_nicknames.index(
+                _x_start = self.cell_indices.rows_labels.index(
                     index_nickname[0])
                 _x_end = _x_start + 1
                 _x_step = 1
@@ -207,18 +207,18 @@ class Spreadsheet(object):
                 # If the second index is slice
                 _y_start = 0
                 if index_nickname[1].start:
-                    _y_start = self.cell_indices.columns_nicknames.index(
+                    _y_start = self.cell_indices.columns_labels.index(
                         index_nickname[1].start)
                 _y_end = self.shape[1]
                 if index_nickname[1].stop:
-                    _y_end = self.cell_indices.columns_nicknames.index(
+                    _y_end = self.cell_indices.columns_labels.index(
                         index_nickname[1].stop)
                 _y_step = 1
                 if index_nickname[1].step:
                     _y_step = int(index_nickname[1].step)
             else:
                 # If the first index is scalar
-                _y_start = self.cell_indices.columns_nicknames.index(
+                _y_start = self.cell_indices.columns_labels.index(
                     index_nickname[1])
                 _y_end = _y_start + 1
                 _y_step = 1
@@ -322,13 +322,17 @@ class Spreadsheet(object):
         """
         return self.cell_indices.shape
 
-    def to_excel(self, file_path: str, sheet_name: str = "Results") -> None:
+    def to_excel(self, file_path: str, *,
+                 sheet_name: str = "Results",
+                 spaces_replacement: str = ' ') -> None:
         """Export the values inside Spreadsheet instance to the
             Excel 2010 compatible .xslx file
 
         Args:
             file_path (str): Path to the target .xlsx file.
             sheet_name (str): The name of the sheet inside the file.
+            spaces_replacement (str): All the spaces in the rows and columns
+                descriptions (labels) are replaced with this string.
         """
         # Quick sanity check
         if ".xlsx" not in file_path[-5:]:
@@ -362,11 +366,15 @@ class Spreadsheet(object):
             for col_idx in range(self.shape[1]):
                 worksheet.write(0,
                                 col_idx + 1,
-                                self.cell_indices.columns_nicknames[col_idx])
+                                self.cell_indices.columns_labels[
+                                    col_idx
+                                ].replace(' ', spaces_replacement))
             for row_idx in range(self.shape[0]):
                 worksheet.write(row_idx + 1,
                                 0,
-                                self.cell_indices.rows_nicknames[row_idx])
+                                self.cell_indices.rows_labels[
+                                    row_idx
+                                ].replace(' ', spaces_replacement))
         # Store results
         workbook.close()
 
@@ -374,7 +382,8 @@ class Spreadsheet(object):
                       languages: List[str] = None,
                       /, *,  # noqa E999
                       by_row: bool = True,
-                      languages_pseudonyms: List[str] = None) -> T_out_dict:
+                      languages_pseudonyms: List[str] = None,
+                      spaces_replacement: str = ' ') -> T_out_dict:
         """Export this spreadsheet to the dictionary that can be parsed to the
             JSON format.
 
@@ -384,6 +393,8 @@ class Spreadsheet(object):
                 are the second in the order. If False it is vice-versa.
             languages_pseudonyms (List[str]): Rename languages to the strings
                 inside this list.
+            spaces_replacement (str): All the spaces in the rows and columns
+                descriptions (labels) are replaced with this string.
 
         Returns:
             Dict[object, Dict[object, Dict[str, Union[str, float]]]]: The
@@ -408,23 +419,27 @@ class Spreadsheet(object):
         # If by column (not by_row)
         # The x-axes represents the columns
         x_range = self.shape[1]
-        x = self.cell_indices.columns_nicknames
+        x = [label.replace(' ', spaces_replacement)
+             for label in self.cell_indices.columns_labels]
         x_helptext = self.cell_indices.columns_help_text
         x_start_key = 'columns'
         # The y-axes represents the rows
         y_range = self.shape[0]
-        y = self.cell_indices.rows_nicknames
+        y = [label.replace(' ', spaces_replacement)
+             for label in self.cell_indices.rows_labels]
         y_helptext = self.cell_indices.rows_help_text
         y_start_key = 'rows'
         if by_row:
             # The x-axes represents the rows
             x_range = self.shape[0]
-            x = self.cell_indices.rows_nicknames
+            x = [label.replace(' ', spaces_replacement)
+                 for label in self.cell_indices.rows_labels]
             x_helptext = self.cell_indices.rows_help_text
             x_start_key = 'rows'
             # The y-axes represents the columns
             y_range = self.shape[1]
-            y = self.cell_indices.columns_nicknames
+            y = [label.replace(' ', spaces_replacement)
+                 for label in self.cell_indices.columns_labels]
             y_helptext = self.cell_indices.columns_help_text
             y_start_key = 'columns'
 

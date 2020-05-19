@@ -17,9 +17,9 @@ class CellIndices(object):
                  number_of_rows: int,
                  number_of_columns: int,
                  rows_columns: Optional[T_lg_col_row] = None,
-                 /, *, # noqa E999
-                 rows_nicknames: List[str] = None,
-                 columns_nicknames: List[str] = None,
+                 /, *,  # noqa E999
+                 rows_labels: List[str] = None,
+                 columns_labels: List[str] = None,
                  rows_help_text: List[str] = None,
                  columns_help_text: List[str] = None,
                  excel_append_labels: bool = True
@@ -31,9 +31,9 @@ class CellIndices(object):
             number_of_columns (int): Number of columns.
             rows_columns (T_lg_col_row): List of all row names and column names
                 for each language.
-            rows_nicknames (List[str]): List of masks (nicknames) for row
+            rows_labels (List[str]): List of masks (nicknames) for row
                 names.
-            columns_nicknames (List[str]): List of masks (nicknames) for column
+            columns_labels (List[str]): List of masks (nicknames) for column
                 names.
             rows_help_text (List[str]): List of help texts for each row.
             columns_help_text (List[str]): List of help texts for each column.
@@ -64,12 +64,12 @@ class CellIndices(object):
         if number_of_rows < 1 or number_of_columns < 1:
             raise ValueError("Number of rows and columns has to at least 1!")
         # check the columns and rows nicknames sizes
-        if (rows_nicknames is not None
-                and len(rows_nicknames) != number_of_rows):
+        if (rows_labels is not None
+                and len(rows_labels) != number_of_rows):
             raise ValueError("Number of rows nicknames has to be the same"
                              "as number of rows!")
-        if (columns_nicknames is not None
-                and len(columns_nicknames) != number_of_columns):
+        if (columns_labels is not None
+                and len(columns_labels) != number_of_columns):
             raise ValueError("Number of columns nicknames has to be the same"
                              "as number of columns!")
         # check the help texts sizes
@@ -108,13 +108,13 @@ class CellIndices(object):
                 self.columns[language] = cols
                 self.user_defined_languages.append(language)
         # Define user defined names for rows and columns
-        self.rows_nicknames: List[str] = copy.deepcopy(rows_nicknames)
-        self.columns_nicknames: List[str] = copy.deepcopy(columns_nicknames)
+        self.rows_labels: List[str] = copy.deepcopy(rows_labels)
+        self.columns_labels: List[str] = copy.deepcopy(columns_labels)
         # Or define auto generated nicknames as an integer sequence from 0
-        if rows_nicknames is None:
-            self.rows_nicknames = list(range(number_of_rows))
-        if columns_nicknames is None:
-            self.columns_nicknames = list(range(number_of_columns))
+        if rows_labels is None:
+            self.rows_labels = list(range(number_of_rows))
+        if columns_labels is None:
+            self.columns_labels = list(range(number_of_columns))
         # assign the help texts
         self.rows_help_text: List[str] = copy.deepcopy(rows_help_text)
         self.columns_help_text: List[str] = copy.deepcopy(columns_help_text)
@@ -240,20 +240,20 @@ class CellIndices(object):
 
         # Define user defined names for rows and columns
         if new_rows_nicknames is not None:
-            self.rows_nicknames.extend(new_rows_nicknames)
+            self.rows_labels.extend(new_rows_nicknames)
         else:
-            self.rows_nicknames = list(
+            self.rows_labels = list(
                 range(self.number_of_rows + new_number_of_rows)
             )
         if new_columns_nicknames is not None:
-            self.columns_nicknames.extend(new_columns_nicknames)
+            self.columns_labels.extend(new_columns_nicknames)
         else:
-            self.columns_nicknames = list(
+            self.columns_labels = list(
                 range(self.number_of_columns + new_number_of_columns)
             )
         # Or define auto generated nicknames as an integer sequence from 0
         if new_columns_nicknames is None:
-            self.columns_nicknames = list(
+            self.columns_labels = list(
                 range(self.number_of_columns + new_number_of_columns)
             )
         # assign the help texts
