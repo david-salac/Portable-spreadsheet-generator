@@ -15,6 +15,9 @@ EXCEL = {
             "prefix": "",
             "suffix": "",
         },
+        "empty": {
+            "content": ""
+        },
         # Like A1, A2
         "reference": {
             "prefix": "",
@@ -135,6 +138,9 @@ NATIVE = {
             "prefix": "",
             "suffix": "",
         },
+        "empty": {
+            "content": ""
+        },
         # Like value at (1.1.2015, 25%)
         "reference": {
             "prefix": "value at (",
@@ -254,6 +260,9 @@ PYTHON_NUMPY = {
         "constant": {
             "prefix": "",
             "suffix": "",
+        },
+        "empty": {
+            "content": ""
         },
         # Like [row,column]
         "reference": {

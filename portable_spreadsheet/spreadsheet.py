@@ -285,7 +285,8 @@ class Spreadsheet(object):
                 self.iloc[row_idx,
                           col_idx].cell_indices = self.cell_indices
                 self.iloc[row_idx,
-                          col_idx].words.cell_indices = self.cell_indices
+                          col_idx]._constructing_words.cell_indices = \
+                    self.cell_indices
 
     @property
     def shape(self) -> Tuple[int]:

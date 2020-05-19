@@ -2,6 +2,8 @@
 ## BUGS
 1. Refactor managing of references (add field for defining if cell is flying or
     fixed in the grid)
+1. FUNCTIONS to scallars has to be fixed on the sheet level
+
 ## IMPORTANT FEATURES
 1. Update grammar to accept close-left statement in some languages
 1. Regexp to check the values of row and col index
