@@ -490,3 +490,32 @@ class Spreadsheet(object):
             if row_idx < self.cell_indices.shape[0] - 1:
                 export += ",\n"
         return export + "]"
+
+    def to_csv(self,*,
+               spaces_replacement: str = ' ',
+               sep: str = ',',
+               line_terminator: str = '\n') -> str:
+        """Export values to the string in the CSV logic
+
+        Returns:
+            str: CSV of the values
+        """
+        export = ""
+        for row_idx in range(-1, self.cell_indices.shape[0]):
+            if row_idx == -1:
+                export += sep
+                for col_i, col in enumerate(self.cell_indices.columns_labels):
+                    export += col.replace(' ', spaces_replacement)
+                    if col_i < self.cell_indices.shape[1] - 1:
+                        export += sep
+            else:
+                export += self.cell_indices.rows_labels[row_idx].replace(
+                    ' ', spaces_replacement
+                ) + sep
+                for col_idx in range(self.cell_indices.shape[1]):
+                    export += str(self.iloc[row_idx, col_idx].value)
+                    if col_idx < self.cell_indices.shape[1] - 1:
+                        export += sep
+            if row_idx < self.cell_indices.shape[0] - 1:
+                export += line_terminator
+        return export

@@ -2,8 +2,6 @@
 ## BUGS
 
 ## IMPORTANT FEATURES
-1. Replace of spaces in to_dictionary (new parameter), maybe also regexp what
-    to pass, this for keys of columns, rows
 1. To CSV (Values)
 1. Regexp to check the values of row and col index
 ---
@@ -31,3 +29,5 @@
 1. Fix logarithm and exponential
 1. Check the word construction
 1. Update grammar to accept right-open slices statement in some languages
+1. Replace of spaces in to_dictionary (new parameter), maybe also regexp what
+    to pass, this for keys of columns, rows
