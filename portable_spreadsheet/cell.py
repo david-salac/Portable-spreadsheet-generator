@@ -8,6 +8,20 @@ from .cell_indices import CellIndices
 
 
 class Cell(object):
+    """Represent the single cell in the spreadsheet.
+
+    Attributes:
+        row (Optional[int]): Position of the cell (row index).
+        column (Optional[int]): Position of the cell (column index).
+        cell_type (CellType): If the cell is Value or Computational. Value type
+            means that it only stores constant value, computation means that
+            it does some computations
+        _value (Optional[float]): The actual value of the cell.
+        cell_indices (CellIndices): The indices of the columns and rows for
+            each used language.
+        _constructing_words (WordConstructor): The words defining the cell in
+            each language.
+    """
     def __init__(self,
                  row: Optional[int] = None,
                  column: Optional[int] = None, /,  # noqa E999
@@ -17,6 +31,20 @@ class Cell(object):
                  cell_type: CellType = CellType.value_only,
                  words: Optional[WordConstructor] = None,
                  ):
+        """Create single cell.
+
+        Args:
+            row (Optional[int]): Position of the cell (row index).
+            column (Optional[int]): Position of the cell (column index).
+            cell_indices (CellIndices): The indices of the columns and rows for
+                each used language.
+            cell_type (CellType): If the cell is Value or Computational. Value
+                type means that it only stores constant value, computation
+                means that it does some computations. Do not use this argument
+                directly.
+            words (Optional[WordConstructor]): The words defining the cell
+                in each language. Do not use this argument directly.
+        """
         if row is not None and column is None \
                 or row is None and column is not None:
             raise ValueError("The values of 'row' and 'column' parameters have"
@@ -215,49 +243,112 @@ class Cell(object):
         return self._constructing_words.parse(self)
 
     @staticmethod
-    def sum(start_idx: Tuple[int, int], end_idx: Tuple[int, int],
+    def sum(cell_start: 'Cell', cell_end: 'Cell',
             subset: Iterable['Cell']) -> 'Cell':
-        return Cell._aggregate_fun(start_idx, end_idx, subset,
+        """Compute the sum of the slice.
+
+        Args:
+            cell_start (Cell): Starting cell of the slice (left top).
+            cell_end: (Cell'): Ending cell of the slice (bottom right).
+            subset (Iterable['Cell']): List of all cells in the subset.
+
+        Returns:
+            Cell: the cell with aggregated and computed results.
+        """
+        return Cell._aggregate_fun(cell_start, cell_end, subset,
                                    'sum', np.sum)
 
     @staticmethod
-    def product(start_idx: Tuple[int, int], end_idx: Tuple[int, int],
+    def product(cell_start: 'Cell', cell_end: 'Cell',
                 subset: Iterable['Cell']) -> 'Cell':
-        return Cell._aggregate_fun(start_idx, end_idx, subset,
+        """Compute the product of the slice.
+
+        Args:
+            cell_start (Cell): Starting cell of the slice (left top).
+            cell_end: (Cell'): Ending cell of the slice (bottom right).
+            subset (Iterable['Cell']): List of all cells in the subset.
+
+        Returns:
+            Cell: the cell with aggregated and computed results.
+        """
+        return Cell._aggregate_fun(cell_start, cell_end, subset,
                                    'product', np.prod)
 
     @staticmethod
-    def mean(start_idx: Tuple[int, int], end_idx: Tuple[int, int],
+    def mean(cell_start: 'Cell', cell_end: 'Cell',
              subset: Iterable['Cell']) -> 'Cell':
-        return Cell._aggregate_fun(start_idx, end_idx, subset,
+        """Compute the mean-average of the slice.
+
+        Args:
+            cell_start (Cell): Starting cell of the slice (left top).
+            cell_end: (Cell'): Ending cell of the slice (bottom right).
+            subset (Iterable['Cell']): List of all cells in the subset.
+
+        Returns:
+            Cell: the cell with aggregated and computed results.
+        """
+        return Cell._aggregate_fun(cell_start, cell_end, subset,
                                    'mean', np.mean)
 
     @staticmethod
-    def min(start_idx: Tuple[int, int], end_idx: Tuple[int, int],
+    def min(cell_start: 'Cell', cell_end: 'Cell',
             subset: Iterable['Cell']) -> 'Cell':
-        return Cell._aggregate_fun(start_idx, end_idx, subset,
+        """Compute the minimum of the slice.
+
+        Args:
+            cell_start (Cell): Starting cell of the slice (left top).
+            cell_end: (Cell'): Ending cell of the slice (bottom right).
+            subset (Iterable['Cell']): List of all cells in the subset.
+
+        Returns:
+            Cell: the cell with aggregated and computed results.
+        """
+        return Cell._aggregate_fun(cell_start, cell_end, subset,
                                    'minimum', np.min)
 
     @staticmethod
-    def max(start_idx: Tuple[int, int], end_idx: Tuple[int, int],
+    def max(cell_start: 'Cell', cell_end: 'Cell',
             subset: Iterable['Cell']) -> 'Cell':
-        return Cell._aggregate_fun(start_idx, end_idx, subset,
+        """Compute the maximum of the slice.
+
+        Args:
+            cell_start (Cell): Starting cell of the slice (left top).
+            cell_end: (Cell'): Ending cell of the slice (bottom right).
+            subset (Iterable['Cell']): List of all cells in the subset.
+
+        Returns:
+            Cell: the cell with aggregated and computed results.
+        """
+        return Cell._aggregate_fun(cell_start, cell_end, subset,
                                    'maximum', np.max)
 
     @staticmethod
     def _aggregate_fun(
-            start_idx: Tuple[int, int],
-            end_idx: Tuple[int, int],
+            cell_start: 'Cell',
+            cell_end: 'Cell',
             subset: Iterable['Cell'],
             grammar_method: str,
             method_np: Callable[[Iterable[float]], float]
     ) -> 'Cell':
+        """General aggregation function covering all methods.
+
+        Args:
+            cell_start (Cell): Starting cell of the slice (left top).
+            cell_end: (Cell'): Ending cell of the slice (bottom right).
+            subset (Iterable['Cell']): List of all cells in the subset.
+            grammar_method (str): What method is used (like 'minimum', ...)
+            method_np (Callable[[Iterable[float]], float]): What numpy method
+                is used for computation.
+
+        Returns:
+            Cell: the cell with aggregated and computed results.
+        """
         return Cell(value=method_np([c.value for c in subset]),
-                    cell_indices=subset[0].cell_indices,
-                    cell_type=CellType.computational,
-                    words=subset[0]._constructing_words.aggregation(
-                        start_idx, end_idx, grammar_method
-                    )
+                    words=WordConstructor.aggregation(
+                        cell_start, cell_end, grammar_method
+                    ),
+                    cell_indices=cell_start.cell_indices,
+                    cell_type=CellType.computational
                     )
 
     @staticmethod

@@ -15,6 +15,10 @@ T_word = Dict[str, str]
 class WordConstructor(object):
     """Provides functionality for constructing words in all supported languages
         and also serves container for keeping them.
+
+    Attributes:
+        languages (Set[str]): What languages are used.
+        words (Dict[str, str]): Mapping from language name to word.
     """
 
     def __init__(self, *,
@@ -22,6 +26,12 @@ class WordConstructor(object):
                  languages: Set[str] = None,
                  cell_indices: CellIndices
                  ):
+        """Initialise the word cunstructor.
+
+        Args:
+            languages (Set[str]): What languages are used.
+            words (Dict[str, str]): Mapping from language name to word.
+        """
         if languages is not None:
             self.languages: Set[str] = languages
         else:
@@ -31,8 +41,6 @@ class WordConstructor(object):
             self.words: T_word = words
         else:
             self.words: T_word = {key: "" for key in self.languages}
-
-        self.cell_indices: CellIndices = cell_indices
 
     @staticmethod
     def init_from_new_cell(cell, /) -> 'WordConstructor':  # noqa E999
@@ -141,16 +149,29 @@ class WordConstructor(object):
         """
         return WordConstructor._binary_operation(first, second, "power")
 
-    def _aggregation_parse_cell(self,
+    @staticmethod
+    def _aggregation_parse_cell(cell,
                                 start_idx: Tuple[int, int],
                                 end_idx: Tuple[int, int],
                                 language: str
-                                ):
-        start_idx_r = self.cell_indices.rows[language][start_idx[0]]
-        start_idx_c = self.cell_indices.columns[language][start_idx[1]]
+                                ) -> Tuple[str, str]:
+        """Generates the aggregation string for a concrete language (regardless
+            what aggregation method is selected).
 
-        end_idx_r = self.cell_indices.rows[language][end_idx[0]]
-        end_idx_c = self.cell_indices.columns[language][end_idx[1]]
+        Args:
+            cell (Cell): Any cell in the set (used for extracting indicies).
+            start_idx (Tuple[int, int]): Position of the slice start.
+            end_idx (Tuple[int, int]): Position of the slice end.
+            language (str): What language is used.
+
+        Returns:
+            Tuple[str, str]: Definition of starting, ending cell in language.
+        """
+        start_idx_r = cell.cell_indices.rows[language][start_idx[0]]
+        start_idx_c = cell.cell_indices.columns[language][start_idx[1]]
+
+        end_idx_r = cell.cell_indices.rows[language][end_idx[0]]
+        end_idx_c = cell.cell_indices.columns[language][end_idx[1]]
 
         pref_cell_start = GRAMMARS[language]['cells']['aggregation'][
             'start_cell']['prefix']
@@ -182,7 +203,7 @@ class WordConstructor(object):
             cell_start = (pref_cell_start + start_idx_c +
                           separator_cell_start + end_idx_c +
                           suffix_cell_start)
-        # ----------------------------
+        # ---------- ending cell -----
         pref_cell_end = GRAMMARS[language]['cells']['aggregation'][
             'end_cell']['prefix']
         separator_cell_end = GRAMMARS[language]['cells']['aggregation'][
@@ -213,22 +234,38 @@ class WordConstructor(object):
             cell_end = (pref_cell_end + start_idx_c +
                         separator_cell_end + end_idx_c +
                         suffix_cell_end)
-
+        # ----------------------------
         return cell_start, cell_end
 
-    def aggregation(self,
-                    start_idx: Tuple[int, int],
-                    end_idx: Tuple[int, int],
+    @staticmethod
+    def aggregation(cell_start, cell_end,
                     grammar_method: str) -> 'WordConstructor':
-        words: T_word = {key: self.words[key] for key in self.languages}
-        for language in self.languages:
+        """General aggregation function.
+
+        Args:
+            cell_start (Cell): The cell on the position of the slice start.
+            cell_end (Cell): The cell on the position of slice end.
+            grammar_method (str): Name of the aggregation method in a grammar.
+
+        Returns:
+            WordConstructor: World constructed from aggregation method.
+        """
+        if not(cell_start.anchored and cell_end.anchored):
+            raise ValueError("Both starting end ending cells has to be"
+                             " anchored!")
+
+        start_idx = cell_start.coordinates
+        end_idx = cell_end.coordinates
+
+        instance = WordConstructor(cell_indices=cell_start.cell_indices)
+        for language in instance.languages:
             prefix = GRAMMARS[language]['cells']['aggregation']['prefix']
             separator = GRAMMARS[language]['cells']['aggregation']['separator']
             suffix = GRAMMARS[language]['cells']['aggregation']['suffix']
 
-            cell_start, cell_end = self._aggregation_parse_cell(start_idx,
-                                                                end_idx,
-                                                                language)
+            start, end = WordConstructor._aggregation_parse_cell(
+                cell_start, start_idx, end_idx, language
+            )
             # Methods
             m_prefix = GRAMMARS[language]['operations'][grammar_method][
                 'prefix'
@@ -237,11 +274,9 @@ class WordConstructor(object):
                 'suffix'
             ]
 
-            words[language] = (m_prefix + prefix + cell_start + separator +
-                               cell_end + suffix + m_suffix)
-        return WordConstructor(words=words,
-                               languages=self.languages,
-                               cell_indices=self.cell_indices)
+            instance.words[language] = (m_prefix + prefix + start +
+                                        separator + end + suffix + m_suffix)
+        return instance
 
     @staticmethod
     def parse(cell) -> T_word:
