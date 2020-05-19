@@ -167,11 +167,18 @@ class WordConstructor(object):
         Returns:
             Tuple[str, str]: Definition of starting, ending cell in language.
         """
+        # Does the language include the last cell?
+        #   if yes, offset of size 1 has to be included.
+        offset = 0
+        if GRAMMARS[
+            language
+        ]['cells']['aggregation']['include_last_cell']:
+            offset = 1
+
         start_idx_r = cell.cell_indices.rows[language][start_idx[0]]
         start_idx_c = cell.cell_indices.columns[language][start_idx[1]]
-
-        end_idx_r = cell.cell_indices.rows[language][end_idx[0]]
-        end_idx_c = cell.cell_indices.columns[language][end_idx[1]]
+        end_idx_r = cell.cell_indices.rows[language][end_idx[0] + offset]
+        end_idx_c = cell.cell_indices.columns[language][end_idx[1] + offset]
 
         pref_cell_start = GRAMMARS[language]['cells']['aggregation'][
             'start_cell']['prefix']

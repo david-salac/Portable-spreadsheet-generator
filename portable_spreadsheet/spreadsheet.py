@@ -1,3 +1,4 @@
+from numbers import Number
 from typing import Tuple, List, Dict, Union
 import copy
 
@@ -32,7 +33,7 @@ T_out_dict = Dict[
     ]
 ]
 # Sheet cell value
-T_cell_val = Union[float, Cell]
+T_cell_val = Union[Number, Cell]
 # ===============
 
 

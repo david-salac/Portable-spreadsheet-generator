@@ -1,6 +1,7 @@
 from typing import List, Tuple, Dict, Optional
 import copy
 
+from .grammars import GRAMMARS
 from .cell_indices_templates import cell_indices_generators, system_languages
 
 # ==== TYPES ====
@@ -42,13 +43,24 @@ class CellIndices(object):
         # Quick sanity check:
         if rows_columns is not None:
             for language in rows_columns.keys():
+                # Does the language include the last cell?
+                #   if yes, offset of size 1 has to be included.
+                offset = 0
+                if GRAMMARS[
+                    language
+                ]['cells']['aggregation']['include_last_cell']:
+                    offset = 1
                 rows, columns = rows_columns[language]
-                if len(rows) != number_of_rows:
-                    raise ValueError("Number of rows is not the same for every"
-                                     " language!")
-                if len(columns) != number_of_columns:
-                    raise ValueError("Number of columns is not the same for "
-                                     "every language!")
+                if len(rows) != number_of_rows + offset:
+                    e_mess = "Number of rows is not the same for every" \
+                             "language! Or you have not included offset " \
+                             "caused by excluding the last value of the slice!"
+                    raise ValueError(e_mess)
+                if len(columns) != number_of_columns + offset:
+                    e_mess = "Number of columns is not the same for every" \
+                             "language! Or you have not included offset " \
+                             "caused by excluding the last value of the slice!"
+                    raise ValueError(e_mess)
         if number_of_rows < 1 or number_of_columns < 1:
             raise ValueError("Number of rows and columns has to at least 1!")
         # check the columns and rows nicknames sizes
@@ -82,10 +94,11 @@ class CellIndices(object):
             offset = 0
             if self.excel_append_labels and language == "excel":
                 offset = 1
-            rows, cols = generator(self.number_of_rows + offset,
-                                   self.number_of_columns + offset)
-            self.rows[language] = rows[offset:]
-            self.columns[language] = cols[offset:]
+            rows, cols = generator(self.number_of_rows,
+                                   self.number_of_columns,
+                                   offset)
+            self.rows[language] = rows
+            self.columns[language] = cols
         # Append the not-system languages and user defined languages
         self.user_defined_languages: List[str] = []
         if rows_columns is not None:
@@ -197,18 +210,30 @@ class CellIndices(object):
             self.columns[language] = cols[offset:]
         # Append rows to user defined languages
         for language, values in new_rows_columns.items():
+            # Does the language include the last cell?
+            #   if yes, offset of size 1 has to be included.
+            offset = 0
+            if GRAMMARS[
+                language
+            ]['cells']['aggregation']['include_last_cell']:
+                offset = 1
             rows, cols = values
             # Quick sanity check
             if language not in self.user_defined_languages:
                 raise ValueError("Users languages has to match to existing "
                                  "ones!")
-            if len(rows) != new_number_of_rows:
-                raise ValueError("Number of rows has to be the same"
-                                 "as number of rows to be added!")
-            if len(cols) != new_number_of_columns:
-                raise ValueError("Number of columns has to be the same"
-                                 "as number of columns to be added!")
+            if len(rows) != new_number_of_rows + offset:
+                raise ValueError("Number of rows has to be the same "
+                                 "as number of rows to be added! Plus the"
+                                 "offset for the ending row.")
+            if len(cols) != new_number_of_columns + offset:
+                raise ValueError("Number of columns has to be the same "
+                                 "as number of columns to be added! Plus the"
+                                 "offset for the ending row.")
             # ------------------
+            if offset == 1:
+                del self.rows[language][-1]
+                del self.columns[language][-1]
 
             self.rows[language].extend(rows)
             self.columns[language].extend(cols)

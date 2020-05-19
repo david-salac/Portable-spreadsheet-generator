@@ -50,7 +50,9 @@ EXCEL = {
                 "rows_only": False,
                 "cols_only": False,
                 "row_first": False,
-            }
+            },
+            # For example, Python exclude last cell when slicing
+            "include_last_cell": False
         }
     },
     "operations": {
@@ -173,7 +175,9 @@ NATIVE = {
                 "rows_only": False,
                 "cols_only": False,
                 "row_first": True,
-            }
+            },
+            # For example, Python exclude last cell when slicing
+            "include_last_cell": True
         }
     },
     "operations": {
@@ -296,7 +300,9 @@ PYTHON_NUMPY = {
                 "rows_only": False,
                 "cols_only": True,
                 "row_first": True
-            }
+            },
+            # For example, Python exclude last cell when slicing
+            "include_last_cell": True
         }
     },
     "operations": {
