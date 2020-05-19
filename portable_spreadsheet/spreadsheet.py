@@ -38,6 +38,24 @@ T_cell_val = Union[Number, Cell]
 
 
 class Spreadsheet(object):
+    """Simple spreadsheet that keeps tracks of each operations in defined
+        languages.
+
+    Logic allows export sheets to Excel files (and see how each cell is
+        computed), to the JSON strings with description of computation e. g.
+        in native language. It also allows to reconstruct behaviours in native
+        Python with Numpy.
+
+    Attributes:
+        self.cell_indices (CellIndices): Define indices and the shape of the
+            spreadsheet.
+        _sheet (T_sheet): Array holding actual sheet.
+        iloc (Spreadsheet._Location): To make cells accessible using
+            obj.iloc[integer_index_x, integer_index_y]
+        loc (Spreadsheet._Location): To make cells accessible using
+            obj.loc[nick_x, nick_y]
+        fn (_Functionality): To make accessible shortcuts for functionality
+    """
     class _Location(object):
         """Private class that enables indexing and slicing of values using
             obj.loc[col, row] or obj.iloc[col_idx, row_idx] logic.
@@ -106,6 +124,30 @@ class Spreadsheet(object):
             """
             return Cell.brackets(body)
 
+        @staticmethod
+        def ln(value: Cell) -> Cell:
+            """Natural logarithm of the value.
+
+            Args:
+                value (Cell): Value to computation.
+
+            Returns:
+                Cell: Natural logarithm of the input value.
+            """
+            return Cell.logarithm(value)
+
+        @staticmethod
+        def exp(value: Cell) -> Cell:
+            """Exponential function of the value (e^value).
+
+            Args:
+                value (Cell): Value to computation.
+
+            Returns:
+                Cell: Exponential function of the input value.
+            """
+            return Cell.exponential(value)
+
     def __init__(self,
                  cell_indices: CellIndices):
         """Initialize the spreadsheet object
@@ -117,11 +159,11 @@ class Spreadsheet(object):
         self.cell_indices: CellIndices = copy.deepcopy(cell_indices)
 
         self._sheet: T_sheet = self._initialise_array()
-        # To make cells accessible using obj.loc[nick_x, nick_y]
-        self.iloc = self._Location(self, True)
         # To make cells accessible using obj.iloc[pos_x, pos_y]
+        self.iloc = self._Location(self, True)
+        # To make cells accessible using obj.loc[nick_x, nick_y]
         self.loc = self._Location(self, False)
-        # To make accesible shortcuts for functionality
+        # To make accessible shortcuts for functionality
         self.fn = self._Functionality(self)
 
     def _initialise_array(self) -> T_sheet:
@@ -356,7 +398,8 @@ class Spreadsheet(object):
 
     def to_excel(self, file_path: str, *,
                  sheet_name: str = "Results",
-                 spaces_replacement: str = ' ') -> None:
+                 spaces_replacement: str = ' ',
+                 label_format: dict = {'bold': True}) -> None:
         """Export the values inside Spreadsheet instance to the
             Excel 2010 compatible .xslx file
 
@@ -365,6 +408,8 @@ class Spreadsheet(object):
             sheet_name (str): The name of the sheet inside the file.
             spaces_replacement (str): All the spaces in the rows and columns
                 descriptions (labels) are replaced with this string.
+            label_format (dict): Excel styles for the label rows and columns,
+                documentation: https://xlsxwriter.readthedocs.io/format.html
         """
         # Quick sanity check
         if ".xlsx" not in file_path[-5:]:
@@ -374,6 +419,8 @@ class Spreadsheet(object):
         # Open or create an Excel file and create a sheet inside:
         workbook = xlsxwriter.Workbook(file_path)
         worksheet = workbook.add_worksheet(name=sheet_name)
+        # Register the style for the labels:
+        cell_format = workbook.add_format(label_format)
         # Iterate through all columns and rows and add data
         for row_idx in range(self.shape[0]):
             for col_idx in range(self.shape[1]):
@@ -400,13 +447,15 @@ class Spreadsheet(object):
                                 col_idx + 1,
                                 self.cell_indices.columns_labels[
                                     col_idx
-                                ].replace(' ', spaces_replacement))
+                                ].replace(' ', spaces_replacement),
+                                cell_format)
             for row_idx in range(self.shape[0]):
                 worksheet.write(row_idx + 1,
                                 0,
                                 self.cell_indices.rows_labels[
                                     row_idx
-                                ].replace(' ', spaces_replacement))
+                                ].replace(' ', spaces_replacement),
+                                cell_format)
         # Store results
         workbook.close()
 

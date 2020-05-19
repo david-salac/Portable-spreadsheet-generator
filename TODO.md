@@ -2,16 +2,15 @@
 ## BUGS
 
 ## IMPORTANT FEATURES
-1. styles for excel
 1. Check grammars
 1. Sheet as a grammar controller
 1. Add grammar (from Sheet as a grammar controller - some 
     static method)
 ---
-1. unittest for everything
-1. docstrings for everything
 1. add comprehensive README.md
 1. demo
+1. docstrings for everything
+1. unittest for everything
 ---
 1. Independent package with setup
 ---
@@ -35,3 +34,5 @@
 1. possibility to add some text to spreadsheet (?)
 1. markdown export
 1. Functionality shortcuts
+1. shortcuts for everything (unary functions)
+1. Styles for excel labels
