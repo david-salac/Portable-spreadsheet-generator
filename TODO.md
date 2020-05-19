@@ -9,6 +9,8 @@
 1. Fix logarithm and exponential
 1. Replace of spaces in to_dictionary (new parameter), maybe also regexp what
     to pass, this for keys of columns, rows
+1. Check the word construction
+1. To CSV (Values)
 ---
 1. possibility to add some text to spreadsheet (?)
 1. styles for excel

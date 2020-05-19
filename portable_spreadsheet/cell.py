@@ -24,6 +24,7 @@ class Cell(object):
         self._value: Optional[float] = value
         self.cell_type: CellType = cell_type
         self.cell_indices: cell_indices = cell_indices  # pass only reference
+        self.anchored = not(row is None or column is None)
 
         if words is not None:
             self.words: WordConstructor = words
@@ -74,17 +75,17 @@ class Cell(object):
                     cell_indices=self.cell_indices,
                     cell_type=CellType.computational)
 
-    def logarithm(self, number: float, /):  # noqa E225
+    def logarithm(self, other: 'Cell', /):  # noqa E225
         # TODO: Check this word creation
         return Cell(value=np.log(number),
-                    words=self.words.constant(np.log(number)),
+                    words=self.words.logarithm(number),
                     cell_indices=self.cell_indices,
                     cell_type=CellType.computational)
 
-    def exponential(self, number: float, /):  # noqa E225
+    def exponential(self, other: 'Cell', /):  # noqa E225
         # TODO: Check this word creation
         return Cell(value=np.exp(number),
-                    words=self.words.constant(np.log(number)),
+                    words=self.words.exponential(number),
                     cell_indices=self.cell_indices,
                     cell_type=CellType.computational)
 

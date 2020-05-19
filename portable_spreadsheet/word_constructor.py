@@ -209,6 +209,30 @@ class WordConstructor(object):
                                languages=self.languages,
                                cell_indices=self.cell_indices)
 
+    def logarithm(self, value: float):
+        words: T_word = {key: "" for key in self.languages}
+        for language in self.languages:
+            prefix = GRAMMARS[language]['operations']['logarithm']['prefix']
+            suffix = GRAMMARS[language]['operations']['logarithm']['suffix']
+
+            words[language] = (prefix + str(value) + suffix)
+
+        return WordConstructor(words=words,
+                               languages=self.languages,
+                               cell_indices=self.cell_indices)
+
+    def exponential(self, value: float):
+        words: T_word = {key: "" for key in self.languages}
+        for language in self.languages:
+            prefix = GRAMMARS[language]['operations']['exponential']['prefix']
+            suffix = GRAMMARS[language]['operations']['exponential']['suffix']
+
+            words[language] = (prefix + str(value) + suffix)
+
+        return WordConstructor(words=words,
+                               languages=self.languages,
+                               cell_indices=self.cell_indices)
+
     def parse(self, cell_type: CellType, *,
               constant_value: Optional[float] = None) -> T_word:
         if cell_type == CellType.value_only:
