@@ -173,6 +173,7 @@ class CellIndices(object):
             new_columns_help_text (List[str]): List of help texts for each
                 column to be added.
         """
+        expanded = copy.deepcopy(self)
         # Quick sanity check:
         if new_number_of_rows < 1 and new_number_of_columns < 1:
             return
@@ -200,14 +201,14 @@ class CellIndices(object):
             if language not in system_languages:
                 continue
             offset = 0
-            if self.excel_append_labels and language == "excel":
+            if expanded.excel_append_labels and language == "excel":
                 offset = 1
-            rows, cols = generator(self.number_of_rows +
+            rows, cols = generator(expanded.number_of_rows +
                                    new_number_of_rows + offset,
-                                   self.number_of_columns +
+                                   expanded.number_of_columns +
                                    new_number_of_columns + offset)
-            self.rows[language] = rows[offset:]
-            self.columns[language] = cols[offset:]
+            expanded.rows[language] = rows[offset:]
+            expanded.columns[language] = cols[offset:]
         # Append rows to user defined languages
         for language, values in new_rows_columns.items():
             # Does the language include the last cell?
@@ -219,7 +220,7 @@ class CellIndices(object):
                 offset = 1
             rows, cols = values
             # Quick sanity check
-            if language not in self.user_defined_languages:
+            if language not in expanded.user_defined_languages:
                 raise ValueError("Users languages has to match to existing "
                                  "ones!")
             if len(rows) != new_number_of_rows + offset:
@@ -232,40 +233,44 @@ class CellIndices(object):
                                  "offset for the ending row.")
             # ------------------
             if offset == 1:
-                del self.rows[language][-1]
-                del self.columns[language][-1]
+                del expanded.rows[language][-1]
+                del expanded.columns[language][-1]
 
-            self.rows[language].extend(rows)
-            self.columns[language].extend(cols)
+            expanded.rows[language].extend(rows)
+            expanded.columns[language].extend(cols)
 
         # Define user defined names for rows and columns
         if new_rows_nicknames is not None:
-            self.rows_labels.extend(new_rows_nicknames)
+            expanded.rows_labels.extend(new_rows_nicknames)
         else:
-            self.rows_labels = list(
-                range(self.number_of_rows + new_number_of_rows)
+            expanded.rows_labels = list(
+                range(expanded.number_of_rows + new_number_of_rows)
             )
         if new_columns_nicknames is not None:
-            self.columns_labels.extend(new_columns_nicknames)
+            expanded.columns_labels.extend(new_columns_nicknames)
         else:
-            self.columns_labels = list(
-                range(self.number_of_columns + new_number_of_columns)
+            expanded.columns_labels = list(
+                range(expanded.number_of_columns + new_number_of_columns)
             )
         # Or define auto generated nicknames as an integer sequence from 0
         if new_columns_nicknames is None:
-            self.columns_labels = list(
-                range(self.number_of_columns + new_number_of_columns)
+            expanded.columns_labels = list(
+                range(expanded.number_of_columns + new_number_of_columns)
             )
         # assign the help texts
-        if self.rows_help_text is not None and new_number_of_rows > 0:
+        if expanded.rows_help_text is not None and new_number_of_rows > 0:
             if new_rows_help_text is None:
                 raise ValueError("Rows help texts has to set.")
-            self.rows_help_text.extend(new_rows_help_text)
-        if self.columns_help_text is not None and new_number_of_columns > 0:
+            expanded.rows_help_text.extend(new_rows_help_text)
+        if expanded.columns_help_text is not None \
+                and new_number_of_columns > 0:
             if new_columns_help_text is None:
                 raise ValueError("Columns help texts has to set.")
-            self.columns_help_text.extend(new_columns_help_text)
+            expanded.columns_help_text.extend(new_columns_help_text)
 
         # Modify the number of rows/columns
-        self.number_of_rows += new_number_of_rows
-        self.number_of_columns += new_number_of_columns
+        expanded.number_of_rows += new_number_of_rows
+        expanded.number_of_columns += new_number_of_columns
+
+        # Return new expanded indices
+        return expanded

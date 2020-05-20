@@ -1,10 +1,11 @@
 # Simple Portable Python Spreadsheet Generator
 Author: David Salac <http://github.com/david-salac>
 
-Simple spreadsheet that keeps tracks of each operations in defined languages.
+Simple spreadsheet that keeps tracks of each operation in defined languages.
 Logic allows export sheets to Excel files (and see how each cell is computed),
 to the JSON strings with description of computation e. g. in native language.
-It also allows to reconstruct behaviours in native Python with Numpy.
+Other formats like CSV and Markdown (MD) are also supported. It also allows
+to reconstruct behaviours in native Python with NumPy.
 
 ## Software User Manual (SUM), how to use it?
 ### Installation

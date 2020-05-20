@@ -1,11 +1,11 @@
 from numbers import Number
-from typing import Tuple, List, Dict, Union
+from typing import Tuple, List, Dict, Union, Optional
 import copy
 
 import xlsxwriter
 
 from .cell import Cell
-from .cell_indices import CellIndices
+from .cell_indices import CellIndices, T_lg_col_row
 from .cell_type import CellType
 from .cell_slice import CellSlice
 
@@ -165,6 +165,44 @@ class Spreadsheet(object):
         self.loc = self._Location(self, False)
         # To make accessible shortcuts for functionality
         self.fn = self._Functionality(self)
+
+    @staticmethod
+    def create_new_sheet(number_of_rows: int,
+                         number_of_columns: int,
+                         rows_columns: Optional[T_lg_col_row] = None,
+                         /, *,  # noqa E999
+                         rows_labels: List[str] = None,
+                         columns_labels: List[str] = None,
+                         rows_help_text: List[str] = None,
+                         columns_help_text: List[str] = None,
+                         excel_append_labels: bool = True) -> 'Spreadsheet':
+        """Direct way of creating instance.
+
+        Args:
+            number_of_rows (int): Number of rows.
+            number_of_columns (int): Number of columns.
+            rows_columns (T_lg_col_row): List of all row names and column names
+                for each language.
+            rows_labels (List[str]): List of masks (nicknames) for row
+                names.
+            columns_labels (List[str]): List of masks (nicknames) for column
+                names.
+            rows_help_text (List[str]): List of help texts for each row.
+            columns_help_text (List[str]): List of help texts for each column.
+            excel_append_labels (bool): If True, one row and column is added
+                on the beginning of the sheet as a offset for labels.
+
+        Returns:
+            Spreadsheet: New instance of spreadsheet.
+        """
+        class_index = CellIndices(number_of_rows, number_of_columns,
+                                  rows_columns,
+                                  rows_labels=rows_labels,
+                                  columns_labels=columns_labels,
+                                  rows_help_text=rows_help_text,
+                                  columns_help_text=columns_help_text,
+                                  excel_append_labels=excel_append_labels)
+        return Spreadsheet(class_index)
 
     def _initialise_array(self) -> T_sheet:
         """Initialise the first empty spreadsheet array on the beginning.

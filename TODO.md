@@ -2,17 +2,13 @@
 ## BUGS
 
 ## IMPORTANT FEATURES
-1. Check grammars
-1. Sheet as a grammar controller
-1. Add grammar (from Sheet as a grammar controller - some 
-    static method)
 ---
 1. add comprehensive README.md
 1. demo
-1. docstrings for everything
 1. unittest for everything
 ---
 1. Independent package with setup
+1. Migrate to PyPi.org
 ---
 1. simple test to avoid write to itself(?)
 # DONE:
@@ -36,3 +32,10 @@
 1. Functionality shortcuts
 1. shortcuts for everything (unary functions)
 1. Styles for excel labels
+1. docstrings for everything
+1. Initialise directly using static method of CellIndex in
+    the sheet (simply without creating instance of CellIndex)
+1. Sheet as a grammar controller (No!, Independent utils)
+1. Add grammar (from Sheet as a grammar controller - some 
+    static method) (No!, Independent utils)
+1. Check grammars that are added
