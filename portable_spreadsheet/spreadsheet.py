@@ -605,7 +605,7 @@ class Spreadsheet(object):
                 values[x_start_key][x[idx_x]]['help_text'] = x_helptext[idx_x]
         return values
 
-    def values_to_string(self) -> str:
+    def to_string_of_values(self) -> str:
         """Export values inside table to the Python array definition string.
 
         Returns:
