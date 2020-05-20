@@ -2,7 +2,6 @@
 ## BUGS
 
 ## IMPORTANT FEATURES
-1. Description of export methods in README.md
 1. Possibly the cell style inside cell (for Excel)
 ---
 1. Unittest for everything
@@ -42,3 +41,4 @@
 1. demo
 1. Independent package with setup
 1. simple test to avoid write to itself(? probably not realistic)
+1. Description of export methods in README.md
