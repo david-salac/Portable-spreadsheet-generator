@@ -390,8 +390,8 @@ for col_idx in range(8):
     # III) Values of girls
     sheet.iloc[23, col_idx] = sheet.iloc[11:21, col_idx].average()
 
-# Export results to Excel file:
-sheet.to_excel("outputs/student_marks.xlsx", sheet_name="Marks")
+# Export results to Excel file, TODO: change the target directory:
+sheet.to_excel("OUTPUTS/student_marks.xlsx", sheet_name="Marks")
 
 # Top print table as Markdown
 print(sheet.to_markdown())
