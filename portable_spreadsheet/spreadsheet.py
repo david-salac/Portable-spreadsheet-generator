@@ -447,7 +447,9 @@ class Spreadsheet(object):
         """
         return self.cell_indices.shape
 
-    def to_excel(self, file_path: str, *,
+    def to_excel(self,
+                 file_path: str,
+                 /, *,  # noqa E999
                  sheet_name: str = "Results",
                  spaces_replacement: str = ' ',
                  label_format: dict = {'bold': True}) -> None:
@@ -633,7 +635,7 @@ class Spreadsheet(object):
         Args:
             spaces_replacement (str): String replacement for spaces.
             sep (str): Separator of values in a row.
-            line_terminator (str): Ending sequence (character) of a rows.
+            line_terminator (str): Ending sequence (character) of a row.
             na_rep (str): Replacement for the missing data.
 
         Returns:

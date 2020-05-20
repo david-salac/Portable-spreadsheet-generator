@@ -309,15 +309,89 @@ word_in_language_lang = word['lang']
 ### Exporting the results
 There are various methods available for exporting the results:
 * `to_excel`: Export the sheet to the Excel-compatible file.
-* `to_dictionary`: Export the sheet to the dictionary (`dict` type)
-that can be used for creating of JSON.
-* `to_string_of_values`: Export values to the string that looks like
-Python array definition string.
-* `to_csv`: Export the values to the CSV compatible string (that can be
-saved to the file)
+* `to_dictionary`: Export the sheet to the dictionary (`dict` type) that
+can be used for creating of JSON.
+* `to_string_of_values`: Export values to the string that looks like Python
+array definition string.
+* `to_csv`: Export the values to the CSV compatible string (that can be saved
+to the file)
 * `to_markdown`: Export the values to MD (Markdown) file format string.
 Defined as a table.
 * `to_numpy`: Export the sheet as a numpy.ndarray object.
+
+#### Exporting to Excel
+It can be done using the interface:
+```
+sheet.to_excel(file_path: str, /, *, sheet_name: str = "Results", 
+               spaces_replacement: str = ' ', 
+               label_format: dict = {'bold': True})
+```
+The only required argument is the path to the destination file (positional
+only parameter). Other parameters are passed as keywords (non-positional only). 
+* **file_path** (str): Path to the target .xlsx file. (REQUIRED, only
+positional)
+* sheet_name (str): The name of the sheet inside the file.
+* spaces_replacement (str): All the spaces in the rows and columns
+descriptions (labels) are replaced with this string.
+* label_format (dict): Excel styles for the label rows and columns, see
+documentation: https://xlsxwriter.readthedocs.io/format.html
+
+#### Exporting to the dictionary
+It can be done using the interface:
+```
+sheet.to_excel(languages: List[str] = None, /, *, by_row: bool = True,
+               languages_pseudonyms: List[str] = None,
+               spaces_replacement: str = ' ')
+```
+Parameters are (all optional):
+
+* languages (List[str]): List of languages that should be exported.
+* by_row (bool): If True, rows are the first indices and columns are the
+second in the order. If False it is vice-versa.
+* languages_pseudonyms (List[str]): Rename languages to the strings inside
+this list.
+* spaces_replacement (str): All the spaces in the rows and columns
+descriptions (labels) are replaced with this string.
+
+**The return value is:** 
+
+Dictionary with keys: 1. column/row, 2. row/column, 3. language or
+language pseudonym or 'value' keyword for values -> value as a value or
+as a cell building string.
+
+#### Exporting to the CSV
+It can be done using the interface:
+```
+sheet.to_excel(*, spaces_replacement: str = ' ', sep: str = ',',
+               line_terminator: str = '\n', na_rep: str = '')
+```
+Parameters are (all optional):
+
+* spaces_replacement (str): String replacement for spaces.
+* sep (str): Separator of values in a row.
+* line_terminator (str): Ending sequence (character) of a row.
+* na_rep (str): Replacement for the missing data.
+
+
+**The return value is:** 
+
+CSV of the values as a string.
+
+#### Exporting to Markdown (MD) format
+It can be done using the interface:
+```
+sheet.to_markdown(*, spaces_replacement: str = ' ', 
+                  top_right_corner_text: str = "Sheet", na_rep: str = '')
+```
+Parameters are (all optional):
+
+* spaces_replacement (str): String replacement for spaces.
+* top_right_corner_text (str): Text in the top right corner.
+* na_rep (str): Replacement for the missing data.
+
+**The return value is:** 
+
+Markdown (MD) compatible table of the values as a string.
 
 ## Software User Manual (SUM), how to use it?
 ### Installation

@@ -2,8 +2,10 @@
 ## BUGS
 
 ## IMPORTANT FEATURES
+1. Description of export methods in README.md
+1. Possibly the cell style inside cell (for Excel)
 ---
-1. unittest for everything
+1. Unittest for everything
 ---
 1. Migrate to PyPi.org
 ---
