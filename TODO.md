@@ -2,15 +2,16 @@
 ## BUGS
 
 ## IMPORTANT FEATURES
+1. Expanding cells directly ()
 ---
-1. add comprehensive README.md
+1. add comprehensive README.md + demo ``
 1. demo
 1. unittest for everything
 ---
 1. Independent package with setup
 1. Migrate to PyPi.org
 ---
-1. simple test to avoid write to itself(?)
+1. simple test to avoid write to itself(? probably not realistic)
 # DONE:
 1. Help texts for column/row indicies
 1. Indices generator rather as a parameter (not global parameter)

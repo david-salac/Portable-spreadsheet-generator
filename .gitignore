@@ -5,3 +5,4 @@ __pycache__
 .idea/
 .idea
 devel_*
+outputs/*

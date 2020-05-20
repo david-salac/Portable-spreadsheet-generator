@@ -341,9 +341,15 @@ class Spreadsheet(object):
                 _x_start = 0
                 if index_integer[0].start:
                     _x_start = int(index_integer[0].start)
+                    # Negative index starts from end
+                    if _x_start < 0:
+                        _x_start = self.shape[0] + _x_start
                 _x_end = self.shape[0]
                 if index_integer[0].stop:
                     _x_end = int(index_integer[0].stop)
+                    # Negative index starts from end
+                    if _x_end < 0:
+                        _x_end = self.shape[0] + _x_end
                 _x_step = 1
                 if index_integer[0].step:
                     _x_step = int(index_integer[0].step)
@@ -358,9 +364,15 @@ class Spreadsheet(object):
                 _y_start = 0
                 if index_integer[1].start:
                     _y_start = int(index_integer[1].start)
+                    # Negative index starts from end
+                    if _y_start < 0:
+                        _y_start = self.shape[1] + _y_start
                 _y_end = self.shape[1]
                 if index_integer[1].stop:
                     _y_end = int(index_integer[1].stop)
+                    # Negative index starts from end
+                    if _y_end < 0:
+                        _y_end = self.shape[1] + _y_end
                 _y_step = 1
                 if index_integer[1].step:
                     _y_step = int(index_integer[1].step)

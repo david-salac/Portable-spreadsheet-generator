@@ -13,6 +13,8 @@ T_lg_col_row = Dict[str, Tuple[List[str], List[str]]]
 
 
 class CellIndices(object):
+    """Represent the indices of the cells and its labels for each language.
+    """
     def __init__(self,
                  number_of_rows: int,
                  number_of_columns: int,
