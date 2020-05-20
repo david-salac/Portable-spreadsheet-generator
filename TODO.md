@@ -2,7 +2,6 @@
 ## BUGS
 
 ## IMPORTANT FEATURES
-1. Expanding cells directly ()
 ---
 1. add comprehensive README.md + demo ``
 1. demo
@@ -40,3 +39,4 @@
 1. Add grammar (from Sheet as a grammar controller - some 
     static method) (No!, Independent utils)
 1. Check grammars that are added
+1. method to_numpy() - behaving like in Pandas

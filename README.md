@@ -90,6 +90,7 @@ There is also a functionality related to setting the values to some constant or 
 ### Installation
 To install package use the command:
 
+TODO rewrite this (to cloning the current)
 `pip install portable-spreadsheet`
 
 ### Demo
@@ -143,7 +144,7 @@ for row_idx in range(21):
     sheet.iloc[row_idx, 5] = sheet.iloc[row_idx, 0:5].max()
     # II) Minimal value
     sheet.iloc[row_idx, 6] = sheet.iloc[row_idx, 0:5].min()
-    # II) Mean value
+    # III) Mean value
     sheet.iloc[row_idx, 7] = sheet.iloc[row_idx, 0:5].mean()
 # Insert the similar to rows:
 for col_idx in range(8):
@@ -151,7 +152,7 @@ for col_idx in range(8):
     sheet.iloc[21, col_idx] = sheet.iloc[0:21, col_idx].average()
     # II) Values of boys
     sheet.iloc[22, col_idx] = sheet.iloc[0:11, col_idx].average()
-    # II) Values of girls
+    # III) Values of girls
     sheet.iloc[23, col_idx] = sheet.iloc[11:21, col_idx].average()
 
 # Export results to Excel file:

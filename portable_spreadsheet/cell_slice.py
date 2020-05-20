@@ -194,3 +194,22 @@ class CellSlice(object):
         """Overrides operator <<= to do a set functionality.
         """
         self.set(other)
+
+    def to_numpy(self) -> np.ndarray:
+        """Exports the values to the numpy.ndarray.
+
+        Returns:
+            numpy.ndarray: 2 dimensions array with values
+        """
+        results = np.zeros(self.shape)
+        i, j = 0, 0  # Indices relative to results
+        for row in range(self.start_idx[0], self.end_idx[0] + 1):
+            j = 0
+            for col in range(self.start_idx[1], self.end_idx[1] + 1):
+                if value := self.driving_sheet.iloc[row, col] is not None:  # noqa E999
+                    results[i, j] = value
+                else:
+                    results[i, j] = np.nan
+                j += 1
+            i += 1
+        return results

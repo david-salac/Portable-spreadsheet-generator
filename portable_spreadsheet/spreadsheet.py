@@ -3,6 +3,7 @@ from typing import Tuple, List, Dict, Union, Optional
 import copy
 
 import xlsxwriter
+import numpy
 
 from .cell import Cell
 from .cell_indices import CellIndices, T_lg_col_row
@@ -182,7 +183,7 @@ class Spreadsheet(object):
             number_of_rows (int): Number of rows.
             number_of_columns (int): Number of columns.
             rows_columns (T_lg_col_row): List of all row names and column names
-                for each language.
+                for each user defined language.
             rows_labels (List[str]): List of masks (nicknames) for row
                 names.
             columns_labels (List[str]): List of masks (nicknames) for column
@@ -190,7 +191,7 @@ class Spreadsheet(object):
             rows_help_text (List[str]): List of help texts for each row.
             columns_help_text (List[str]): List of help texts for each column.
             excel_append_labels (bool): If True, one row and column is added
-                on the beginning of the sheet as a offset for labels.
+                on the beginning of the sheet as an offset for labels.
 
         Returns:
             Spreadsheet: New instance of spreadsheet.
@@ -709,3 +710,18 @@ class Spreadsheet(object):
                     elif col_idx == self.cell_indices.shape[1] - 1:
                         export += " |\n"
         return export
+
+    def to_numpy(self) -> numpy.ndarray:
+        """Exports the values to the numpy.ndarray.
+
+        Returns:
+            numpy.ndarray: 2 dimensions array with values
+        """
+        results = numpy.zeros(self.shape)
+        for row_idx in range(self.shape[0]):
+            for col_idx in range(self.shape[1]):
+                if value := self.iloc[row_idx, col_idx].value is not None:  # noqa E999
+                    results[row_idx, col_idx] = value
+                else:
+                    results[row_idx, col_idx] = numpy.nan
+        return results
