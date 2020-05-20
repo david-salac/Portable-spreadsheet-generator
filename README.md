@@ -329,7 +329,7 @@ python setup.py install
 ```
 
 ### Demo
-The following demo contains the simple example with aggregations.
+The following demo contains a simple example with aggregations.
 ```
 import portable_spreadsheet as ps
 import numpy as np

@@ -3,14 +3,10 @@
 
 ## IMPORTANT FEATURES
 ---
-1. add comprehensive README.md + demo ``
-1. demo
 1. unittest for everything
 ---
-1. Independent package with setup
 1. Migrate to PyPi.org
 ---
-1. simple test to avoid write to itself(? probably not realistic)
 # DONE:
 1. Help texts for column/row indicies
 1. Indices generator rather as a parameter (not global parameter)
@@ -40,3 +36,7 @@
     static method) (No!, Independent utils)
 1. Check grammars that are added
 1. method to_numpy() - behaving like in Pandas
+1. add comprehensive README.md + demo ``
+1. demo
+1. Independent package with setup
+1. simple test to avoid write to itself(? probably not realistic)
