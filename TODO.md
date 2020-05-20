@@ -1,5 +1,6 @@
 # TODO:
 ## BUGS
+1. To numpy does not work
 
 ## IMPORTANT FEATURES
 1. Possibly the cell style inside cell (for Excel)

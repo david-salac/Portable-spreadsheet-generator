@@ -600,8 +600,8 @@ class Spreadsheet(object):
                 pseudolang_and_val['value'] = cell.value
                 y_values[y_start_key][y[idx_y]] = pseudolang_and_val
                 if y_helptext is not None:
-                    y_values[y_start_key][y[idx_x]]['help_text'] = \
-                        x_helptext[idx_x]
+                    y_values[y_start_key][y[idx_y]]['help_text'] = \
+                        y_helptext[idx_y]
             values[x_start_key][x[idx_x]] = y_values
             if x_helptext is not None:
                 values[x_start_key][x[idx_x]]['help_text'] = x_helptext[idx_x]
@@ -722,8 +722,10 @@ class Spreadsheet(object):
         results = numpy.zeros(self.shape)
         for row_idx in range(self.shape[0]):
             for col_idx in range(self.shape[1]):
-                if value := self.iloc[row_idx, col_idx].value is not None:  # noqa E999
-                    results[row_idx, col_idx] = value
+                if self.iloc[row_idx, col_idx].value is not None:  # noqa E999
+                    value = self.iloc[row_idx, col_idx].value
+                    if isinstance(value, Number):
+                        results[row_idx, col_idx] = value
                 else:
                     results[row_idx, col_idx] = numpy.nan
         return results
