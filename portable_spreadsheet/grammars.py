@@ -81,6 +81,12 @@ EXCEL = {
             "suffix": "",
             "separator": "/",
         },
+        # like 7%3
+        "modulo": {
+            "prefix": "MOD(",
+            "suffix": ")",
+            "separator": ",",
+        },
         # like 7^3
         "power": {
             "prefix": "",
@@ -108,6 +114,14 @@ EXCEL = {
             "prefix": "MAX(",
             "suffix": ")",
         },
+        "stdev": {
+            "prefix": "STDEV(",
+            "suffix": ")",
+        },
+        "median": {
+            "prefix": "MEDIAN(",
+            "suffix": ")",
+        },
         # BASIC OPERATIONS
         "exponential": {
             "prefix": "EXP(",
@@ -115,6 +129,26 @@ EXCEL = {
         },
         "logarithm": {
             "prefix": "LN(",
+            "suffix": ")",
+        },
+        "ceil": {
+            "prefix": "CEILING(",
+            "suffix": ")",
+        },
+        "floor": {
+            "prefix": "FLOOR(",
+            "suffix": ")",
+        },
+        "round": {
+            "prefix": "ROUND(",
+            "suffix": ")",
+        },
+        "abs": {
+            "prefix": "ABS(",
+            "suffix": ")",
+        },
+        "sqrt": {
+            "prefix": "SQRT(",
             "suffix": ")",
         },
     },
@@ -206,6 +240,12 @@ NATIVE = {
             "suffix": "",
             "separator": " / ",
         },
+        # like 7%3
+        "modulo": {
+            "prefix": "",
+            "suffix": "",
+            "separator": " mod ",
+        },
         # like 7^3
         "power": {
             "prefix": "",
@@ -233,6 +273,14 @@ NATIVE = {
             "prefix": "maximum of ",
             "suffix": "",
         },
+        "stdev": {
+            "prefix": "standard deviation of ",
+            "suffix": "",
+        },
+        "median": {
+            "prefix": "median of ",
+            "suffix": "",
+        },
         # BASIC OPERATIONS
         "exponential": {
             "prefix": "exponential function of ",
@@ -240,6 +288,26 @@ NATIVE = {
         },
         "logarithm": {
             "prefix": "logarithm of ",
+            "suffix": "",
+        },
+        "ceil": {
+            "prefix": "ceiling function of ",
+            "suffix": "",
+        },
+        "floor": {
+            "prefix": "floor function of ",
+            "suffix": "",
+        },
+        "round": {
+            "prefix": "round of ",
+            "suffix": "",
+        },
+        "abs": {
+            "prefix": "absolute value of ",
+            "suffix": "",
+        },
+        "sqrt": {
+            "prefix": "square root of ",
             "suffix": "",
         },
     },
@@ -331,6 +399,12 @@ PYTHON_NUMPY = {
             "suffix": "",
             "separator": "/",
         },
+        # like 7%3
+        "modulo": {
+            "prefix": "",
+            "suffix": "",
+            "separator": "%",
+        },
         # like 7^3
         "power": {
             "prefix": "",
@@ -358,6 +432,14 @@ PYTHON_NUMPY = {
             "prefix": "np.max(",
             "suffix": ")",
         },
+        "stdev": {
+            "prefix": "np.std(",
+            "suffix": ")",
+        },
+        "median": {
+            "prefix": "np.median(",
+            "suffix": ")",
+        },
         # BASIC OPERATIONS
         "exponential": {
             "prefix": "np.exp(",
@@ -365,6 +447,26 @@ PYTHON_NUMPY = {
         },
         "logarithm": {
             "prefix": "np.log(",
+            "suffix": ")",
+        },
+        "ceil": {
+            "prefix": "np.ceil(",
+            "suffix": ")",
+        },
+        "floor": {
+            "prefix": "np.floor(",
+            "suffix": ")",
+        },
+        "round": {
+            "prefix": "np.round(",
+            "suffix": ")",
+        },
+        "abs": {
+            "prefix": "np.abs(",
+            "suffix": ")",
+        },
+        "sqrt": {
+            "prefix": "np.sqrt(",
             "suffix": ")",
         },
     },
@@ -498,6 +600,12 @@ GRAMMAR_PATTERN: dict = {
             "suffix": str,
             "separator": str,  # Typically /
         },
+        # Modulo, like 7%3
+        "modulo": {
+            "prefix": str,
+            "suffix": str,
+            "separator": str,  # Typically %
+        },
         # Power to, like 7^3
         "power": {
             "prefix": str,
@@ -526,6 +634,16 @@ GRAMMAR_PATTERN: dict = {
             "prefix": str,  # Like MIN(
             "suffix": str,  # Like )
         },
+        # Standard deviation of aggregated cells.
+        "stdev": {
+            "prefix": str,
+            "suffix": str,
+        },
+        # Median of aggregated cells.
+        "median": {
+            "prefix": str,
+            "suffix": str,
+        },
         # Maximum of aggregated cells.
         "maximum": {
             "prefix": str,  # Like MAX(
@@ -542,6 +660,31 @@ GRAMMAR_PATTERN: dict = {
         "logarithm": {
             "prefix": str,  # Like LN(
             "suffix": str,  # Like )
+        },
+        # Ceiling function
+        "ceil": {
+            "prefix": str,
+            "suffix": str,
+        },
+        # Floor function
+        "floor": {
+            "prefix": str,
+            "suffix": str,
+        },
+        # Round the number
+        "round": {
+            "prefix": str,
+            "suffix": str,
+        },
+        # Absolute value
+        "abs": {
+            "prefix": str,
+            "suffix": str,
+        },
+        # Absolute value
+        "sqrt": {
+            "prefix": str,
+            "suffix": str,
         },
     },
     # Brackets around the statement

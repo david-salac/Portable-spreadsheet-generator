@@ -97,6 +97,7 @@ class WordConstructor(object):
         """
         return WordConstructor._binary_operation(first, second, "add")
 
+    @staticmethod
     def subtract(first, second, /) -> 'WordConstructor':  # noqa E225
         """Subtract binary operation (-).
 
@@ -110,6 +111,7 @@ class WordConstructor(object):
         """
         return WordConstructor._binary_operation(first, second, "subtract")
 
+    @staticmethod
     def multiply(first, second, /) -> 'WordConstructor':  # noqa E225
         """Multiply binary operation (*).
 
@@ -123,6 +125,7 @@ class WordConstructor(object):
         """
         return WordConstructor._binary_operation(first, second, "multiply")
 
+    @staticmethod
     def divide(first, second, /) -> 'WordConstructor':  # noqa E225
         """Divide binary operation (/).
 
@@ -136,6 +139,21 @@ class WordConstructor(object):
         """
         return WordConstructor._binary_operation(first, second, "divide")
 
+    @staticmethod
+    def modulo(first, second, /) -> 'WordConstructor':  # noqa E225
+        """Modulo binary operation (%).
+
+        Args:
+            first (Cell): The first cell (operand) of the operator.
+            second (Cell): The second cell (operand) of the operator.
+
+        Returns:
+            WordConstructor: Word constructed using binary operator and two
+                operands.
+        """
+        return WordConstructor._binary_operation(first, second, "modulo")
+
+    @staticmethod
     def power(first, second, /) -> 'WordConstructor':  # noqa E225
         """Power binary operation (**).
 
@@ -398,7 +416,7 @@ class WordConstructor(object):
         """Add brackets around the cell.
 
         Args:
-            cell (Cell): The cell around that brackets are added.
+            cell (Cell): The cell around which brackets are added.
 
         Returns:
             WordConstructor: Word with brackets.
@@ -414,7 +432,7 @@ class WordConstructor(object):
         """Add logarithm definition context around the cell.
 
         Args:
-            cell (Cell): The cell around that logarithm context is added.
+            cell (Cell): The cell around which logarithm context is added.
 
         Returns:
             WordConstructor: Word with logarithm context.
@@ -430,7 +448,7 @@ class WordConstructor(object):
         """Add exponential definition context around the cell.
 
         Args:
-            cell (Cell): The cell around that exponential context is added.
+            cell (Cell): The cell around which exponential context is added.
 
         Returns:
             WordConstructor: Word with exponential context.
@@ -439,4 +457,84 @@ class WordConstructor(object):
             cell=cell,
             prefix_path=['operations', 'exponential', 'prefix'],
             suffix_path=['operations', 'exponential', 'suffix']
+        )
+
+    @staticmethod
+    def ceil(cell, /) -> 'WordConstructor':  # noqa E225
+        """Add ceiling function definition context around the cell.
+
+        Args:
+            cell (Cell): The cell around which ceiling fn. context is added.
+
+        Returns:
+            WordConstructor: Word with ceiling function context.
+        """
+        return WordConstructor._unary_operator(
+            cell=cell,
+            prefix_path=['operations', 'ceil', 'prefix'],
+            suffix_path=['operations', 'ceil', 'suffix']
+        )
+
+    @staticmethod
+    def floor(cell, /) -> 'WordConstructor':  # noqa E225
+        """Add floor function definition context around the cell.
+
+        Args:
+            cell (Cell): The cell around which floor fn. context is added.
+
+        Returns:
+            WordConstructor: Word with floor function context.
+        """
+        return WordConstructor._unary_operator(
+            cell=cell,
+            prefix_path=['operations', 'floor', 'prefix'],
+            suffix_path=['operations', 'floor', 'suffix']
+        )
+
+    @staticmethod
+    def round(cell, /) -> 'WordConstructor':  # noqa E225
+        """Add rounding function definition context around the cell.
+
+        Args:
+            cell (Cell): The cell around which rounding fn. context is added.
+
+        Returns:
+            WordConstructor: Word with rounding function context.
+        """
+        return WordConstructor._unary_operator(
+            cell=cell,
+            prefix_path=['operations', 'round', 'prefix'],
+            suffix_path=['operations', 'round', 'suffix']
+        )
+
+    @staticmethod
+    def abs(cell, /) -> 'WordConstructor':  # noqa E225
+        """Add absolute value definition context around the cell.
+
+        Args:
+            cell (Cell): The cell around which absolute value context is added.
+
+        Returns:
+            WordConstructor: Word with absolute value function context.
+        """
+        return WordConstructor._unary_operator(
+            cell=cell,
+            prefix_path=['operations', 'abs', 'prefix'],
+            suffix_path=['operations', 'abs', 'suffix']
+        )
+
+    @staticmethod
+    def sqrt(cell, /) -> 'WordConstructor':  # noqa E225
+        """Add square root value definition context around the cell.
+
+        Args:
+            cell (Cell): The cell around which square root context is added.
+
+        Returns:
+            WordConstructor: Word with square root function context.
+        """
+        return WordConstructor._unary_operator(
+            cell=cell,
+            prefix_path=['operations', 'sqrt', 'prefix'],
+            suffix_path=['operations', 'sqrt', 'suffix']
         )

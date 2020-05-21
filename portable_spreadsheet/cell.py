@@ -176,6 +176,21 @@ class Cell(object):
                     cell_type=CellType.computational
                     )
 
+    def modulo(self, other: 'Cell', /) -> 'Cell':  # noqa E225
+        """Modulo of two values.
+
+        Args:
+            other (Cell): Another operand.
+
+        Returns:
+            Cell: self / other
+        """
+        return Cell(value=self.value % other.value,
+                    words=WordConstructor.modulo(self, other),
+                    cell_indices=other.cell_indices,
+                    cell_type=CellType.computational
+                    )
+
     def power(self, other: 'Cell', /) -> 'Cell':  # noqa E225
         """Self power to other.
 
@@ -211,6 +226,10 @@ class Cell(object):
     def __pow__(self, power, modulo=None):
         """Overload the operator '**'."""
         return self.power(power)
+
+    def __mod__(self, other):
+        """Overload the operator '%'."""
+        return self.modulo(other)
     # ==============================
 
     def __str__(self) -> str:
@@ -323,6 +342,38 @@ class Cell(object):
                                    'maximum', np.max)
 
     @staticmethod
+    def stdev(cell_start: 'Cell', cell_end: 'Cell',
+              subset: Iterable['Cell']) -> 'Cell':
+        """Compute the standard deviation of the slice.
+
+        Args:
+            cell_start (Cell): Starting cell of the slice (left top).
+            cell_end: (Cell'): Ending cell of the slice (bottom right).
+            subset (Iterable['Cell']): List of all cells in the subset.
+
+        Returns:
+            Cell: the cell with aggregated and computed results.
+        """
+        return Cell._aggregate_fun(cell_start, cell_end, subset,
+                                   'stdev', np.std)
+
+    @staticmethod
+    def median(cell_start: 'Cell', cell_end: 'Cell',
+               subset: Iterable['Cell']) -> 'Cell':
+        """Compute the median of the slice.
+
+        Args:
+            cell_start (Cell): Starting cell of the slice (left top).
+            cell_end: (Cell'): Ending cell of the slice (bottom right).
+            subset (Iterable['Cell']): List of all cells in the subset.
+
+        Returns:
+            Cell: the cell with aggregated and computed results.
+        """
+        return Cell._aggregate_fun(cell_start, cell_end, subset,
+                                   'median', np.median)
+
+    @staticmethod
     def _aggregate_fun(
             cell_start: 'Cell',
             cell_end: 'Cell',
@@ -414,6 +465,86 @@ class Cell(object):
         """
         return Cell(value=np.exp(other.value),
                     words=WordConstructor.logarithm(other),
+                    cell_indices=other.cell_indices,
+                    cell_type=CellType.computational
+                    )
+
+    @staticmethod
+    def ceil(other: 'Cell', /) -> 'Cell':  # noqa E225
+        """Ceiling function of the value in the cell.
+
+        Args:
+            other (Cell): Argument of the ceiling function.
+
+        Returns:
+            Cell: ceiling function value of the input
+        """
+        return Cell(value=np.ceil(other.value),
+                    words=WordConstructor.ceil(other),
+                    cell_indices=other.cell_indices,
+                    cell_type=CellType.computational
+                    )
+
+    @staticmethod
+    def floor(other: 'Cell', /) -> 'Cell':  # noqa E225
+        """Floor function of the value in the cell.
+
+        Args:
+            other (Cell): Argument of the floor function.
+
+        Returns:
+            Cell: floor function value of the input
+        """
+        return Cell(value=np.floor(other.value),
+                    words=WordConstructor.floor(other),
+                    cell_indices=other.cell_indices,
+                    cell_type=CellType.computational
+                    )
+
+    @staticmethod
+    def round(other: 'Cell', /) -> 'Cell':  # noqa E225
+        """Round the value in the cell.
+
+        Args:
+            other (Cell): Argument of the rounding function.
+
+        Returns:
+            Cell: round of the input numeric value
+        """
+        return Cell(value=np.round(other.value),
+                    words=WordConstructor.round(other),
+                    cell_indices=other.cell_indices,
+                    cell_type=CellType.computational
+                    )
+
+    @staticmethod
+    def abs(other: 'Cell', /) -> 'Cell':  # noqa E225
+        """Absolute value of the value in the cell.
+
+        Args:
+            other (Cell): Argument of the absolute value function.
+
+        Returns:
+            Cell: absolute value of the input numeric value
+        """
+        return Cell(value=np.abs(other.value),
+                    words=WordConstructor.abs(other),
+                    cell_indices=other.cell_indices,
+                    cell_type=CellType.computational
+                    )
+
+    @staticmethod
+    def sqrt(other: 'Cell', /) -> 'Cell':  # noqa E225
+        """Square root of the value in the cell.
+
+        Args:
+            other (Cell): Argument of the square root function.
+
+        Returns:
+            Cell: square root of the input numeric value
+        """
+        return Cell(value=np.sqrt(other.value),
+                    words=WordConstructor.sqrt(other),
                     cell_indices=other.cell_indices,
                     cell_type=CellType.computational
                     )

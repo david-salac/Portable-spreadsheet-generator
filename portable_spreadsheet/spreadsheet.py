@@ -149,6 +149,66 @@ class Spreadsheet(object):
             """
             return Cell.exponential(value)
 
+        @staticmethod
+        def floor(value: Cell) -> Cell:
+            """Floor function of the value.
+
+            Args:
+                value (Cell): Value to computation.
+
+            Returns:
+                Cell: Floor function of the input value.
+            """
+            return Cell.floor(value)
+
+        @staticmethod
+        def ceil(value: Cell) -> Cell:
+            """Ceiling function of the value.
+
+            Args:
+                value (Cell): Value to computation.
+
+            Returns:
+                Cell: Ceiling function of the input value.
+            """
+            return Cell.ceil(value)
+
+        @staticmethod
+        def round(value: Cell) -> Cell:
+            """Round the numeric value.
+
+            Args:
+                value (Cell): Value to computation.
+
+            Returns:
+                Cell: Round of the input value.
+            """
+            return Cell.round(value)
+
+        @staticmethod
+        def abs(value: Cell) -> Cell:
+            """Absolute value of the input.
+
+            Args:
+                value (Cell): Value to computation.
+
+            Returns:
+                Cell: Absolute value of the input value.
+            """
+            return Cell.abs(value)
+
+        @staticmethod
+        def sqrt(value: Cell) -> Cell:
+            """Square root of the input.
+
+            Args:
+                value (Cell): Value to computation.
+
+            Returns:
+                Cell: Square root of the input value.
+            """
+            return Cell.sqrt(value)
+
     def __init__(self,
                  cell_indices: CellIndices):
         """Initialize the spreadsheet object

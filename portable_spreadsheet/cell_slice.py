@@ -104,6 +104,22 @@ class CellSlice(object):
         """
         return self.mean()
 
+    def stdev(self) -> Cell:
+        """Compute the standard deviation of the aggregate.
+
+        Returns:
+            Cell: a new cell with the result.
+        """
+        return Cell.stdev(self.start_cell, self.end_cell, self.cell_subset)
+
+    def median(self) -> Cell:
+        """Compute the median of the aggregate.
+
+        Returns:
+            Cell: a new cell with the result.
+        """
+        return Cell.median(self.start_cell, self.end_cell, self.cell_subset)
+
     def _set_value_on_position(self, other: Union[Cell, Number],
                                row: int, col: int) -> None:
         """Set the cell on given position in the spreadsheet to the value
@@ -206,8 +222,11 @@ class CellSlice(object):
         for row in range(self.start_idx[0], self.end_idx[0] + 1):
             j = 0
             for col in range(self.start_idx[1], self.end_idx[1] + 1):
-                if value := self.driving_sheet.iloc[row, col] is not None:  # noqa E999
-                    results[i, j] = value
+                if (cell := self.driving_sheet.iloc[row, col]) is not None:  # noqa E999
+                    if isinstance(cell.value, Number):
+                        results[i, j] = cell.value
+                    else:
+                        results[i, j] = np.nan
                 else:
                     results[i, j] = np.nan
                 j += 1

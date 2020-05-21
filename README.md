@@ -53,14 +53,23 @@ Currently, the supported operations are:
 * Subtracting: (method subtract), operator -, simply subtract two cells.
 * Multiplying: (method multiply), operator *, simply multiply two cells.
 * Dividing: (method divide), operator /, simply divide two cells.
+* Modulo: (method remainder after dividing), operator %, find remainder after
+dividing.
 * Power to: (method power), operator **, simply compute cell power to another
 cell.
 * Brackets: add brackets around the formula.
-* Aggregated functions: sum, product, minimum, maximum, average (aka mean)
-that operates with a set of cells.
+* Ceil: (ceiling function or round up), simply compute a ceiling function at 
+a cell.
+* Floor: (floor function or round down), simply compute a floor function at
+a cell.
+* Round: (round the cell value), simply round a numerical value at a cell.
+* Absolute value: (absolute value function), simply get an absolute value of
+a cell.
 * Logarithm: (method logarithm), simply compute a natural logarithm of a cell.
 * Exponential: (method exponential), simply compute an exponential value of a
 cell.
+* Aggregated functions: sum, product, minimum, maximum, average (aka mean),
+standard deviation, median that operates with a set of cells.
 
 The main purpose of the cell is to keep the value (the numerical result of
 the computation) and the word (how is an operation or constant represented
@@ -158,11 +167,11 @@ sheet = ps.SpreadSheet.create_new_sheet(
 ```
 Other (keywords) arguments:
 
-1. rows_labels (List[str]): List of masks (nicknames) for row names.
-2. columns_labels (List[str]): List of masks (nicknames) for column names.
-3. rows_help_text (List[str]): List of help texts for each row.
-4. columns_help_text (List[str]): List of help texts for each column.
-5. excel_append_labels (bool): If True, one row and column is added on the
+1. `rows_labels (List[str])`: List of masks (nicknames) for row names.
+2. `columns_labels (List[str])`: List of masks (nicknames) for column names.
+3. `rows_help_text (List[str])`: List of help texts for each row.
+4. `columns_help_text (List[str])`: List of help texts for each column.
+5. `excel_append_labels (bool)`: If True, one row and column is added on the
 beginning of the sheet as an offset for labels.
 
 First two are the most important because they define labels for the columns
@@ -217,6 +226,7 @@ In the case that you want to assign the result of some operation (or just
 reference to another cell), make sure that it does not contains any reference
 to itself (coordinates where you are assigning). It would not work
 correctly otherwise.
+
 ### Working with slices
 Similarly, like in NumPy or Pandas DataFrame, there is a possibility
 how to work with slices (e. g. if you want to select a whole row, column
@@ -233,13 +243,15 @@ sheet.iloc[:,2] = sheet.iloc[1,3]  # Just a reference to a cell
 ```
 #### Aggregate functions
 The slice itself can be used for computations using aggregate functions
-(sum, product, average, minimum, maximum): 
+(sum, product, average, minimum, maximum, standard deviation, median): 
 ```
-sheet.iloc[1,3] = sheet.iloc[:,2].sum()  # Find sum of cells in the 3rd row.
+sheet.iloc[1,3] = sheet.iloc[:,2].sum()  # Find sum of cells in the 3rd column.
 sheet.iloc[1,3] = sheet.iloc[:,2].product()  # Find the product...
 sheet.iloc[1,3] = sheet.iloc[:,2].min()  # Find the minimum...
 sheet.iloc[1,3] = sheet.iloc[:,2].max()  # Find the maximum...
 sheet.iloc[1,3] = sheet.iloc[:,2].mean()  # Find the mean-average...
+sheet.iloc[1,3] = sheet.iloc[:,2].stdev()  # Find the standard deviation...
+sheet.iloc[1,3] = sheet.iloc[:,2].median()  # Find the median...
 ```
 You can also export slice to the NumPy array using `.to_numpy()` method.
 
@@ -255,9 +267,21 @@ constant_cell = sheet.fn.const(7)
 ```
 The value OPERAND bellow is always the reference to another cell in the
 sheet or the constant created as just described.
+
 #### Unary operations
-There are just two unary operations: exponential and logarithm of the value:
+There are the following unary operations: ceiling, floor, round, absolute
+value, square root, exponential and logarithm of the value:
 ```
+# Ceiling function:
+sheet[i,j] = sheet.fn.ceil(OPERAND)
+# Floor function:
+sheet[i,j] = sheet.fn.floor(OPERAND)
+# Round function (round the input):
+sheet[i,j] = sheet.fn.round(OPERAND)
+# Absolute value:
+sheet[i,j] = sheet.fn.abs(OPERAND)
+# Square root:
+sheet[i,j] = sheet.fn.sqrt(OPERAND)
 # Natural logarithm:
 sheet[i,j] = sheet.fn.ln(OPERAND)
 # Exponential function:
@@ -265,16 +289,18 @@ sheet[i,j] = sheet.fn.exp(OPERAND)
 ```
 All unary operators are defined in the `fn` property of the SpreadSheet
 object (together with brackets, that works exactly the same - see bellow).
+
 #### Binary operations
 All the basic operations are covered: adding, subtracting, multiplying,
 dividing, the power to something. They are accessible using the overloaded
-operators (`+`, `-`, `*`, `/`, `**`):
+operators (`+`, `-`, `*`, `/`, `%`, `**`):
 ```
-sheet[i,j] = OPERAND_1 + OPERAND_2
-sheet[i,j] = OPERAND_1 - OPERAND_2
-sheet[i,j] = OPERAND_1 * OPERAND_2
-sheet[i,j] = OPERAND_1 / OPERAND_2
-sheet[i,j] = OPERAND_1 ** OPERAND_2
+sheet[i,j] = OPERAND_1 + OPERAND_2  # adding
+sheet[i,j] = OPERAND_1 - OPERAND_2  # subtracting
+sheet[i,j] = OPERAND_1 * OPERAND_2  # multiplying
+sheet[i,j] = OPERAND_1 / OPERAND_2  # dividing
+sheet[i,j] = OPERAND_1 % OPERAND_2  # modulo
+sheet[i,j] = OPERAND_1 ** OPERAND_2  # power to
 ```
 Operations can be chained in the string:
 ```
@@ -282,6 +308,7 @@ sheet[i,j] = OPERAND_1 + OPERAND_2 * OPERAND_3 ** OPERAND_4
 ```
 The priority of the operators is the same as in normal mathematics. If
 you need to modify priority, you need to use brackets.
+
 #### Brackets for computation
 Brackets are technically speaking just another unary operator. They are
 defined in the `fn` property. They can be used like:
@@ -332,12 +359,12 @@ sheet.to_excel(file_path: str, /, *, sheet_name: str = "Results",
 ```
 The only required argument is the path to the destination file (positional
 only parameter). Other parameters are passed as keywords (non-positional only). 
-* **file_path** (str): Path to the target .xlsx file. (REQUIRED, only
+* `file_path (str)`: Path to the target .xlsx file. (**REQUIRED**, only
 positional)
-* sheet_name (str): The name of the sheet inside the file.
-* spaces_replacement (str): All the spaces in the rows and columns
+* `sheet_name (str)`: The name of the sheet inside the file.
+* `spaces_replacement (str)`: All the spaces in the rows and columns
 descriptions (labels) are replaced with this string.
-* label_format (dict): Excel styles for the label rows and columns, see
+* `label_format (dict)`: Excel styles for the label rows and columns, see
 documentation: https://xlsxwriter.readthedocs.io/format.html
 
 #### Exporting to the dictionary
@@ -349,12 +376,12 @@ sheet.to_excel(languages: List[str] = None, /, *, by_row: bool = True,
 ```
 Parameters are (all optional):
 
-* languages (List[str]): List of languages that should be exported.
-* by_row (bool): If True, rows are the first indices and columns are the
+* `languages (List[str])`: List of languages that should be exported.
+* `by_row (bool)`: If True, rows are the first indices and columns are the
 second in the order. If False it is vice-versa.
-* languages_pseudonyms (List[str]): Rename languages to the strings inside
+* `languages_pseudonyms (List[str])`: Rename languages to the strings inside
 this list.
-* spaces_replacement (str): All the spaces in the rows and columns
+* `spaces_replacement (str)`: All the spaces in the rows and columns
 descriptions (labels) are replaced with this string.
 
 **The return value is:** 
@@ -371,12 +398,11 @@ sheet.to_excel(*, spaces_replacement: str = ' ', sep: str = ',',
 ```
 Parameters are (all optional):
 
-* spaces_replacement (str): All the spaces in the rows and columns descriptions
+* `spaces_replacement (str)`: All the spaces in the rows and columns descriptions
 (labels) are replaced with this string.
-* sep (str): Separator of values in a row.
-* line_terminator (str): Ending sequence (character) of a row.
-* na_rep (str): Replacement for the missing data.
-
+* `sep (str)`: Separator of values in a row.
+* `line_terminator (str)`: Ending sequence (character) of a row.
+* `na_rep (str)`: Replacement for the missing data.
 
 **The return value is:** 
 
@@ -390,10 +416,10 @@ sheet.to_markdown(*, spaces_replacement: str = ' ',
 ```
 Parameters are (all optional):
 
-* spaces_replacement (str): All the spaces in the rows and columns
+* `spaces_replacement (str)`: All the spaces in the rows and columns
 descriptions (labels) are replaced with this string.
-* top_right_corner_text (str): Text in the top right corner.
-* na_rep (str): Replacement for the missing data.
+* `top_right_corner_text (str)`: Text in the top right corner.
+* `na_rep (str)`: Replacement for the missing data.
 
 **The return value is:** 
 
