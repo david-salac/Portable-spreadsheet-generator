@@ -1,13 +1,19 @@
 # TODO:
 ## BUGS
-1. To numpy does not work
 
 ## IMPORTANT FEATURES
+1. Mention to README.md that aggregate functions does not work with identities.
+    And mention reference to identities as a general problem.
 1. Possibly the cell style inside cell (for Excel)
+1. New function: binary: mod (%), aggregate: stdev, modus, median,
+    unary: ceil, floor
+1. Independent styles for cols and rows
+1. New property of cell 'excel_style' (and export it to excel)
+1. Exporting formulas to CSV, MD (option selecting of languages)
+1. Appending to the same Excel file (sheet)
+1. Show outputs in README.md
 ---
 1. Unittest for everything
----
-1. Migrate to PyPi.org
 ---
 # DONE:
 1. Help texts for column/row indicies
@@ -43,3 +49,5 @@
 1. Independent package with setup
 1. simple test to avoid write to itself(? probably not realistic)
 1. Description of export methods in README.md
+1. Migrate to PyPi.org
+1. To numpy does not work
