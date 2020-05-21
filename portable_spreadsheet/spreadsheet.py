@@ -600,8 +600,8 @@ class Spreadsheet(object):
                 pseudolang_and_val['value'] = cell.value
                 y_values[y_start_key][y[idx_y]] = pseudolang_and_val
                 if y_helptext is not None:
-                    y_values[y_start_key][y[idx_x]]['help_text'] = \
-                        x_helptext[idx_x]
+                    y_values[y_start_key][y[idx_y]]['help_text'] = \
+                        y_helptext[idx_y]
             values[x_start_key][x[idx_x]] = y_values
             if x_helptext is not None:
                 values[x_start_key][x[idx_x]]['help_text'] = x_helptext[idx_x]
@@ -633,7 +633,8 @@ class Spreadsheet(object):
         """Export values to the string in the CSV logic
 
         Args:
-            spaces_replacement (str): String replacement for spaces.
+            spaces_replacement (str): All the spaces in the rows and columns
+                descriptions (labels) are replaced with this string.
             sep (str): Separator of values in a row.
             line_terminator (str): Ending sequence (character) of a row.
             na_rep (str): Replacement for the missing data.
@@ -671,7 +672,8 @@ class Spreadsheet(object):
         """Export values to the string in the Markdown (MD) file logic
 
         Args:
-            spaces_replacement (str): String replacement for spaces.
+            spaces_replacement (str): All the spaces in the rows and columns
+                descriptions (labels) are replaced with this string.
             top_right_corner_text (str): Text in the top right corner.
             na_rep (str): Replacement for the missing data.
 
@@ -722,8 +724,11 @@ class Spreadsheet(object):
         results = numpy.zeros(self.shape)
         for row_idx in range(self.shape[0]):
             for col_idx in range(self.shape[1]):
-                if value := self.iloc[row_idx, col_idx].value is not None:  # noqa E999
-                    results[row_idx, col_idx] = value
+                if (value := self.iloc[row_idx, col_idx].value) is not None:  # noqa E999
+                    if isinstance(value, Number):
+                        results[row_idx, col_idx] = value
+                    else:
+                        results[row_idx, col_idx] = numpy.nan
                 else:
                     results[row_idx, col_idx] = numpy.nan
         return results
