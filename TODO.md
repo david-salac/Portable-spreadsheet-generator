@@ -2,9 +2,7 @@
 ## BUGS
 
 ## IMPORTANT FEATURES
-1. Mention to README.md that aggregate functions does not work with identities.
-    And mention reference to identities as a general problem.
-1. Possibly the cell style inside cell (for Excel)
+1. Possibly the cell style inside cell (for Excel) (also for slide)
 1. New function: binary: mod (%), aggregate: stdev, modus, median,
     unary: ceil, floor
 1. Independent styles for cols and rows
@@ -51,3 +49,5 @@
 1. Description of export methods in README.md
 1. Migrate to PyPi.org
 1. To numpy does not work
+1. Mention to README.md that aggregate functions does not work with identities.
+    And mention reference to identities as a general problem.

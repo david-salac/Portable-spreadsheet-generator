@@ -213,6 +213,10 @@ operations with cells:
 ```
 sheet.iloc[1,2] = sheet.iloc[1,3] + sheet.iloc[1,4]
 ```
+In the case that you want to assign the result of some operation (or just
+reference to another cell), make sure that it does not contains any reference
+to itself (coordinates where you are assigning). It would not work
+correctly otherwise.
 ### Working with slices
 Similarly, like in NumPy or Pandas DataFrame, there is a possibility
 how to work with slices (e. g. if you want to select a whole row, column
@@ -367,7 +371,8 @@ sheet.to_excel(*, spaces_replacement: str = ' ', sep: str = ',',
 ```
 Parameters are (all optional):
 
-* spaces_replacement (str): String replacement for spaces.
+* spaces_replacement (str): All the spaces in the rows and columns descriptions
+(labels) are replaced with this string.
 * sep (str): Separator of values in a row.
 * line_terminator (str): Ending sequence (character) of a row.
 * na_rep (str): Replacement for the missing data.
@@ -385,7 +390,8 @@ sheet.to_markdown(*, spaces_replacement: str = ' ',
 ```
 Parameters are (all optional):
 
-* spaces_replacement (str): String replacement for spaces.
+* spaces_replacement (str): All the spaces in the rows and columns
+descriptions (labels) are replaced with this string.
 * top_right_corner_text (str): Text in the top right corner.
 * na_rep (str): Replacement for the missing data.
 
