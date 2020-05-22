@@ -2,23 +2,17 @@
 ## BUGS
 
 ## IMPORTANT FEATURES
-1. New function: binary: _mod (%)_, _aggregate: stdev, median_;
-    **_unary: ceil, floor, round, absolute value, sqrt_; 
-    ternary: if (have binary conditions first)** <- Document them
-    IF: condition set, 4 cells: compared, comparing, if true, if false.
-    OFFSET: two binary operators, one skips down (@), another skip left (>>)
+1. New sheet containing VARIABLES + reference to this new sheet (inside one
+    file). USE RATHER: workbook.define_name(NAME, VALUE) to create VARIABLE
+    test names of variable: no spaces, lowercase
 1. Move export functionality to the new parent class: requires to create two
     abstract methods: get_shape(), get_value_at(row, col). Use this parent for 
-    slices and sheet
-1. New sheet containing constants + reference to this new sheet (inside one
-    file).
-1. Test if language is included (Utils of grammars)
+    slices and sheet    
 1. Possibly the cell style inside cell (for Excel) (also for slide)
 1. New property of cell 'excel_style' (and export it to excel)
 1. Independent styles for cols and rows
 1. Exporting formulas to CSV, MD (option selecting of languages)
 1. Add new export - to array (just Python 2D array)
-
 1. Export to dict as standard row / column array.
 1. Show outputs in README.md
 1. New Use Cases for readme demo
@@ -68,3 +62,13 @@
 1. Mention to README.md that aggregate functions does not work with identities.
     And mention reference to identities as a general problem.
 1. In readme use code style for parameters description.
+1. Test if language is included (Utils of grammars)
+1. New function: binary: _mod (%)_, _aggregate: stdev, median_;
+    **_unary: ceil, floor, round, absolute value, sqrt_; 
+    ternary: if (have binary conditions first) + 
+    NOT, AND, OR operators 
+    (+ ==, >, <, <=, >=, !=) ** <- Document them
+    IF: condition set, 4 cells: compared, comparing, if true, if false.
+    - OFFSET: two binary operators, one skips down (@), another skip left (>>) - rather not  
+    - Test if the referential cell IS ANCHORED here!
+1. WRITE explicitely to readme.md what is anchored cell!

@@ -105,7 +105,7 @@ class Spreadsheet(object):
             """Create the constant for computation (un-anchored cell).
 
             Args:
-                value (Number): Constant value.
+                value (Number): Some constant value.
 
             Returns:
                 Cell: un-anchored cell with constant value.
@@ -118,7 +118,7 @@ class Spreadsheet(object):
             """Shortcut for adding bracket around body.
 
             Args:
-                body (Cell): Body of the expression.
+                body (Cell): The body of the expression.
 
             Returns:
                 Cell: Expression with brackets
@@ -130,7 +130,7 @@ class Spreadsheet(object):
             """Natural logarithm of the value.
 
             Args:
-                value (Cell): Value to computation.
+                value (Cell): The input value for computation.
 
             Returns:
                 Cell: Natural logarithm of the input value.
@@ -142,7 +142,7 @@ class Spreadsheet(object):
             """Exponential function of the value (e^value).
 
             Args:
-                value (Cell): Value to computation.
+                value (Cell): The input value for computation.
 
             Returns:
                 Cell: Exponential function of the input value.
@@ -154,7 +154,7 @@ class Spreadsheet(object):
             """Floor function of the value.
 
             Args:
-                value (Cell): Value to computation.
+                value (Cell): The input value for computation.
 
             Returns:
                 Cell: Floor function of the input value.
@@ -166,7 +166,7 @@ class Spreadsheet(object):
             """Ceiling function of the value.
 
             Args:
-                value (Cell): Value to computation.
+                value (Cell): The input value for computation.
 
             Returns:
                 Cell: Ceiling function of the input value.
@@ -178,7 +178,7 @@ class Spreadsheet(object):
             """Round the numeric value.
 
             Args:
-                value (Cell): Value to computation.
+                value (Cell): The input value for computation.
 
             Returns:
                 Cell: Round of the input value.
@@ -190,7 +190,7 @@ class Spreadsheet(object):
             """Absolute value of the input.
 
             Args:
-                value (Cell): Value to computation.
+                value (Cell): The input value for computation.
 
             Returns:
                 Cell: Absolute value of the input value.
@@ -202,12 +202,76 @@ class Spreadsheet(object):
             """Square root of the input.
 
             Args:
-                value (Cell): Value to computation.
+                value (Cell): The input value for computation.
 
             Returns:
                 Cell: Square root of the input value.
             """
             return Cell.sqrt(value)
+
+        @staticmethod
+        def neg(value: Cell) -> Cell:
+            """Logical negation of the input.
+
+            Args:
+                value (Cell): The input value for computation.
+
+            Returns:
+                Cell: logical negation of the input value.
+            """
+            return Cell.logicalNegation(value)
+
+        @staticmethod
+        def conditional(condition: 'Cell',
+                        consequent: 'Cell',
+                        alternative: 'Cell', /) -> 'Cell':  # noqa E225
+            """Conditional statement (standard if-then-else statement).
+
+            Evaluate the value of the condition, if it is true, take the value
+                of the consequent, if not take the value of the alternative.
+
+            Args:
+                condition (Cell): Cell defining the condition (boolean value)
+                consequent (Cell): What is pass if the condition is true (the
+                    part right after the if)
+                alternative (Cell): What is pass if the condition is false (the
+                    part right after the else)
+
+            Returns:
+                Cell: The if-then-else conditional statement and correctly
+                    chosen value.
+            """
+            return Cell.conditional(condition, consequent, alternative)
+
+        def offset(self,
+                   reference: Cell,
+                   row_skip: Cell,
+                   column_skip: Cell, /) -> Cell:  # noqa E225
+            """Return the cell with value computed as offset from reference
+                cell plus row_skip rows and column_skip columns.
+
+            Args:
+                reference (Cell): Reference cell from that the position is
+                    computed.
+                row_skip (Cell): How many rows (down) should be skipped.
+                column_skip (Cell): How many columns (left) should be skipped.
+
+            Returns:
+                Cell: Cell with offset operation and value from the cell on the
+                    referential position.
+
+            Raises:
+                ValueError: If the reference cell is not anchored.
+            """
+            # Test if the reference cell is anchored
+            if not reference.anchored:
+                raise ValueError("Reference cell must be anchored!")
+            # Find the target cell
+            target = self.spreadsheet.iloc[
+                reference.row + row_skip.value,
+                reference.column + column_skip.value
+            ]
+            return Cell.offset(reference, row_skip, column_skip, target=target)
 
     def __init__(self,
                  cell_indices: CellIndices):

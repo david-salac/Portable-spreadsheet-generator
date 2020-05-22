@@ -168,6 +168,122 @@ class WordConstructor(object):
         return WordConstructor._binary_operation(first, second, "power")
 
     @staticmethod
+    def logicalConjunction(first, second, /) -> 'WordConstructor':  # noqa E225
+        """Logical conjunction operation (and).
+
+        Args:
+            first (Cell): The first cell (operand) of the operator.
+            second (Cell): The second cell (operand) of the operator.
+
+        Returns:
+            WordConstructor: Word constructed using binary operator and two
+                operands.
+        """
+        return WordConstructor._binary_operation(first, second,
+                                                 "logical-conjunction")
+
+    @staticmethod
+    def logicalDisjunction(first, second, /) -> 'WordConstructor':  # noqa E225
+        """Logical disjunction operation (or).
+
+        Args:
+            first (Cell): The first cell (operand) of the operator.
+            second (Cell): The second cell (operand) of the operator.
+
+        Returns:
+            WordConstructor: Word constructed using binary operator and two
+                operands.
+        """
+        return WordConstructor._binary_operation(first, second,
+                                                 "logical-disjunction")
+
+    @staticmethod
+    def equalTo(first, second, /) -> 'WordConstructor':  # noqa E225
+        """Equal to binary operation (==).
+
+        Args:
+            first (Cell): The first cell (operand) of the operator.
+            second (Cell): The second cell (operand) of the operator.
+
+        Returns:
+            WordConstructor: Word constructed using binary operator and two
+                operands.
+        """
+        return WordConstructor._binary_operation(first, second, "equal-to")
+
+    @staticmethod
+    def notEqualTo(first, second, /) -> 'WordConstructor':  # noqa E225
+        """Not equal to binary operation (!=).
+
+        Args:
+            first (Cell): The first cell (operand) of the operator.
+            second (Cell): The second cell (operand) of the operator.
+
+        Returns:
+            WordConstructor: Word constructed using binary operator and two
+                operands.
+        """
+        return WordConstructor._binary_operation(first, second, "not-equal-to")
+
+    @staticmethod
+    def greaterThan(first, second, /) -> 'WordConstructor':  # noqa E225
+        """Greater than binary operation (>).
+
+        Args:
+            first (Cell): The first cell (operand) of the operator.
+            second (Cell): The second cell (operand) of the operator.
+
+        Returns:
+            WordConstructor: Word constructed using binary operator and two
+                operands.
+        """
+        return WordConstructor._binary_operation(first, second, "greater-than")
+
+    @staticmethod
+    def greaterThanOrEqualTo(first, second, /) -> 'WordConstructor':  # noqa E225
+        """Greater than or equal to binary operation (>=).
+
+        Args:
+            first (Cell): The first cell (operand) of the operator.
+            second (Cell): The second cell (operand) of the operator.
+
+        Returns:
+            WordConstructor: Word constructed using binary operator and two
+                operands.
+        """
+        return WordConstructor._binary_operation(first, second,
+                                                 "greater-than-or-equal-to")
+
+    @staticmethod
+    def lessThan(first, second, /) -> 'WordConstructor':  # noqa E225
+        """Less than binary operation (<).
+
+        Args:
+            first (Cell): The first cell (operand) of the operator.
+            second (Cell): The second cell (operand) of the operator.
+
+        Returns:
+            WordConstructor: Word constructed using binary operator and two
+                operands.
+        """
+        return WordConstructor._binary_operation(first, second, "less-than")
+
+    @staticmethod
+    def lessThanOrEqualTo(first, second, /) -> 'WordConstructor':  # noqa E225
+        """Less than or equal to binary operation (<=).
+
+        Args:
+            first (Cell): The first cell (operand) of the operator.
+            second (Cell): The second cell (operand) of the operator.
+
+        Returns:
+            WordConstructor: Word constructed using binary operator and two
+                operands.
+        """
+        return WordConstructor._binary_operation(first, second,
+                                                 "less-than-or-equal-to")
+
+    @staticmethod
     def _aggregation_parse_cell(cell,
                                 start_idx: Tuple[int, int],
                                 end_idx: Tuple[int, int],
@@ -538,3 +654,167 @@ class WordConstructor(object):
             prefix_path=['operations', 'sqrt', 'prefix'],
             suffix_path=['operations', 'sqrt', 'suffix']
         )
+
+    @staticmethod
+    def logicalNegation(cell, /) -> 'WordConstructor':  # noqa E225
+        """Add logical negation definition context around the cell.
+
+        Args:
+            cell (Cell): The cell around which logical negation context is
+                added.
+
+        Returns:
+            WordConstructor: Word with logical negation function context.
+        """
+        return WordConstructor._unary_operator(
+            cell=cell,
+            prefix_path=['operations', 'logical-negation', 'prefix'],
+            suffix_path=['operations', 'logical-negation', 'suffix']
+        )
+
+    @staticmethod
+    def conditional(condition,
+                    consequent,
+                    alternative, /) -> 'WordConstructor':  # noqa E225
+        """Construct the word for the conditional statement (if-then-else).
+
+        Args:
+            condition (Cell): condition statement.
+            consequent (Cell): value if the condition is true.
+            alternative (Cell): value if the condition is false.
+
+        Returns:
+            WordConstructor: Word for the conditional statement
+        """
+        instance = WordConstructor(cell_indices=condition.cell_indices)
+
+        w_condition = condition.word.words
+        w_consequent = consequent.word.words
+        w_alternative = alternative.word.words
+
+        for language in instance.languages:
+            conditional_prefix = GRAMMARS[language]['conditional']['prefix']
+            conditional_suffix = GRAMMARS[language]['conditional']['suffix']
+
+            condition_prefix = GRAMMARS[language][
+                'conditional']['condition']['prefix']
+            condition_suffix = GRAMMARS[language][
+                'conditional']['condition']['suffix']
+            condition_word = condition_prefix + w_condition[language] + \
+                condition_suffix
+
+            consequent_prefix = GRAMMARS[language][
+                'conditional']['consequent']['prefix']
+            consequent_suffix = GRAMMARS[language][
+                'conditional']['consequent']['suffix']
+            consequent_word = consequent_prefix + w_consequent[language] + \
+                consequent_suffix
+
+            alternative_prefix = GRAMMARS[language][
+                'conditional']['alternative']['prefix']
+            alternative_suffix = GRAMMARS[language][
+                'conditional']['alternative']['suffix']
+            alternative_word = alternative_prefix + w_alternative[language] + \
+                alternative_suffix
+
+            # Swap the words to desired sequence
+            clausules_order = GRAMMARS[language]['conditional']['order']
+            prefered_order = ('condition', 'consequent', 'alternative')
+            words_in_prefered_order = (condition_word, consequent_word,
+                                       alternative_word)
+            words_in_correct_order = ["", "", ""]
+            # Do the permutation and construct the word:
+            for clausule_idx, clausule in enumerate(prefered_order):
+                clausule_permutated_idx = clausules_order.index(clausule)
+                words_in_correct_order[clausule_permutated_idx] = \
+                    words_in_prefered_order[clausule_idx]
+
+            # Merge words into one word
+            final_word = "".join(words_in_correct_order)
+
+            instance.words[language] = conditional_prefix + final_word + \
+                conditional_suffix
+
+        return instance
+
+    @staticmethod
+    def offset(reference,
+               row_skip,
+               column_skip, /) -> 'WordConstructor':  # noqa E225
+        """Construct the word for the offset statement (skip n rows and m
+            columns from the referential position).
+
+        Args:
+            reference (Cell): Reference cell from that the position is
+                computed.
+            row_skip (Cell): How many rows (down) should be skipped.
+            column_skip (Cell): How many columns (left) should be skipped.
+
+        Returns:
+            WordConstructor: Word for the offset statement.
+        """
+        instance = WordConstructor(cell_indices=reference.cell_indices)
+
+        # For shorter access to rows and column indices:
+        index_row = reference.cell_indices.rows
+        index_col = reference.cell_indices.columns
+
+        ref_row_skip = row_skip.parse
+        ref_col_skip = column_skip.parse
+
+        for language in instance.languages:
+            offset_prefix = GRAMMARS[language]['cells']['offset']['prefix']
+            offset_suffix = GRAMMARS[language]['cells']['offset']['suffix']
+
+            ref_row_prefix = GRAMMARS[language]['cells']['offset'][
+                'reference-cell-row']['prefix']
+            ref_row_suffix = GRAMMARS[language]['cells']['offset'][
+                'reference-cell-row']['suffix']
+            ref_row_word = (ref_row_prefix +
+                            index_row[language][reference.row] +
+                            ref_row_suffix)
+
+            ref_col_prefix = GRAMMARS[language]['cells']['offset'][
+                'reference-cell-column']['prefix']
+            ref_col_suffix = GRAMMARS[language]['cells']['offset'][
+                'reference-cell-column']['suffix']
+            ref_col_word = (ref_col_prefix +
+                            index_col[language][reference.column] +
+                            ref_col_suffix)
+            # HERE USING REFERENCE
+            skip_row_prefix = GRAMMARS[language]['cells']['offset'][
+                'skip-of-rows']['prefix']
+            skip_row_suffix = GRAMMARS[language]['cells']['offset'][
+                'skip-of-rows']['suffix']
+            skip_row_word = (skip_row_prefix +
+                             ref_row_skip[language] +
+                             skip_row_suffix)
+
+            skip_col_prefix = GRAMMARS[language]['cells']['offset'][
+                'skip-of-columns']['prefix']
+            skip_col_suffix = GRAMMARS[language]['cells']['offset'][
+                'skip-of-columns']['suffix']
+            skip_col_word = (skip_col_prefix +
+                             ref_col_skip[language] +
+                             skip_col_suffix)
+
+            # Swap the words to desired sequence
+            clausules_order = GRAMMARS[language]['cells']['offset']['order']
+            prefered_order = ('reference-cell-row', 'reference-cell-column',
+                              'skip-of-rows', 'skip-of-columns')
+            words_in_prefered_order = (ref_row_word, ref_col_word,
+                                       skip_row_word, skip_col_word)
+            words_in_correct_order = ["", "", "", ""]
+            # Do the permutation and construct the word:
+            for clausule_idx, clausule in enumerate(prefered_order):
+                clausule_permutated_idx = clausules_order.index(clausule)
+                words_in_correct_order[clausule_permutated_idx] = \
+                    words_in_prefered_order[clausule_idx]
+
+            # Merge words into one word
+            final_word = "".join(words_in_correct_order)
+
+            instance.words[language] = offset_prefix + final_word + \
+                offset_suffix
+
+        return instance
