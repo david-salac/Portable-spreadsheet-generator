@@ -516,16 +516,22 @@ word_in_language_lang = word['lang']
 
 ### Exporting the results
 There are various methods available for exporting the results:
-* `to_excel`: Export the sheet to the Excel-compatible file.
-* `to_dictionary`: Export the sheet to the dictionary (`dict` type) that
-can be used for creating of JSON.
-* `to_string_of_values`: Export values to the string that looks like Python
-array definition string.
-* `to_csv`: Export the values to the CSV compatible string (that can be saved
-to the file)
-* `to_markdown`: Export the values to MD (Markdown) file format string.
+1. **Excel format**, method `to_excel`:
+Export the sheet to the Excel-compatible file.
+2. **Dictionary of values**, method `to_dictionary`:
+Export the sheet to the dictionary (`dict` type) that can be used for
+creating of JSON.
+3. **2D array as a string**, method: `to_string_of_values`:
+Export values to the string that looks like Python array definition string.
+4. **CSV**, method `to_csv`:
+Export the values to the CSV compatible string (that can be saved to the file)
+5. **Markdown (MD)**, method `to_markdown`:
+Export the values to MD (Markdown) file format string.
 Defined as a table.
-* `to_numpy`: Export the sheet as a numpy.ndarray object.
+6. **NumPy ndarray**, method `to_numpy`:
+Export the sheet as a `numpy.ndarray` object.
+7. **Python 2D list**, method `to_2d_list`: 
+Export values 2 dimensional Python array (list of the list of the values).
 
 #### Exporting to Excel
 It can be done using the interface:

@@ -5,12 +5,14 @@ import copy
 import numpy as np
 
 from .cell import Cell
+from .cell_indices import CellIndices
+from .serialization import Serialization
 
 # Acceptable values for the slice
 T_slice = Union[np.ndarray, List[Number], List[Cell], Number, Cell]
 
 
-class CellSlice(object):
+class CellSlice(Serialization):
     """Encapsulate aggregating functionality and setting of the slices.
 
     Attributes:
@@ -45,16 +47,6 @@ class CellSlice(object):
         self.end_cell: Cell = driving_sheet.iloc[end_idx]
         self.cell_subset: Iterable[Cell] = cell_subset
         self.driving_sheet = driving_sheet
-
-    @property
-    def shape(self) -> Tuple[int, int]:
-        """Return the shape of the slice in the NumPy logic.
-
-        Returns:
-            Tuple[int]: Number of rows, Number of columns
-        """
-        return (self.end_idx[0] - self.start_idx[0] + 1,
-                self.end_idx[1] - self.start_idx[1] + 1)
 
     def sum(self) -> Cell:
         """Compute the sum of the aggregate.
@@ -219,24 +211,40 @@ class CellSlice(object):
         """
         self.set(other)
 
-    def to_numpy(self) -> np.ndarray:
-        """Exports the values to the numpy.ndarray.
+    # ==== OVERRIDE ABSTRACT METHODS AND PROPERTIES OF SERIALIZATION CLASS ====
+    @Serialization.shape.getter
+    def shape(self) -> Tuple[int, int]:
+        """Return the shape of the sheet in the NumPy logic.
 
         Returns:
-            numpy.ndarray: 2 dimensions array with values
+            Tuple[int]: Number of rows, Number of columns
         """
-        results = np.zeros(self.shape)
-        i, j = 0, 0  # Indices relative to results
-        for row in range(self.start_idx[0], self.end_idx[0] + 1):
-            j = 0
-            for col in range(self.start_idx[1], self.end_idx[1] + 1):
-                if (cell := self.driving_sheet.iloc[row, col]) is not None:  # noqa E999
-                    if isinstance(cell.value, Number):
-                        results[i, j] = cell.value
-                    else:
-                        results[i, j] = np.nan
-                else:
-                    results[i, j] = np.nan
-                j += 1
-            i += 1
-        return results
+        return (self.end_idx[0] - self.start_idx[0] + 1,
+                self.end_idx[1] - self.start_idx[1] + 1)
+
+    @Serialization.cell_indices.getter
+    def cell_indices(self) -> CellIndices:
+        """Get the cell indices.
+
+        Returns:
+            CellIndices: Cell indices of the spreadsheet.
+        """
+        return self.driving_sheet._cell_indices
+
+    def _get_cell_at(self, row: int, column: int) -> 'Cell':
+        """Get the particular cell on the (row, column) position.
+
+        Returns:
+            Cell: The call on given position.
+        """
+        return self.driving_sheet.iloc[self.start_idx[0] + row,
+                                       self.start_idx[1] + column]
+
+    def _get_variables(self) -> '_SheetVariables':
+        """Return the sheet variables as _SheetVariables object.
+
+        Returns:
+            _SheetVariables: Sheet variables.
+        """
+        return self.driving_sheet.var
+    # =========================================================================

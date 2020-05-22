@@ -114,9 +114,11 @@ class CellIndices(object):
         self.columns_labels: List[str] = copy.deepcopy(columns_labels)
         # Or define auto generated nicknames as an integer sequence from 0
         if rows_labels is None:
-            self.rows_labels = list(range(number_of_rows))
+            self.rows_labels = [str(_row_n) for _row_n in
+                                range(number_of_rows)]
         if columns_labels is None:
-            self.columns_labels = list(range(number_of_columns))
+            self.columns_labels = [str(_col_n) for _col_n in
+                                   range(number_of_columns)]
         # assign the help texts
         self.rows_help_text: List[str] = copy.deepcopy(rows_help_text)
         self.columns_help_text: List[str] = copy.deepcopy(columns_help_text)

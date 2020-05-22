@@ -2,14 +2,10 @@
 ## BUGS
 
 ## IMPORTANT FEATURES
-1. Move export functionality to the new parent class: requires to create two
-    abstract methods: get_shape(), get_value_at(row, col). Use this parent for 
-    slices and sheet    
 1. Possibly the cell style inside cell (for Excel) (also for slide)
 1. New property of cell 'excel_style' (and export it to excel)
 1. Independent styles for cols and rows
 1. Exporting formulas to CSV, MD (option selecting of languages)
-1. Add new export - to array (just Python 2D array)
 1. Export to dict as standard row / column array.
 1. Show outputs in README.md
 1. New Use Cases for readme demo
@@ -74,3 +70,7 @@
     USE logic: `workbook.define_name(NAME, VALUE)` to create VARIABLE
     test names of variable: no spaces, lowercase
     - Export them A) TO EXCEL, B) TO DICTIONARY
+1. Move export functionality to the new parent class: requires to create two
+    abstract methods: get_shape(), get_value_at(row, col). Use this parent for 
+    slices and sheet
+1. Add new export - to array (just Python 2D array)
