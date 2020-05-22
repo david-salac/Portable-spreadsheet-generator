@@ -2,9 +2,6 @@
 ## BUGS
 
 ## IMPORTANT FEATURES
-1. New sheet containing VARIABLES + reference to this new sheet (inside one
-    file). USE RATHER: workbook.define_name(NAME, VALUE) to create VARIABLE
-    test names of variable: no spaces, lowercase
 1. Move export functionality to the new parent class: requires to create two
     abstract methods: get_shape(), get_value_at(row, col). Use this parent for 
     slices and sheet    
@@ -72,3 +69,8 @@
     - OFFSET: two binary operators, one skips down (@), another skip left (>>) - rather not  
     - Test if the referential cell IS ANCHORED here!
 1. WRITE explicitely to readme.md what is anchored cell!
+1. Add COUNT aggregate function
+1. Sheet containing VARIABLES + (inside one file). 
+    USE logic: `workbook.define_name(NAME, VALUE)` to create VARIABLE
+    test names of variable: no spaces, lowercase
+    - Export them A) TO EXCEL, B) TO DICTIONARY

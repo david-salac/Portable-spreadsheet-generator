@@ -21,6 +21,8 @@ class Cell(object):
             each used language.
         _constructing_words (WordConstructor): The words defining the cell in
             each language.
+        is_variable (bool): If True, cell is considered to be a varaible.
+        variable_name (Optional[str]): The name of variable.
     """
     def __init__(self,
                  row: Optional[int] = None,
@@ -30,6 +32,8 @@ class Cell(object):
                  # Private arguments
                  cell_type: CellType = CellType.value_only,
                  words: Optional[WordConstructor] = None,
+                 is_variable: bool = False,
+                 variable_name: Optional[str] = None,
                  ):
         """Create single cell.
 
@@ -44,6 +48,8 @@ class Cell(object):
                 directly.
             words (Optional[WordConstructor]): The words defining the cell
                 in each language. Do not use this argument directly.
+            is_variable (bool): If True, cell is considered to be a variable.
+            variable_name (Optional[str]): The name of variable.
         """
         if row is not None and column is None \
                 or row is None and column is not None:
@@ -54,6 +60,8 @@ class Cell(object):
         self._value: Optional[float] = value
         self.cell_type: CellType = cell_type
         self.cell_indices: cell_indices = cell_indices  # pass only reference
+        self.is_variable: bool = is_variable
+        self.variable_name: Optional[str] = variable_name
 
         if words is not None:
             self._constructing_words: WordConstructor = words
@@ -550,6 +558,22 @@ class Cell(object):
                                    'median', np.median)
 
     @staticmethod
+    def count(cell_start: 'Cell', cell_end: 'Cell',
+              subset: Iterable['Cell']) -> 'Cell':
+        """Compute the number of items the slice.
+
+        Args:
+            cell_start (Cell): Starting cell of the slice (left top).
+            cell_end: (Cell'): Ending cell of the slice (bottom right).
+            subset (Iterable['Cell']): List of all cells in the subset.
+
+        Returns:
+            Cell: the cell with aggregated and computed results.
+        """
+        return Cell._aggregate_fun(cell_start, cell_end, subset,
+                                   'count', len)
+
+    @staticmethod
     def _aggregate_fun(
             cell_start: 'Cell',
             cell_end: 'Cell',
@@ -569,7 +593,13 @@ class Cell(object):
 
         Returns:
             Cell: the cell with aggregated and computed results.
+
+        Raises:
+            ValueError: If the starting or ending cells are not anchored.
         """
+        if not(cell_start.anchored and cell_end.anchored):
+            raise ValueError("All cells in the slice has to be anchored!")
+
         return Cell(value=method_np([c.value for c in subset]),
                     words=WordConstructor.aggregation(
                         cell_start, cell_end, grammar_method
@@ -595,6 +625,24 @@ class Cell(object):
 
         return Cell(value=other.value,
                     words=WordConstructor.reference(other),
+                    cell_indices=other.cell_indices,
+                    cell_type=CellType.computational
+                    )
+
+    @staticmethod
+    def variable(other: 'Cell', /) -> 'Cell':  # noqa E225
+        """The cell as a variable.
+
+        Args:
+            other (Cell): Cell that is interpreted as a variable.
+
+        Returns:
+            Cell: variable.
+        """
+        if not other.is_variable:
+            raise ValueError("Only the variable type cell is accepted!")
+        return Cell(value=other.value,
+                    words=WordConstructor.variable(other),
                     cell_indices=other.cell_indices,
                     cell_type=CellType.computational
                     )

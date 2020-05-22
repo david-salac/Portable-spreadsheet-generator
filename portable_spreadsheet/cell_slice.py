@@ -120,6 +120,14 @@ class CellSlice(object):
         """
         return Cell.median(self.start_cell, self.end_cell, self.cell_subset)
 
+    def count(self) -> Cell:
+        """Compute the number of items in the aggregate.
+
+        Returns:
+            Cell: a new cell with the result.
+        """
+        return Cell.count(self.start_cell, self.end_cell, self.cell_subset)
+
     def _set_value_on_position(self, other: Union[Cell, Number],
                                row: int, col: int) -> None:
         """Set the cell on given position in the spreadsheet to the value

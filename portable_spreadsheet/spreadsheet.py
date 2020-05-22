@@ -9,6 +9,7 @@ from .cell import Cell
 from .cell_indices import CellIndices, T_lg_col_row
 from .cell_type import CellType
 from .cell_slice import CellSlice
+from .spreadsheet_utils import _Location, _Functionality, _SheetVariables
 
 # ==== TYPES ====
 # Type for the sheet (list of the list of the cells)
@@ -51,227 +52,13 @@ class Spreadsheet(object):
         self.cell_indices (CellIndices): Define indices and the shape of the
             spreadsheet.
         _sheet (T_sheet): Array holding actual sheet.
-        iloc (Spreadsheet._Location): To make cells accessible using
+        iloc (_Location): To make cells accessible using
             obj.iloc[integer_index_x, integer_index_y]
-        loc (Spreadsheet._Location): To make cells accessible using
+        loc (_Location): To make cells accessible using
             obj.loc[nick_x, nick_y]
         fn (_Functionality): To make accessible shortcuts for functionality
+        var (_SheetVariables): Variables in the sheet.
     """
-    class _Location(object):
-        """Private class that enables indexing and slicing of values using
-            obj.loc[col, row] or obj.iloc[col_idx, row_idx] logic.
-        """
-        def __init__(self,
-                     spreadsheet: 'Spreadsheet',
-                     by_integer: bool):
-            self.spreadsheet: 'Spreadsheet' = spreadsheet
-            self.by_integer: str = by_integer
-
-        def __setitem__(self, index, val):
-            has_slice = isinstance(index[0], slice) or \
-                        isinstance(index[1], slice)
-            if not has_slice:
-                if self.by_integer:
-                    self.spreadsheet._set_item(val, index, None)
-                else:
-                    self.spreadsheet._set_item(val, None, index)
-            else:
-                if self.by_integer:
-                    return self.spreadsheet._set_slice(val, index, None)
-                else:
-                    return self.spreadsheet._set_slice(val, None, index)
-
-        def __getitem__(self, index):
-            has_slice = isinstance(index[0], slice) or \
-                        isinstance(index[1], slice)
-            if not has_slice:
-                if self.by_integer:
-                    return self.spreadsheet._get_item(index, None)
-                else:
-                    return self.spreadsheet._get_item(None, index)
-            else:
-                if self.by_integer:
-                    return self.spreadsheet._get_slice(index, None)
-                else:
-                    return self.spreadsheet._get_slice(None, index)
-
-    class _Functionality(object):
-        """Class encapsulating some shortcuts for functionality.
-        """
-        def __init__(self, spreadsheet: 'Spreadsheet'):
-            self.spreadsheet = spreadsheet
-
-        def const(self, value: Number) -> Cell:
-            """Create the constant for computation (un-anchored cell).
-
-            Args:
-                value (Number): Some constant value.
-
-            Returns:
-                Cell: un-anchored cell with constant value.
-            """
-            return Cell(value=value,
-                        cell_indices=self.spreadsheet.cell_indices)
-
-        @staticmethod
-        def brackets(body: Cell) -> Cell:
-            """Shortcut for adding bracket around body.
-
-            Args:
-                body (Cell): The body of the expression.
-
-            Returns:
-                Cell: Expression with brackets
-            """
-            return Cell.brackets(body)
-
-        @staticmethod
-        def ln(value: Cell) -> Cell:
-            """Natural logarithm of the value.
-
-            Args:
-                value (Cell): The input value for computation.
-
-            Returns:
-                Cell: Natural logarithm of the input value.
-            """
-            return Cell.logarithm(value)
-
-        @staticmethod
-        def exp(value: Cell) -> Cell:
-            """Exponential function of the value (e^value).
-
-            Args:
-                value (Cell): The input value for computation.
-
-            Returns:
-                Cell: Exponential function of the input value.
-            """
-            return Cell.exponential(value)
-
-        @staticmethod
-        def floor(value: Cell) -> Cell:
-            """Floor function of the value.
-
-            Args:
-                value (Cell): The input value for computation.
-
-            Returns:
-                Cell: Floor function of the input value.
-            """
-            return Cell.floor(value)
-
-        @staticmethod
-        def ceil(value: Cell) -> Cell:
-            """Ceiling function of the value.
-
-            Args:
-                value (Cell): The input value for computation.
-
-            Returns:
-                Cell: Ceiling function of the input value.
-            """
-            return Cell.ceil(value)
-
-        @staticmethod
-        def round(value: Cell) -> Cell:
-            """Round the numeric value.
-
-            Args:
-                value (Cell): The input value for computation.
-
-            Returns:
-                Cell: Round of the input value.
-            """
-            return Cell.round(value)
-
-        @staticmethod
-        def abs(value: Cell) -> Cell:
-            """Absolute value of the input.
-
-            Args:
-                value (Cell): The input value for computation.
-
-            Returns:
-                Cell: Absolute value of the input value.
-            """
-            return Cell.abs(value)
-
-        @staticmethod
-        def sqrt(value: Cell) -> Cell:
-            """Square root of the input.
-
-            Args:
-                value (Cell): The input value for computation.
-
-            Returns:
-                Cell: Square root of the input value.
-            """
-            return Cell.sqrt(value)
-
-        @staticmethod
-        def neg(value: Cell) -> Cell:
-            """Logical negation of the input.
-
-            Args:
-                value (Cell): The input value for computation.
-
-            Returns:
-                Cell: logical negation of the input value.
-            """
-            return Cell.logicalNegation(value)
-
-        @staticmethod
-        def conditional(condition: 'Cell',
-                        consequent: 'Cell',
-                        alternative: 'Cell', /) -> 'Cell':  # noqa E225
-            """Conditional statement (standard if-then-else statement).
-
-            Evaluate the value of the condition, if it is true, take the value
-                of the consequent, if not take the value of the alternative.
-
-            Args:
-                condition (Cell): Cell defining the condition (boolean value)
-                consequent (Cell): What is pass if the condition is true (the
-                    part right after the if)
-                alternative (Cell): What is pass if the condition is false (the
-                    part right after the else)
-
-            Returns:
-                Cell: The if-then-else conditional statement and correctly
-                    chosen value.
-            """
-            return Cell.conditional(condition, consequent, alternative)
-
-        def offset(self,
-                   reference: Cell,
-                   row_skip: Cell,
-                   column_skip: Cell, /) -> Cell:  # noqa E225
-            """Return the cell with value computed as offset from reference
-                cell plus row_skip rows and column_skip columns.
-
-            Args:
-                reference (Cell): Reference cell from that the position is
-                    computed.
-                row_skip (Cell): How many rows (down) should be skipped.
-                column_skip (Cell): How many columns (left) should be skipped.
-
-            Returns:
-                Cell: Cell with offset operation and value from the cell on the
-                    referential position.
-
-            Raises:
-                ValueError: If the reference cell is not anchored.
-            """
-            # Test if the reference cell is anchored
-            if not reference.anchored:
-                raise ValueError("Reference cell must be anchored!")
-            # Find the target cell
-            target = self.spreadsheet.iloc[
-                reference.row + row_skip.value,
-                reference.column + column_skip.value
-            ]
-            return Cell.offset(reference, row_skip, column_skip, target=target)
 
     def __init__(self,
                  cell_indices: CellIndices):
@@ -285,11 +72,13 @@ class Spreadsheet(object):
 
         self._sheet: T_sheet = self._initialise_array()
         # To make cells accessible using obj.iloc[pos_x, pos_y]
-        self.iloc = self._Location(self, True)
+        self.iloc: _Location = _Location(self, True)
         # To make cells accessible using obj.loc[nick_x, nick_y]
-        self.loc = self._Location(self, False)
+        self.loc: _Location = _Location(self, False)
         # To make accessible shortcuts for functionality
-        self.fn = self._Functionality(self)
+        self.fn: _Functionality = _Functionality(self)
+        # Variables of the sheet
+        self.var: _SheetVariables = _SheetVariables(self)
 
     @staticmethod
     def create_new_sheet(number_of_rows: int,
@@ -596,6 +385,9 @@ class Spreadsheet(object):
         # Open or create an Excel file and create a sheet inside:
         workbook = xlsxwriter.Workbook(file_path)
         worksheet = workbook.add_worksheet(name=sheet_name)
+        # Register all variables:
+        for name, value in self.var.variables_dict.items():
+            workbook.define_name(name, str(value))
         # Register the style for the labels:
         cell_format = workbook.add_format(label_format)
         # Iterate through all columns and rows and add data
@@ -729,6 +521,8 @@ class Spreadsheet(object):
             values[x_start_key][x[idx_x]] = y_values
             if x_helptext is not None:
                 values[x_start_key][x[idx_x]]['help_text'] = x_helptext[idx_x]
+        # Add variables
+        values['variables'] = self.var.variables_dict
         return values
 
     def to_string_of_values(self) -> str:

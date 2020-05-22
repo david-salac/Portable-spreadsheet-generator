@@ -128,7 +128,7 @@ a language called 'native' ready to be used.
 ### How to create a spreadsheet
 The easiest function is to use the built-in static method `create_new_sheet`:
 ```
-sheet = ps.SpreadSheet.create_new_sheet(
+sheet = ps.Spreadsheet.create_new_sheet(
     number_of_rows, number_of_columns, [rows_columns]
 )
 ```
@@ -138,7 +138,7 @@ pass the argument `rows_columns` (that is a dictionary with keys as
 languages and values as lists with column names in a given language).
 If you choose to add a 'native' language, you can use a shorter version:
 ```
-sheet = ps.SpreadSheet.create_new_sheet(
+sheet = ps.Spreadsheet.create_new_sheet(
     number_of_rows, number_of_columns, 
     {
         "native": cell_indices_generators['native'](number_of_rows, 
@@ -170,9 +170,9 @@ sheet.expand_size(
 )
 ```
 Parameters of the `cell_indices.expand_size` method are of the same
-logic as the parameters of `SpreadSheet.create_new_sheet`.
+logic as the parameters of `Spreadsheet.create_new_sheet`.
 
-### Shape of the SpreadSheet object
+### Shape of the Spreadsheet object
 If you want to know what is the actual size of the spreadsheet, you can
 use the property `shape` that behaves as in Pandas. It returns you the
 tuple with a number of rows and number of columns (on the second position).
@@ -208,6 +208,40 @@ reference to another cell), make sure that it does not contains any reference
 to itself (coordinates where you are assigning). It would not work
 correctly otherwise.
 
+### Variables
+Variable represents an imaginary entity that can be used for computation if 
+you want to refer to something that is common for the whole spreadsheet. 
+Technically it is similar to variables in programming languages.
+
+Variables are encapsulated in the property `var` of the class `Spreadsheet`. 
+
+It provides the following functionality:
+
+1. **Setting the variable**, method `set_variable` with parameters: `name` 
+(a lowercase alphanumeric string with underscores) and `value` 
+(number or string).
+2. **Get the variable dictionary**, property `variables_dict`, returns 
+a dictionary with variable names as keys and variable values as values.
+3. **Check if the variable exists in a system**, method `variable_exist` with
+a parameter `name` representing the name of the variable. 
+Return true if the variable exists, false otherwise.
+4. **Get the variable as a Cell object**, method `get_variable`, with
+parameter `name` (required as positional only) that returns the variable as a
+Cell object (for computations in a sheet).
+
+To get the variable as a cell object, you can also use the following
+approach (preferable approach) with square brackets:
+```
+sheet.iloc[i, j] = sheet.var['VARIABLE_NAME']
+```
+#### Example
+Following example multiply some cell with value of
+PI constant stored as a variable `pi`:
+```
+sheet.set_variable(pi, 3.14159265359)
+sheet.iloc[i,j] = sheet.var['pi'] * sheet.iloc[x,y]
+```
+
 ### Working with slices
 Similarly, like in NumPy or Pandas DataFrame, there is a possibility
 how to work with slices (e. g. if you want to select a whole row, column
@@ -230,39 +264,43 @@ The slice itself can be used for computations using aggregate functions.
 1. **Sum**: return the sum of the cells in the slice. 
     For example: SUM(7, 8, 9) = 25.
     Available as the function `sum` called on the slice object.
-    Usage: `sheet[i,j] = sheet[p:q,x:y].sum()`
+    Usage: `sheet.iloc[i,j] = sheet.iloc[p:q,x:y].sum()`
 2. **Product**: return the product of the cells in the slice. 
     For example: PROD(7, 8, 9) = 504.
     Available as the function `product` called on the slice object.
-    Usage: `sheet[i,j] = sheet[p:q,x:y].product()`
+    Usage: `sheet.iloc[i,j] = sheet.iloc[p:q,x:y].product()`
 3. **Minimum**: return the minimum of the cells in the slice. 
     For example: MIN(7, 8, 9) = 7.
     Available as the function `min` called on the slice object.
-    Usage: `sheet[i,j] = sheet[p:q,x:y].min()`
+    Usage: `sheet.iloc[i,j] = sheet.iloc[p:q,x:y].min()`
 4. **Maximum**: return the maximum of the cells in the slice. 
     For example: MAX(7, 8, 9) = 9.
     Available as the function `max` called on the slice object.
-    Usage: `sheet[i,j] = sheet[p:q,x:y].max()`
+    Usage: `sheet.iloc[i,j] = sheet.iloc[p:q,x:y].max()`
 5. **Mean-average**: return the arithmetic mean of the cells in the slice. 
     For example: MEAN(7, 8, 9) = 8.
     Available as the function `mean` and `average` called on the slice object.
-    Usage: `sheet[i,j] = sheet[p:q,x:y].mean()` or 
-    `sheet[i,j] = sheet[p:q,x:y].average()` 
+    Usage: `sheet.iloc[i,j] = sheet.iloc[p:q,x:y].mean()` or 
+    `sheet.iloc[i,j] = sheet.iloc[p:q,x:y].average()` 
 6. **Standard deviation**: return the standard deviation of the cells in the
 slice. 
     For example: STDEV(7, 8, 9) = 1.
     Available as the function `stdev` called on the slice object.
-    Usage: `sheet[i,j] = sheet[p:q,x:y].stdev()`
+    Usage: `sheet.iloc[i,j] = sheet.iloc[p:q,x:y].stdev()`
 7. **Median**: return the median of the cells in the slice. 
     For example: MEDIAN(7, 8, 9) = 8.
     Available as the function `median` called on the slice object.
-    Usage: `sheet[i,j] = sheet[p:q,x:y].median()`
+    Usage: `sheet.iloc[i,j] = sheet.iloc[p:q,x:y].median()`
+7. **Count**: return the number of the cells in the slice. 
+    For example: COUNT(7, 8, 9) = 3.
+    Available as the function `count` called on the slice object.
+    Usage: `sheet.iloc[i,j] = sheet.iloc[p:q,x:y].count()`
 
 Aggregate functions always return the cell with the result.
 
 ### Conditional
 There is a support for the conditional statement (aka if-then-else statement).
-Functionality is implemented in the property `fn` of the `SpreadSheet`
+Functionality is implemented in the property `fn` of the `Spreadsheet`
 instance in the method `conditional`. It takes three parameters (positional)
 in precisely this order:
 
@@ -280,13 +318,13 @@ Consider the following example that compares whether two cells are equals,
 if yes, it takes some value in a cell, if not, another value in the
 different cell:
 ```
-sheet[i,j] = sheet.fn.conditional(
+sheet.iloc[i,j] = sheet.fn.conditional(
     # Condition is the first parameter:
-    sheet[1,2] == sheet[2,2],
+    sheet.iloc[1,2] == sheet.iloc[2,2],
     # Consequent (value if condition is true) is the second parameter:
-    sheet[3,1],
+    sheet.iloc[3,1],
     # Alternative (value if condition is false) is the third parameter:
-    sheet[4,1]
+    sheet.iloc[4,1]
 )
 ```
 
@@ -295,7 +333,7 @@ The offset function represents the possibility of reading the value
 that is shifted by some number rows left, and some number of columns
 down from some referential cells.
 
-It is accessible from the SpreadSheet instance using `fn`
+It is accessible from the Spreadsheet instance using `fn`
 property and `offset` method. Parameters are following (only
 positional, in exactly this order):
 * **Reference cell**: Reference cell from that the position is computed.
@@ -333,39 +371,39 @@ is the instance of the Cell class):
 1. **Ceiling function**: returns the ceil of the input value.
     For example ceil(4.1) = 5.
     Available in the `fn` property of the `sheet` object.
-    Usage: `sheet[i,j] = sheet.fn.ceil(OPERAND)`
+    Usage: `sheet.iloc[i,j] = sheet.fn.ceil(OPERAND)`
 2. **Floor function**: returns the floor of the input value.
     For example floor(4.1) = 4.
     Available in the `fn` property of the `sheet` object.
-    Usage: `sheet[i,j] = sheet.fn.floor(OPERAND)`
+    Usage: `sheet.iloc[i,j] = sheet.fn.floor(OPERAND)`
 3. **Round function**: returns the round of the input value.
     For example round(4.5) = 5.
     Available in the `fn` property of the `sheet` object.
-    Usage: `sheet[i,j] = sheet.fn.round(OPERAND)`
+    Usage: `sheet.iloc[i,j] = sheet.fn.round(OPERAND)`
 4. **Absolute value function**: returns the absolute value of the input value.
     For example abs(-4.5) = 4.5.
     Available in the `fn` property of the `sheet` object.
-    Usage: `sheet[i,j] = sheet.fn.abs(OPERAND)`
+    Usage: `sheet.iloc[i,j] = sheet.fn.abs(OPERAND)`
 5. **Square root function**: returns the square root of the input value.
     For example sqrt(16) = 4.
     Available in the `fn` property of the `sheet` object.
-    Usage: `sheet[i,j] = sheet.fn.sqrt(OPERAND)`
+    Usage: `sheet.iloc[i,j] = sheet.fn.sqrt(OPERAND)`
 6. **Logarithm function**: returns the natural logarithm of the input value.
     For example ln(11) = 2.3978952728.
     Available in the `fn` property of the `sheet` object.
-    Usage: `sheet[i,j] = sheet.fn.ln(OPERAND)`
+    Usage: `sheet.iloc[i,j] = sheet.fn.ln(OPERAND)`
 7. **Exponential function**: returns the exponential of the input value.
     For example exp(1) = _e_ power to 1 = 2.71828182846.
     Available in the `fn` property of the `sheet` object.
-    Usage: `sheet[i,j] = sheet.fn.exp(OPERAND)`
+    Usage: `sheet.iloc[i,j] = sheet.fn.exp(OPERAND)`
 8. **Logical negation**: returns the logical negation of the input value.
     For example neg(false) = true.
     Available as the overloaded operator `~`.
-    Usage: `sheet[i,j] = ~OPERAND`.
+    Usage: `sheet.iloc[i,j] = ~OPERAND`.
     _Also available in the `fn` property of the `sheet` object.
-    Usage: `sheet[i,j] = sheet.fn.neg(OPERAND)`_
+    Usage: `sheet.iloc[i,j] = sheet.fn.neg(OPERAND)`_
     
-All unary operators are defined in the `fn` property of the SpreadSheet
+All unary operators are defined in the `fn` property of the Spreadsheet
 object (together with brackets, that works exactly the same - see bellow).
 
 #### Binary operations
@@ -375,88 +413,91 @@ and `OPERAND_2` are the instances of the Cell class):
 1. **Addition**: return the sum of two numbers. 
     For example: 5 + 2 = 7.
     Available as the overloaded operator `+`.
-    Usage: `sheet[i,j] = OPERAND_1 + OPERAND_2`
+    Usage: `sheet.iloc[i,j] = OPERAND_1 + OPERAND_2`
 2. **Subtraction**: return the difference of two numbers. 
     For example: 5 - 2 = 3.
     Available as the overloaded operator `-`.
-    Usage: `sheet[i,j] = OPERAND_1 - OPERAND_2`
+    Usage: `sheet.iloc[i,j] = OPERAND_1 - OPERAND_2`
 3. **Multiplication**: return the product of two numbers. 
     For example: 5 * 2 = 10.
     Available as the overloaded operator `*`.
-    Usage: `sheet[i,j] = OPERAND_1 * OPERAND_2`
+    Usage: `sheet.iloc[i,j] = OPERAND_1 * OPERAND_2`
 4. **Division**: return the quotient of two numbers. 
     For example: 5 / 2 = 2.5.
     Available as the overloaded operator `/`.
-    Usage: `sheet[i,j] = OPERAND_1 / OPERAND_2`
+    Usage: `sheet.iloc[i,j] = OPERAND_1 / OPERAND_2`
 5. **Exponentiation**: return the power of two numbers. 
     For example: 5 ** 2 = 25.
     Available as the overloaded operator `**`.
-    Usage: `sheet[i,j] = OPERAND_1 ** OPERAND_2`
+    Usage: `sheet.iloc[i,j] = OPERAND_1 ** OPERAND_2`
 6. **Logical equality**: return true if inputs are equals, false otherwise. 
     For example: 5 = 2 <=> false.
     Available as the overloaded operator `==`.
-    Usage: `sheet[i,j] = OPERAND_1 == OPERAND_2`
+    Usage: `sheet.iloc[i,j] = OPERAND_1 == OPERAND_2`
 7. **Logical inequality**: return true if inputs are not equals,
 false otherwise. 
     For example: 5 ≠ 2 <=> true.
     Available as the overloaded operator `!=`.
-    Usage: `sheet[i,j] = OPERAND_1 != OPERAND_2`
+    Usage: `sheet.iloc[i,j] = OPERAND_1 != OPERAND_2`
 8. **Relational greater than operator**: return true if the first operand is
 greater than another operand, false otherwise. 
     For example: 5 > 2 <=> true.
     Available as the overloaded operator `>`.
-    Usage: `sheet[i,j] = OPERAND_1 > OPERAND_2`
+    Usage: `sheet.iloc[i,j] = OPERAND_1 > OPERAND_2`
 9. **Relational greater than or equal to operator**: return true if the first
 operand is greater than or equal to another operand, false otherwise. 
     For example: 5 ≥ 2 <=> true.
     Available as the overloaded operator `>=`.
-    Usage: `sheet[i,j] = OPERAND_1 >= OPERAND_2`
+    Usage: `sheet.iloc[i,j] = OPERAND_1 >= OPERAND_2`
 10. **Relational less than operator**: return true if the first operand is
 less than another operand, false otherwise. 
     For example: 5 < 2 <=> false.
     Available as the overloaded operator `<`.
-    Usage: `sheet[i,j] = OPERAND_1 < OPERAND_2`
+    Usage: `sheet.iloc[i,j] = OPERAND_1 < OPERAND_2`
 11. **Relational less than or equal to operator**: return true if the first
 operand is less than or equal to another operand, false otherwise. 
     For example: 5 ≤ 2 <=> false.
     Available as the overloaded operator `<=`.
-    Usage: `sheet[i,j] = OPERAND_1 <= OPERAND_2`
+    Usage: `sheet.iloc[i,j] = OPERAND_1 <= OPERAND_2`
 12. **Logical conjunction operator**: return true if the first
 operand is true and another operand is true, false otherwise. 
     For example: true ∧ false <=> false.
     Available as the overloaded operator `&`.
-    Usage: `sheet[i,j] = OPERAND_1 & OPERAND_2`.
-    **BEWARE that operator `and` IS NOT OVERLOADED! Because it is not
-    technically possible.**
+    Usage: `sheet.iloc[i,j] = OPERAND_1 & OPERAND_2`.
+    **_BEWARE that operator `and` IS NOT OVERLOADED! Because it is not
+    technically possible._**
 13. **Logical disjunction operator**: return true if the first
 operand is true or another operand is true, false otherwise. 
     For example: true ∨ false <=> true.
     Available as the overloaded operator `|`.
-    Usage: `sheet[i,j] = OPERAND_1 | OPERAND_2`.
-    **BEWARE that operator `or` IS NOT OVERLOADED! Because it is not
-    technically possible.**
+    Usage: `sheet.iloc[i,j] = OPERAND_1 | OPERAND_2`.
+    **_BEWARE that operator `or` IS NOT OVERLOADED! Because it is not
+    technically possible._**
 
 Operations can be chained in the string:
 ```
-sheet[i,j] = OPERAND_1 + OPERAND_2 * OPERAND_3 ** OPERAND_4
+sheet.iloc[i,j] = OPERAND_1 + OPERAND_2 * OPERAND_3 ** OPERAND_4
 ```
 The priority of the operators is the same as in normal mathematics. If
 you need to modify priority, you need to use brackets, for example:
 ```
-sheet[i,j] = sheet.fn.brackets(OPERAND_1 + OPERAND_2) * OPERAND_3 ** OPERAND_4
+sheet.iloc[i,j] = sheet.fn.brackets(OPERAND_1 + OPERAND_2) \
+    * OPERAND_3 ** OPERAND_4
 ```
 #### Brackets for computation
 Brackets are technically speaking just another unary operator. They are
 defined in the `fn` property. They can be used like:
 ```
-sheet[i,j] = sheet.fn.brackets(OPERAND_1 + OPERAND_2) * OPERAND_3 ** OPERAND_4
+sheet.iloc[i,j] = sheet.fn.brackets(OPERAND_1 + OPERAND_2) \ 
+    * OPERAND_3 ** OPERAND_4
 ```
 #### Example
 For example
 ```
 # Equivalent of: value at [1,0] * (value at [2,1] + value at [3,1]) * exp(9)
-sheet[0,0] = sheet[1,0] * sheet.fn.brackets(sheet[2,1] + sheet[3,1]) 
-             * sheet.fn.exp(sheet.fn.const(9))
+sheet.iloc[0,0] = sheet.iloc[1,0] * sheet.fn.brackets(
+        sheet.iloc[2,1] + sheet.iloc[3,1]
+    ) * sheet.fn.exp(sheet.fn.const(9))
 ```
 ### Accessing the computed values
 You can access either to the actual numerical value of the cell or to the
@@ -466,9 +507,9 @@ the `parse` property (it returns a dictionary with languages as keys
 and word as values).
 ```
 # Access the value of the cell
-value_of_cell: float = sheet[i, j].value
+value_of_cell: float = sheet.iloc[i, j].value
 # Access all the words in the cell
-word: dict = sheet[i, j].parse
+word: dict = sheet.iloc[i, j].parse
 # Access the word in language 'lang'
 word_in_language_lang = word['lang']
 ```
@@ -534,8 +575,8 @@ sheet.to_excel(*, spaces_replacement: str = ' ', sep: str = ',',
 ```
 Parameters are (all optional):
 
-* `spaces_replacement (str)`: All the spaces in the rows and columns descriptions
-(labels) are replaced with this string.
+* `spaces_replacement (str)`: All the spaces in the rows and columns
+descriptions (labels) are replaced with this string.
 * `sep (str)`: Separator of values in a row.
 * `line_terminator (str)`: Ending sequence (character) of a row.
 * `na_rep (str)`: Replacement for the missing data.

@@ -15,6 +15,10 @@ EXCEL = {
             "prefix": "",
             "suffix": "",
         },
+        "variable": {
+            "prefix": "",
+            "suffix": "",
+        },
         "empty": {
             "content": ""
         },
@@ -144,6 +148,10 @@ EXCEL = {
             "prefix": "MEDIAN(",
             "suffix": ")",
         },
+        "count": {
+            "prefix": "COUNT(",
+            "suffix": ")",
+        },
         # BASIC OPERATIONS
         "exponential": {
             "prefix": "EXP(",
@@ -257,6 +265,10 @@ NATIVE = {
         "constant": {
             "prefix": "",
             "suffix": "",
+        },
+        "variable": {
+            "prefix": "value of variable '",
+            "suffix": "'",
         },
         "empty": {
             "content": ""
@@ -387,6 +399,10 @@ NATIVE = {
             "prefix": "median of ",
             "suffix": "",
         },
+        "count": {
+            "prefix": " number of items in the slice ",
+            "suffix": "",
+        },
         # BASIC OPERATIONS
         "exponential": {
             "prefix": "exponential function of ",
@@ -503,6 +519,10 @@ PYTHON_NUMPY = {
         },
         "empty": {
             "content": ""
+        },
+        "variable": {
+            "prefix": "",
+            "suffix": "",
         },
         # Like [row,column]
         "reference": {
@@ -629,6 +649,10 @@ PYTHON_NUMPY = {
         "median": {
             "prefix": "np.median(",
             "suffix": ")",
+        },
+        "count": {
+            "prefix": "((lambda var=",
+            "suffix": ": var.shape[0] * var.shape[1])())",
         },
         # BASIC OPERATIONS
         "exponential": {
@@ -763,6 +787,12 @@ GRAMMAR_PATTERN: dict = {
 
         # Constant definition (like 7):
         "constant": {
+            "prefix": str,
+            "suffix": str,
+        },
+
+        # Variable definition (e.g. pi)
+        "variable": {
             "prefix": str,
             "suffix": str,
         },
@@ -929,6 +959,11 @@ GRAMMAR_PATTERN: dict = {
         "maximum": {
             "prefix": str,  # Like MAX(
             "suffix": str,  # Like )
+        },
+        # Number of aggregated cells.
+        "count": {
+            "prefix": str,
+            "suffix": str,
         },
 
         # === BASIC UNARY OPERATIONS (that takes only one operand) ===
