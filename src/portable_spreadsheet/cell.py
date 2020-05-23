@@ -197,6 +197,7 @@ class Cell(object):
         Args:
             new_description (Optional[str]): description of the cell.
         """
+        # Use only None value or string value
         if (new_description is not None
                 and not isinstance(new_description, str)):
             raise ValueError("Cell description has to be a string value!")
@@ -320,21 +321,6 @@ class Cell(object):
         """
         return Cell(value=self.value != other.value,
                     words=WordConstructor.notEqualTo(self, other),
-                    cell_indices=other.cell_indices,
-                    cell_type=CellType.computational
-                    )
-
-    def greaterThan(self, other: 'Cell', /) -> 'Cell':  # noqa E225
-        """Boolean greater than operator.
-
-        Args:
-            other (Cell): Another operand.
-
-        Returns:
-            Cell: self greater than other
-        """
-        return Cell(value=self.value > other.value,
-                    words=WordConstructor.greaterThan(self, other),
                     cell_indices=other.cell_indices,
                     cell_type=CellType.computational
                     )

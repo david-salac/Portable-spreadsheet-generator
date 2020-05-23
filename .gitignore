@@ -7,3 +7,7 @@ __pycache__
 devel_*
 outputs/*
 .eggs/*
+build/*
+dist/*
+portable_spreadsheet.egg-info/*
+TODO.md

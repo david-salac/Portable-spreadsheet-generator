@@ -714,7 +714,6 @@ unanchored_cell_1 = sheet.iloc[4,2] * sheet.iloc[5,2]
 unanchored_cell_2 = sheet.fn.const(9)
 ```
 
-
 ## Software User Manual (SUM), how to use it?
 ### Installation
 To install the most actual package, use the command:
@@ -723,7 +722,16 @@ git clone https://github.com/david-salac/Portable-spreadsheet-generator
 cd Portable-spreadsheet-generator/
 python setup.py install
 ```
-
+or simply install using PIP:
+```
+pip install portable-spreadsheet
+```
+#### Running of the unit-tests
+For running package unit-tests, use command:
+```
+python setup.py test
+```
+In order to run package unit-tests you need to clone package first.
 ### Demo
 The following demo contains a simple example with aggregations.
 ```

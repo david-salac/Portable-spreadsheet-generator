@@ -546,9 +546,9 @@ PYTHON_NUMPY = {
             "separator": ",",
             "row_first": True
         },
-        # like =7+values[1,2]
+        # like 7+values[1,2] (in Python case do nothing)
         "operation": {
-            "prefix": "=",
+            "prefix": "",
             "suffix": "",
         },
         # like values[1:2,3:7]
@@ -634,7 +634,7 @@ PYTHON_NUMPY = {
         "power": {
             "prefix": "",
             "suffix": "",
-            "separator": "^",
+            "separator": "**",
         },
         # AGGREGATE FUNCTIONS
         "sum": {
