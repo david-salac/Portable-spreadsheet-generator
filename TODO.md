@@ -2,26 +2,26 @@
 ## BUGS
 
 ## IMPORTANT FEATURES
-1. Export to dict as standard row / column array.
-1. Export of variable with value (for Native language)
 1. Exporting formulas to CSV, MD (option selecting of languages)
 
 1. Show outputs in README.md
-1. New Use Cases for readme demo
+1. New Use Cases for README.md demo part
 
-1. Export help text for Excel too(?)
-1. Everywhere export with labels, true/false
+1. New parameter for export: everywhere export with labels, true/false
 1. Add the possibility to export only values of cells to Excel (no formulas).
+
+1. Appending the sheets to same Excel file (sheet)
 ---
 1. Unittest for everything
 ---
 **Speculative:**
-1. Appending the sheets to same Excel file (sheet) - WITH WARNING LOG
+1. Export to dict as standard row / column array. (Not any advantage)
 1. String literals, some special treatment (?)
 1. Transpose feature (Only for values!)
 1. Regular serialization
 1. Generally CONSTANT EXPORTING for all formats(?)
 1. Rounding numbers (precision up to 2 digits)
+1. Export help text for Excel too(?)
 ---
 Rewrite setup.py using new technologies
 # DONE:
@@ -108,3 +108,7 @@ JUST PRINT WARNING
 1. Cell style inside cell (for Excel) (also for slide)
     - New property of cell 'excel_style' (and export it to excel)
     - Excel format must be set just before exporting``
+1. Add description to the cell (for help text when exported).
+1. Export of variable with value included in language word (for Native
+language)
+1. Export as HTML table <- document in README.md

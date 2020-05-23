@@ -1,5 +1,5 @@
 from numbers import Number
-from typing import Iterable, Tuple, Union, List
+from typing import Iterable, Tuple, Union, List, Optional
 import copy
 
 import numpy as np
@@ -145,6 +145,27 @@ class CellSlice(Serialization):
             for col in range(self.start_idx[1],
                              self.end_idx[1] + 1):
                 self.driving_sheet.iloc[row, col].excel_format = new_format
+
+    @property
+    def description(self) -> Optional[str]:
+        """Not implementable.
+        """
+        raise NotImplementedError
+
+    @description.setter
+    def description(self, new_description: Optional[str]):
+        """Set the cell description.
+
+        Args:
+            new_description (Optional[str]): description of the cell.
+        """
+        if (new_description is not None
+                and not isinstance(new_description, str)):
+            raise ValueError("Cell description has to be a string value!")
+        for row in range(self.start_idx[0], self.end_idx[0] + 1):
+            for col in range(self.start_idx[1],
+                             self.end_idx[1] + 1):
+                self.driving_sheet.iloc[row, col].description = new_description
 
     def _set_value_on_position(self, other: Union[Cell, Number],
                                row: int, col: int) -> None:

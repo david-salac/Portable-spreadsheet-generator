@@ -18,6 +18,11 @@ EXCEL = {
         "variable": {
             "prefix": "",
             "suffix": "",
+            "value": {
+                'include': False,
+                "prefix": "",
+                "suffix": ""
+            }
         },
         "empty": {
             "content": ""
@@ -269,6 +274,11 @@ NATIVE = {
         "variable": {
             "prefix": "value of variable '",
             "suffix": "'",
+            "value": {
+                'include': True,
+                "prefix": " (=",
+                "suffix": ")"
+            }
         },
         "empty": {
             "content": ""
@@ -523,6 +533,11 @@ PYTHON_NUMPY = {
         "variable": {
             "prefix": "",
             "suffix": "",
+            "value": {
+                'include': False,
+                "prefix": "",
+                "suffix": ""
+            }
         },
         # Like [row,column]
         "reference": {
@@ -795,6 +810,13 @@ GRAMMAR_PATTERN: dict = {
         "variable": {
             "prefix": str,
             "suffix": str,
+            # If is included (parameter include), also add the value inside
+            #   the variable as a suffix (always) after variable name
+            "value": {
+                'include': bool,
+                "prefix": str,
+                "suffix": str
+            }
         },
 
         # Empty cell definition

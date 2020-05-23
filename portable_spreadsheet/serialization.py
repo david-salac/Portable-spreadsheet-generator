@@ -103,6 +103,13 @@ class Serialization(abc.ABC):
         """
         raise NotImplementedError
 
+    def log_export_subset_warning_if_needed(self):
+        """Log the export subset warning if needed.
+        """
+        if self.export_subset:
+            self.warning_logger("Slice is being exported => there is"
+                                " a possibility of data losses.")
+
     def to_excel(self,
                  file_path: str,
                  /, *,  # noqa E999
@@ -142,9 +149,8 @@ class Serialization(abc.ABC):
         if not isinstance(sheet_name, str) or len(sheet_name) < 1:
             raise ValueError("Sheet name has to be non-empty string!")
         # Log warning if needed
-        if self.export_subset:
-            self.warning_logger("Slice is being exported => there is"
-                                " a possibility of data losses.")
+        self.log_export_subset_warning_if_needed()
+
         # Open or create an Excel file and create a sheet inside:
         workbook = xlsxwriter.Workbook(file_path)
         worksheet = workbook.add_worksheet(name=sheet_name)
@@ -255,15 +261,14 @@ class Serialization(abc.ABC):
             nan_replacement (object): Replacement for the None (NaN) value
 
         Returns:
-            Dict[object, Dict[object, Dict[str, Union[str, float]]]]: The
+            Dict[object, Dict[object, Dict[str, Union[str, float]]]]:
                 Dictionary with keys: 1. column/row, 2. row/column, 3. language
                 or language pseudonym or 'value' keyword for values -> value as
                 a value or as a cell building string.
         """
         # Log warning if needed
-        if self.export_subset:
-            self.warning_logger("Slice is being exported => there is"
-                                " a possibility of data losses.")
+        self.log_export_subset_warning_if_needed()
+
         # Assign all languages if languages is None:
         if languages is None:
             languages = self.cell_indices.languages
@@ -279,7 +284,8 @@ class Serialization(abc.ABC):
         if languages_pseudonyms is not None:
             languages_used = languages_pseudonyms
         # If by column (not by_row)
-        # The x-axes represents the columns
+
+        # A) The x-axes represents the columns
         x_range = self.shape[1]
         x = [label.replace(' ', spaces_replacement)
              for label in self.cell_indices.columns_labels[
@@ -302,10 +308,10 @@ class Serialization(abc.ABC):
         if (y_helptext := self.cell_indices.rows_help_text) is not None:  # noqa E203
             # Reflects the row offset for export
             y_helptext = y_helptext[self.export_offset[0]:]
-
         y_start_key = 'rows'
+
+        # B) The x-axes represents the rows:
         if by_row:
-            # The x-axes represents the rows
             x_range = self.shape[0]
             x = [label.replace(' ', spaces_replacement)
                  for label in self.cell_indices.rows_labels[
@@ -354,13 +360,15 @@ class Serialization(abc.ABC):
                         parsed_cell[language]
                 # Append the value:
                 pseudolang_and_val['value'] = cell_value
+                pseudolang_and_val['description'] = cell.description
                 y_values[y_start_key][y[idx_y]] = pseudolang_and_val
                 if y_helptext is not None:
                     y_values[y_start_key][y[idx_y]]['help_text'] = \
                         y_helptext[idx_y]
             values[x_start_key][x[idx_x]] = y_values
             if x_helptext is not None:
-                values[x_start_key][x[idx_x]]['help_text'] = x_helptext[idx_x]
+                values[x_start_key][x[idx_x]][
+                    'help_text'] = x_helptext[idx_x]
         # Add variables
         values['variables'] = self._get_variables().variables_dict
         # Add a row and column labels as arrays
@@ -379,9 +387,8 @@ class Serialization(abc.ABC):
             str: Python list definition string.
         """
         # Log warning if needed
-        if self.export_subset:
-            self.warning_logger("Slice is being exported => there is"
-                                " a possibility of data losses.")
+        self.log_export_subset_warning_if_needed()
+
         export = "["
         for row_idx in range(self.shape[0]):
             export += "["
@@ -401,9 +408,8 @@ class Serialization(abc.ABC):
             str: Python array.
         """
         # Log warning if needed
-        if self.export_subset:
-            self.warning_logger("Slice is being exported => there is"
-                                " a possibility of data losses.")
+        self.log_export_subset_warning_if_needed()
+
         export: list = []
         for row_idx in range(self.shape[0]):
             row: list = []
@@ -432,9 +438,8 @@ class Serialization(abc.ABC):
             str: CSV of the values
         """
         # Log warning if needed
-        if self.export_subset:
-            self.warning_logger("Slice is being exported => there is"
-                                " a possibility of data losses.")
+        self.log_export_subset_warning_if_needed()
+
         export = ""
         for row_idx in range(-1, self.shape[0]):
             if row_idx == -1:
@@ -480,9 +485,8 @@ class Serialization(abc.ABC):
             str: Markdown (MD) compatible table of the values
         """
         # Log warning if needed
-        if self.export_subset:
-            self.warning_logger("Slice is being exported => there is"
-                                " a possibility of data losses.")
+        self.log_export_subset_warning_if_needed()
+
         export = ""
         for row_idx in range(-2, self.shape[0]):
             if row_idx == -2:
@@ -532,9 +536,8 @@ class Serialization(abc.ABC):
             numpy.ndarray: 2 dimensions array with values
         """
         # Log warning if needed
-        if self.export_subset:
-            self.warning_logger("Slice is being exported => there is"
-                                " a possibility of data losses.")
+        self.log_export_subset_warning_if_needed()
+
         results = numpy.zeros(self.shape)
         # Variable for indicating that logging is needed (for logging that
         # replacement of some value for NaN is done):
@@ -557,3 +560,90 @@ class Serialization(abc.ABC):
                 "nan value is set instead."
             )
         return results
+
+    def to_html_table(self, *,
+                      spaces_replacement: str = ' ',
+                      top_right_corner_text: str = "Sheet",
+                      na_rep: str = '',
+                      language_for_description: str = None) -> str:
+        """Export values to the string in the HTML table logic
+
+        Args:
+            spaces_replacement (str): All the spaces in the rows and columns
+                descriptions (labels) are replaced with this string.
+            top_right_corner_text (str): Text in the top right corner.
+            na_rep (str): Replacement for the missing data.
+            language_for_description (str): If not None, the description
+                of each computational cell is inserted as word of this
+                language (if the property description is not set).
+
+        Returns:
+            str: HTML table definition
+        """
+        # Log warning if needed
+        self.log_export_subset_warning_if_needed()
+
+        export = "<table>"
+        for row_idx in range(-1, self.shape[0]):
+            export += "<tr>"
+            if row_idx == -1:
+                export += "<th>"
+                export += top_right_corner_text
+                export += "</th>"
+                # Insert labels of columns:
+                for col_i in range(self.shape[1]):
+                    export += "<th>"
+                    col = self.cell_indices.columns_labels[
+                        col_i + self.export_offset[1]
+                        ]
+                    if (help_text := self.cell_indices.columns_help_text) \
+                            is not None:
+                        title_attr = ' title="{}"'.format(
+                            help_text[col_i + self.export_offset[1]]
+                        )
+                    else:
+                        title_attr = ""
+                    export += f'<a href="javascript:;" {title_attr}>'
+                    export += col.replace(' ', spaces_replacement)
+                    export += "</a>"
+                    export += "</th>"
+            else:
+                # Insert labels of rows
+                if (help_text := self.cell_indices.rows_help_text) \
+                        is not None:
+                    title_attr = ' title="{}"'.format(
+                        help_text[row_idx + self.export_offset[1]]
+                    )
+                else:
+                    title_attr = ""
+                export += "<td>"
+                export += f'<a href="javascript:;" {title_attr}>'
+                export += self.cell_indices.rows_labels[
+                              row_idx + self.export_offset[0]
+                              ].replace(' ', spaces_replacement)
+                export += "</a>"
+                export += "</td>"
+                # Insert actual values in the spreadsheet
+                for col_idx in range(self.shape[1]):
+                    title_attr = ""
+                    cell_at_pos = self._get_cell_at(row_idx, col_idx)
+                    if (description := cell_at_pos.description) \
+                            is not None:
+                        title_attr = ' title="{}"'.format(description)
+                    elif language_for_description is not None:
+                        if cell_at_pos.cell_type == CellType.computational:
+                            title = cell_at_pos.constructing_words.words[
+                                language_for_description
+                            ]
+                            title_attr = f' title="{title}"'
+                    export += "<td>"
+                    export += f'<a href="javascript:;" {title_attr}>'
+                    value = cell_at_pos.value
+                    if value is None:
+                        value = na_rep
+                    export += str(value)
+                    export += "</a>"
+                    export += "</td>"
+            export += '</tr>'
+        export += '</table>'
+        return export

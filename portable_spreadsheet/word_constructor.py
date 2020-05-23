@@ -524,7 +524,17 @@ class WordConstructor(object):
         for language in instance.languages:
             prefix = GRAMMARS[language]['cells']['variable']['prefix']
             suffix = GRAMMARS[language]['cells']['variable']['suffix']
-            instance.words[language] = prefix + cell.variable_name + suffix
+            # Now add the value as a suffix if required
+            value_word = ""
+            value_grammar = GRAMMARS[language]['cells']['variable']['value']
+            if value_grammar['include']:
+                value_word += value_grammar['prefix']
+                value_word += str(cell.value)
+                value_word += value_grammar['suffix']
+            # Construct the whole word
+            instance.words[language] = (prefix + cell.variable_name
+                                        + value_word + suffix)
+
         return instance
 
     @staticmethod

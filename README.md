@@ -117,6 +117,7 @@ be used directly.
 
 Cell slices can be exported in the same way as a whole spreadsheet (methods
 are discussed below).
+
 ## Spreadsheets functionality
 All following examples expect that user has already imported package.
 ```
@@ -554,7 +555,24 @@ Defined as a table.
 Export the sheet as a `numpy.ndarray` object.
 7. **Python 2D list**, method `to_2d_list`: 
 Export values 2 dimensional Python array (list of the list of the values).
+8. **HTML table**, method `to_html_table`:
+Export values to HTML table.
 
+#### Description field
+There is a possibility to add a description to a cell in the sheet
+(or to the whole slice of the sheet). It can be done using the property
+`description` on the cell or slice object. It should be done just before
+the export is done (together with defining Excel styles, see below)
+because once you rewrite the value of the cell on a given location,
+the description is lost.
+
+Example of using the description field:
+```
+# Setting the description of a single cell
+sheet.iloc[i, j].description = "Some text describing a cell"
+# Seting the description to a slice (propagate its value to each cell)
+sheet.iloc[i:j, k:l].description = "Text describing each cell in the slice"
+```
 #### Exporting to Excel
 It can be done using the interface:
 ```
@@ -657,6 +675,30 @@ descriptions (labels) are replaced with this string.
 **The return value is:** 
 
 Markdown (MD) compatible table of the values as a string.
+
+#### Exporting to HTML table format
+It can be done using the interface:
+```
+sheet.to_html_table(*,
+                    spaces_replacement: str = ' ',
+                    top_right_corner_text: str = "Sheet",
+                    na_rep: str = '',
+                    language_for_description: str = None)
+```
+Parameters are (all optional):
+
+* `spaces_replacement (str)`: All the spaces in the rows and columns
+descriptions (labels) are replaced with this string.
+* `top_right_corner_text (str)`: Text in the top right corner.
+* `na_rep (str)`: Replacement for the missing data.
+* `language_for_description (str)`: If not `None`, the description
+of each computational cell is inserted as word of this language
+(if the property description is not set).
+
+**The return value is:** 
+
+HTML table of the values as a string. Table is usable mainly for debugging
+purposes.
 
 ## Remarks and definitions
 * **Anchored cell** is a cell that is located in the sheet and can be
