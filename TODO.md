@@ -2,20 +2,28 @@
 ## BUGS
 
 ## IMPORTANT FEATURES
-1. Possibly the cell style inside cell (for Excel) (also for slide)
-1. New property of cell 'excel_style' (and export it to excel)
-1. Independent styles for cols and rows
-1. Exporting formulas to CSV, MD (option selecting of languages)
 1. Export to dict as standard row / column array.
+1. Export of variable with value (for Native language)
+1. Exporting formulas to CSV, MD (option selecting of languages)
+
 1. Show outputs in README.md
 1. New Use Cases for readme demo
+
+1. Export help text for Excel too(?)
+1. Everywhere export with labels, true/false
+1. Add the possibility to export only values of cells to Excel (no formulas).
 ---
 1. Unittest for everything
 ---
 **Speculative:**
-
-1. Appending to the same Excel file (sheet) - RATHER NOT
-1. String literals (?)
+1. Appending the sheets to same Excel file (sheet) - WITH WARNING LOG
+1. String literals, some special treatment (?)
+1. Transpose feature (Only for values!)
+1. Regular serialization
+1. Generally CONSTANT EXPORTING for all formats(?)
+1. Rounding numbers (precision up to 2 digits)
+---
+Rewrite setup.py using new technologies
 # DONE:
 1. Help texts for column/row indicies
 1. Indices generator rather as a parameter (not global parameter)
@@ -74,3 +82,29 @@
     abstract methods: get_shape(), get_value_at(row, col). Use this parent for 
     slices and sheet
 1. Add new export - to array (just Python 2D array)
+1. To excel exporting of slices must respect offsets! Probably introduce
+a general variable/function (**property _offset**) with offset on the 
+serializer level. RATHER: EXPORT ONLY VALUES IF FROM SLICE + WARNING LOG.
+JUST PRINT WARNING
+    - Add logger (with warning method) - Optional Callable
+    - Add export_offset property
+    - Document arguments and principle in README.md
+    - Offset to labels! (related to above)
+1. _to dictionary: not to skip none values_
+    - document this to README.md
+1. Rename nickname to **ALIAS**.
+1. Rows and columns should be included as an ordered array in the export
+    to dictionary.
+    1. Variables in Excel defined in a separate sheet:
+    - How to:
+    To define sheet: `constants_ws = workbook.add_worksheet(name="Constants")`
+    USE: `workbook.define_name('super_1', '=Constants!$F$8')`
+    - Use custom defined name for sheet with constants + possibility to skip it.
+    - Add **description** to variable
+    - Document new parameters in README.md
+    - Setting variables using [] operator -< document in README.md
+    - new parameter for setting variables -< document in README.md
+1. Independent styles for cols and rows -< document in README.md
+1. Cell style inside cell (for Excel) (also for slide)
+    - New property of cell 'excel_style' (and export it to excel)
+    - Excel format must be set just before exporting``

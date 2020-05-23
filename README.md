@@ -115,8 +115,8 @@ There is also a functionality related to setting the values to some
 constant or reference to another cell. This functionality should not
 be used directly.
 
-You can also export cell slice to the NumPy array using `.to_numpy()` method.
-
+Cell slices can be exported in the same way as a whole spreadsheet (methods
+are discussed below).
 ## Spreadsheets functionality
 All following examples expect that user has already imported package.
 ```
@@ -135,8 +135,11 @@ sheet = ps.Spreadsheet.create_new_sheet(
 if you wish to include some user-defined languages or the language
 called 'native' (which is already in the system), you also need to
 pass the argument `rows_columns` (that is a dictionary with keys as
-languages and values as lists with column names in a given language).
-If you choose to add a 'native' language, you can use a shorter version:
+languages and values as lists with column names in a given non-system
+language).
+
+For example, if you choose to add _'native'_ language (already available in
+grammars), you can use a shorter version:
 ```
 sheet = ps.Spreadsheet.create_new_sheet(
     number_of_rows, number_of_columns, 
@@ -146,17 +149,23 @@ sheet = ps.Spreadsheet.create_new_sheet(
     }
 )
 ```
-Other (keywords) arguments:
 
-1. `rows_labels (List[str])`: List of masks (nicknames) for row names.
-2. `columns_labels (List[str])`: List of masks (nicknames) for column names.
-3. `rows_help_text (List[str])`: List of help texts for each row.
-4. `columns_help_text (List[str])`: List of help texts for each column.
-5. `excel_append_labels (bool)`: If True, one row and column is added on the
-beginning of the sheet as an offset for labels.
+Other (keywords) arguments:
+1. `rows_labels (List[str])`: _(optional)_ List of masks (aliases)
+for row names.
+2. `columns_labels (List[str])`: _(optional)_ List of masks (aliases)
+for column names.
+3. `rows_help_text (List[str])`: _(optional)_ List of help texts for each row.
+4. `columns_help_text (List[str])`: _(optional)_ List of help texts for each
+column.
+5. `excel_append_labels (bool)`: _(optional)_ If True, one row and
+column is added on the beginning of the sheet as an offset for labels.
+6. `warning_logger (Callable[[str], None]])`: Function that logs the warnings
+(or `None` if logging should be skipped).
 
 First two are the most important because they define labels for the columns
-and rows indices.
+and rows indices. The warnings mention above occurs when the slices are
+exported (which can lead to data losses).
 
 #### How to change the size of the spreadsheet
 You can only expand the size of the spreadsheet (it's because of the
@@ -218,22 +227,32 @@ Variables are encapsulated in the property `var` of the class `Spreadsheet`.
 It provides the following functionality:
 
 1. **Setting the variable**, method `set_variable` with parameters: `name` 
-(a lowercase alphanumeric string with underscores) and `value` 
-(number or string).
+(a lowercase alphanumeric string with underscores), `value` 
+(number or string), and `description` (optional) that serves as a help text.
 2. **Get the variable dictionary**, property `variables_dict`, returns 
-a dictionary with variable names as keys and variable values as values.
+a dictionary with variable names as keys and variable values and descriptions
+as values → following the logic: `{'VARIABLE_NAME': {'description':
+'String value or None', 'value': 'VALUE'}}`.
 3. **Check if the variable exists in a system**, method `variable_exist` with
 a parameter `name` representing the name of the variable. 
 Return true if the variable exists, false otherwise.
 4. **Get the variable as a Cell object**, method `get_variable`, with
 parameter `name` (required as positional only) that returns the variable as a
 Cell object (for computations in a sheet).
+5. **Check if there is any variable in the system**: using the property `empty`
+that returns true if there is no variable in the system, false otherwise. 
 
-To get the variable as a cell object, you can also use the following
-approach (preferable approach) with square brackets:
+To get (and set similarly) the variable as a cell object, you can also use
+the following approach with square brackets:
 ```
 sheet.iloc[i, j] = sheet.var['VARIABLE_NAME']
 ```
+Same approach can be used for setting the value of variable:
+```
+sheet.var['VARIABLE_NAME'] = some_value
+```
+Getting/setting the variables values should be done preferably by this logic.
+
 #### Example
 Following example multiply some cell with value of
 PI constant stored as a variable `pi`:
@@ -515,7 +534,10 @@ word_in_language_lang = word['lang']
 ```
 
 ### Exporting the results
-There are various methods available for exporting the results:
+There are various methods available for exporting the results. All these
+methods can be used either to a whole sheet (instance of Spreadsheet)
+or to any slice (CellSlice instance):
+
 1. **Excel format**, method `to_excel`:
 Export the sheet to the Excel-compatible file.
 2. **Dictionary of values**, method `to_dictionary`:
@@ -547,15 +569,40 @@ positional)
 * `sheet_name (str)`: The name of the sheet inside the file.
 * `spaces_replacement (str)`: All the spaces in the rows and columns
 descriptions (labels) are replaced with this string.
-* `label_format (dict)`: Excel styles for the label rows and columns, see
+* `label_row_format (dict)`: Excel styles for the label of rows,
 documentation: https://xlsxwriter.readthedocs.io/format.html
+* `label_column_format (dict)`: Excel styles for the label of columns,
+documentation: https://xlsxwriter.readthedocs.io/format.html
+* `variables_sheet_name (Optional[str])`: If set, creates the new
+sheet with variables and their description and possibility
+to set them up (directly from the sheet).
+* `variables_sheet_header (Dict[str, str])`: Define the labels (header)
+for the sheet with variables (first row in the sheet). Dictionary should look
+like: `{"name": "Name", "value": "Value", "description": "Description"}`.
+
+##### Setting the format/style for Excel cells
+There is a possibility to set the style/format of each cell in the grid
+or the slice of the gird using property `excel_format`. Style assignment
+should be done just before the export to the file because each new
+assignment of values to the cell overrides its style. Format/style can
+be set for both slice and single value. 
+
+Example of setting Excel format/style for cells and slices:
+```
+# Set the format of the cell on the position [i, j] (use bold value)
+sheet.iloc[i, j].excel_format = {'bold': True}
+# Set the format of the cell slice (use bold value and red color)
+sheet.iloc[i:j, k:l].excel_format = {'bold': True, 'color': 'red'}
+```
 
 #### Exporting to the dictionary
 It can be done using the interface:
 ```
-sheet.to_excel(languages: List[str] = None, /, *, by_row: bool = True,
+sheet.to_excel(languages: List[str] = None, /, *, 
+               by_row: bool = True,
                languages_pseudonyms: List[str] = None,
-               spaces_replacement: str = ' ')
+               spaces_replacement: str = ' ',
+               skip_nan_cell: bool = False)
 ```
 Parameters are (all optional):
 
@@ -566,6 +613,9 @@ second in the order. If False it is vice-versa.
 this list.
 * `spaces_replacement (str)`: All the spaces in the rows and columns
 descriptions (labels) are replaced with this string.
+* `skip_nan_cell (bool)`: If true, `None` (NaN, empty cells) values are
+skipped, default value is false (NaN values are included).
+* `nan_replacement (object)`: Replacement for the `None` (NaN) value
 
 **The return value is:** 
 

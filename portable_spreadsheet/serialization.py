@@ -1,5 +1,6 @@
 import abc
-from typing import Tuple, List, Dict, Union
+from typing import Tuple, List, Dict, Union, Callable, Optional
+from types import MappingProxyType
 from numbers import Number
 
 import xlsxwriter
@@ -33,7 +34,39 @@ T_out_dict = Dict[
 
 class Serialization(abc.ABC):
     """Provides basic functionality for exporting to required formats.
+
+    Attributes:
+        export_offset (Tuple[int, int]): Defines how many rows and
+            columns are skiped from the left top corner. First index is
+            number of rows, second number of columns.
+        warning_logger (Callable[[str], None]): Function that logs the
+            warnings.
+        export_subset (bool): If true, warning are raised when exporting.
     """
+
+    def __init__(self, *,
+                 export_offset: Tuple[int, int] = (0, 0),
+                 export_subset: bool = False,
+                 warning_logger: Optional[Callable[[str], None]] = None):
+        """Initialise functionality for serialization.
+
+        Args:
+            export_offset (Tuple[int, int]): Defines how many rows and
+                columns are skiped from the left top corner. First index is
+                number of rows, second number of columns.
+            export_subset (bool): If true, warning are raised when exporting.
+            warning_logger (Optional[Callable[[str], None]]): Function that
+                logs the warnings (or None if skipped).
+        """
+        # Export offset of rows, columns
+        self.export_offset: Tuple[int, int] = export_offset
+        if warning_logger is not None:
+            self.warning_logger: Callable[[str], None] = warning_logger
+        else:
+            # Silent logger
+            self.warning_logger: Callable[[str], None] = lambda _mess: _mess
+        self.export_subset: bool = export_subset
+
     @property
     def shape(self) -> Tuple[int, int]:
         """Get the shape as the tuple of number of rows and columns.
@@ -75,7 +108,16 @@ class Serialization(abc.ABC):
                  /, *,  # noqa E999
                  sheet_name: str = "Results",
                  spaces_replacement: str = ' ',
-                 label_format: dict = {'bold': True}) -> None:
+                 label_row_format: dict = {'bold': True},
+                 label_column_format: dict = {'bold': True},
+                 variables_sheet_name: Optional[str] = None,
+                 variables_sheet_header: Dict[str, str] = MappingProxyType(
+                     {
+                         "name": "Name",
+                         "value": "Value",
+                         "description": "Description"
+                     })
+                 ) -> None:
         """Export the values inside Spreadsheet instance to the
             Excel 2010 compatible .xslx file
 
@@ -84,57 +126,108 @@ class Serialization(abc.ABC):
             sheet_name (str): The name of the sheet inside the file.
             spaces_replacement (str): All the spaces in the rows and columns
                 descriptions (labels) are replaced with this string.
-            label_format (dict): Excel styles for the label rows and columns,
+            label_row_format (dict): Excel styles for the label of rows,
                 documentation: https://xlsxwriter.readthedocs.io/format.html
+            label_column_format (dict): Excel styles for the label of columns,
+                documentation: https://xlsxwriter.readthedocs.io/format.html
+            variables_sheet_name (Optional[str]): If set, creates the new
+                sheet with variables and their description and possibility
+                to set them up (directly from the sheet).
+            variables_sheet_header (Dict[str, str]): Define the labels (header)
+                for the sheet with variables (first row in the sheet).
         """
         # Quick sanity check
         if ".xlsx" not in file_path[-5:]:
             raise ValueError("Suffix of the file has to be '.xslx'!")
         if not isinstance(sheet_name, str) or len(sheet_name) < 1:
             raise ValueError("Sheet name has to be non-empty string!")
+        # Log warning if needed
+        if self.export_subset:
+            self.warning_logger("Slice is being exported => there is"
+                                " a possibility of data losses.")
         # Open or create an Excel file and create a sheet inside:
         workbook = xlsxwriter.Workbook(file_path)
         worksheet = workbook.add_worksheet(name=sheet_name)
-        # Register all variables:
-        for name, value in self._get_variables().variables_dict.items():
-            workbook.define_name(name, str(value))
         # Register the style for the labels:
-        cell_format = workbook.add_format(label_format)
+        col_label_format = workbook.add_format(label_column_format)
+        row_label_format = workbook.add_format(label_row_format)
+
+        # Register all variables:
+        if self._get_variables().empty:
+            pass
+        elif variables_sheet_name is None:
+            for name, value in self._get_variables().variables_dict.items():
+                workbook.define_name(name, str(value['value']))
+        else:
+            variables_sheet = workbook.add_worksheet(name=variables_sheet_name)
+            # Insert header (labels)
+            variables_sheet.write(0, 0, variables_sheet_header['name'],
+                                  col_label_format)
+            variables_sheet.write(0, 1, variables_sheet_header['value'],
+                                  col_label_format)
+            variables_sheet.write(0, 2, variables_sheet_header['description'],
+                                  col_label_format)
+            row_idx = 1
+            for var_n, var_v in self._get_variables().variables_dict.items():
+                # Insert variables to the sheet
+                variables_sheet.write(row_idx, 0, var_n)
+                variables_sheet.write(row_idx, 1, var_v['value'])
+                variables_sheet.write(row_idx, 2, var_v['description'])
+                # Register variable
+                workbook.define_name(
+                    var_n, f'={variables_sheet_name}!$B${row_idx + 1}'
+                )
+                row_idx += 1
+
         # Iterate through all columns and rows and add data
         for row_idx in range(self.shape[0]):
             for col_idx in range(self.shape[1]):
                 cell: 'Cell' = self._get_cell_at(row_idx, col_idx)
                 if cell.value is not None:
+                    # Offset here is either 0 or 1, indicates if we writes
+                    # row/column labels to the first row and column.
                     offset = 0
                     if self.cell_indices.excel_append_labels:
                         offset = 1
+                    # Excel format/style for the cell:
+                    if len(cell.excel_format) > 0:
+                        # Register the format
+                        cell_format = workbook.add_format(cell.excel_format)
+                    else:
+                        cell_format = None
                     if cell.cell_type == CellType.value_only:
                         # If the cell is a value only, use method 'write'
                         worksheet.write(row_idx + offset,
                                         col_idx + offset,
-                                        cell.value)
+                                        cell.value,
+                                        cell_format)
                     else:
                         # If the cell is a formula, use method 'write_formula'
                         worksheet.write_formula(row_idx + offset,
                                                 col_idx + offset,
                                                 cell.parse['excel'],
-                                                value=cell.value)
+                                                value=cell.value,
+                                                cell_format=cell_format)
         # Add the labels for rows and columns
         if self.cell_indices.excel_append_labels:
+            # Add labels of column
             for col_idx in range(self.shape[1]):
                 worksheet.write(0,
                                 col_idx + 1,
                                 self.cell_indices.columns_labels[
-                                    col_idx
+                                    # Reflect the export offset
+                                    col_idx + self.export_offset[1]
                                 ].replace(' ', spaces_replacement),
-                                cell_format)
+                                col_label_format)
+            # Add labels for rows
             for row_idx in range(self.shape[0]):
                 worksheet.write(row_idx + 1,
                                 0,
                                 self.cell_indices.rows_labels[
-                                    row_idx
+                                    # Reflect the export offset
+                                    row_idx + self.export_offset[0]
                                 ].replace(' ', spaces_replacement),
-                                cell_format)
+                                row_label_format)
         # Store results
         workbook.close()
 
@@ -143,18 +236,23 @@ class Serialization(abc.ABC):
                       /, *,  # noqa E999
                       by_row: bool = True,
                       languages_pseudonyms: List[str] = None,
-                      spaces_replacement: str = ' ') -> T_out_dict:
+                      spaces_replacement: str = ' ',
+                      skip_nan_cell: bool = False,
+                      nan_replacement: object = None) -> T_out_dict:
         """Export this spreadsheet to the dictionary that can be parsed to the
             JSON format.
 
         Args:
             languages (List[str]): List of languages that should be exported.
+                If it has value None, all the languages are exported.
             by_row (bool): If True, rows are the first indices and columns
                 are the second in the order. If False it is vice-versa.
             languages_pseudonyms (List[str]): Rename languages to the strings
                 inside this list.
             spaces_replacement (str): All the spaces in the rows and columns
                 descriptions (labels) are replaced with this string.
+            skip_nan_cell (bool): If True, None (NaN) values are skipped.
+            nan_replacement (object): Replacement for the None (NaN) value
 
         Returns:
             Dict[object, Dict[object, Dict[str, Union[str, float]]]]: The
@@ -162,6 +260,10 @@ class Serialization(abc.ABC):
                 or language pseudonym or 'value' keyword for values -> value as
                 a value or as a cell building string.
         """
+        # Log warning if needed
+        if self.export_subset:
+            self.warning_logger("Slice is being exported => there is"
+                                " a possibility of data losses.")
         # Assign all languages if languages is None:
         if languages is None:
             languages = self.cell_indices.languages
@@ -180,27 +282,51 @@ class Serialization(abc.ABC):
         # The x-axes represents the columns
         x_range = self.shape[1]
         x = [label.replace(' ', spaces_replacement)
-             for label in self.cell_indices.columns_labels]
-        x_helptext = self.cell_indices.columns_help_text
+             for label in self.cell_indices.columns_labels[
+                          # Reflects the column offset for export
+                          self.export_offset[1]:
+                          ]
+             ]
+        if (x_helptext := self.cell_indices.columns_help_text) is not None:  # noqa E203
+            # Reflects the column offset for export
+            x_helptext = x_helptext[self.export_offset[1]:]
         x_start_key = 'columns'
         # The y-axes represents the rows
         y_range = self.shape[0]
         y = [label.replace(' ', spaces_replacement)
-             for label in self.cell_indices.rows_labels]
-        y_helptext = self.cell_indices.rows_help_text
+             for label in self.cell_indices.rows_labels[
+                          # Reflects the row offset for export
+                          self.export_offset[0]:
+                          ]
+             ]
+        if (y_helptext := self.cell_indices.rows_help_text) is not None:  # noqa E203
+            # Reflects the row offset for export
+            y_helptext = y_helptext[self.export_offset[0]:]
+
         y_start_key = 'rows'
         if by_row:
             # The x-axes represents the rows
             x_range = self.shape[0]
             x = [label.replace(' ', spaces_replacement)
-                 for label in self.cell_indices.rows_labels]
-            x_helptext = self.cell_indices.rows_help_text
+                 for label in self.cell_indices.rows_labels[
+                          # Reflects the row offset for export
+                          self.export_offset[0]:
+                          ]
+                 ]
+            if (x_helptext := self.cell_indices.rows_help_text) is not None:  # noqa E203
+                # Reflects the row offset for export
+                x_helptext = x_helptext[self.export_offset[0]:]
             x_start_key = 'rows'
             # The y-axes represents the columns
             y_range = self.shape[1]
             y = [label.replace(' ', spaces_replacement)
-                 for label in self.cell_indices.columns_labels]
-            y_helptext = self.cell_indices.columns_help_text
+                 for label in self.cell_indices.columns_labels[
+                          # Reflects the column offset for export
+                          self.export_offset[1]:
+                          ]]
+            if (y_helptext := self.cell_indices.columns_help_text) is not None:  # noqa E203
+                # Reflects the column offset for export
+                y_helptext = y_helptext[self.export_offset[1]:]
             y_start_key = 'columns'
 
         # Export the spreadsheet to the dictionary (that can by JSON-ified)
@@ -213,9 +339,13 @@ class Serialization(abc.ABC):
                     cell = self._get_cell_at(idx_x, idx_y)
                 else:
                     cell = self._get_cell_at(idx_y, idx_x)
-                # Skip if cell value is None:
-                if cell.value is None:
+                # Skip if cell value is None if required:
+                cell_value = cell.value
+                if cell_value is None and skip_nan_cell:
                     continue
+                # Replace the NaN value as required
+                if cell_value is None:
+                    cell_value = nan_replacement
                 # Receive values from cell (either integer or building text)
                 parsed_cell = cell.parse
                 pseudolang_and_val = {}
@@ -223,7 +353,7 @@ class Serialization(abc.ABC):
                     pseudolang_and_val[languages_used[i]] = \
                         parsed_cell[language]
                 # Append the value:
-                pseudolang_and_val['value'] = cell.value
+                pseudolang_and_val['value'] = cell_value
                 y_values[y_start_key][y[idx_y]] = pseudolang_and_val
                 if y_helptext is not None:
                     y_values[y_start_key][y[idx_y]]['help_text'] = \
@@ -233,6 +363,13 @@ class Serialization(abc.ABC):
                 values[x_start_key][x[idx_x]]['help_text'] = x_helptext[idx_x]
         # Add variables
         values['variables'] = self._get_variables().variables_dict
+        # Add a row and column labels as arrays
+        if by_row:
+            values['row-labels'] = x
+            values['column-labels'] = y
+        else:
+            values['row-labels'] = y
+            values['column-labels'] = x
         return values
 
     def to_string_of_values(self) -> str:
@@ -241,6 +378,10 @@ class Serialization(abc.ABC):
         Returns:
             str: Python list definition string.
         """
+        # Log warning if needed
+        if self.export_subset:
+            self.warning_logger("Slice is being exported => there is"
+                                " a possibility of data losses.")
         export = "["
         for row_idx in range(self.shape[0]):
             export += "["
@@ -259,6 +400,10 @@ class Serialization(abc.ABC):
         Returns:
             str: Python array.
         """
+        # Log warning if needed
+        if self.export_subset:
+            self.warning_logger("Slice is being exported => there is"
+                                " a possibility of data losses.")
         export: list = []
         for row_idx in range(self.shape[0]):
             row: list = []
@@ -286,19 +431,28 @@ class Serialization(abc.ABC):
         Returns:
             str: CSV of the values
         """
+        # Log warning if needed
+        if self.export_subset:
+            self.warning_logger("Slice is being exported => there is"
+                                " a possibility of data losses.")
         export = ""
         for row_idx in range(-1, self.shape[0]):
             if row_idx == -1:
                 export += top_right_corner_text + sep
+                # Insert labels of columns:
                 for col_i in range(self.shape[1]):
-                    col = self.cell_indices.columns_labels[col_i]
+                    col = self.cell_indices.columns_labels[
+                        col_i + self.export_offset[1]
+                    ]
                     export += col.replace(' ', spaces_replacement)
                     if col_i < self.shape[1] - 1:
                         export += sep
             else:
-                export += self.cell_indices.rows_labels[row_idx].replace(
-                    ' ', spaces_replacement
-                ) + sep
+                # Insert labels of rows
+                export += self.cell_indices.rows_labels[
+                              row_idx + self.export_offset[0]
+                          ].replace(' ', spaces_replacement) + sep
+                # Insert actual values in the spreadsheet
                 for col_idx in range(self.shape[1]):
                     value = self._get_cell_at(row_idx, col_idx).value
                     if value is None:
@@ -325,13 +479,20 @@ class Serialization(abc.ABC):
         Returns:
             str: Markdown (MD) compatible table of the values
         """
+        # Log warning if needed
+        if self.export_subset:
+            self.warning_logger("Slice is being exported => there is"
+                                " a possibility of data losses.")
         export = ""
         for row_idx in range(-2, self.shape[0]):
             if row_idx == -2:
                 # Add the labels and top right corner text
                 export += "| " + top_right_corner_text + " |"
                 for col_i in range(self.shape[1]):
-                    col = self.cell_indices.columns_labels[col_i]
+                    # Insert column labels:
+                    col = self.cell_indices.columns_labels[
+                        col_i + self.export_offset[1]
+                    ]
                     export += "*" + col.replace(' ', spaces_replacement) + "*"
                     if col_i < self.shape[1] - 1:
                         export += " | "
@@ -346,10 +507,13 @@ class Serialization(abc.ABC):
                     if col_i == self.shape[1] - 1:
                         export += "\n"
             else:
-                export += "| *" + \
-                          self.cell_indices.rows_labels[row_idx].replace(
-                              ' ', spaces_replacement
-                          ) + "*" + " | "
+                export += "| *"
+                # Insert row labels
+                export += self.cell_indices.rows_labels[
+                              row_idx + self.export_offset[0]
+                          ].replace(' ', spaces_replacement)
+                export += "*" + " | "
+
                 for col_idx in range(self.shape[1]):
                     value = self._get_cell_at(row_idx, col_idx).value
                     if value is None:
@@ -367,7 +531,14 @@ class Serialization(abc.ABC):
         Returns:
             numpy.ndarray: 2 dimensions array with values
         """
+        # Log warning if needed
+        if self.export_subset:
+            self.warning_logger("Slice is being exported => there is"
+                                " a possibility of data losses.")
         results = numpy.zeros(self.shape)
+        # Variable for indicating that logging is needed (for logging that
+        # replacement of some value for NaN is done):
+        contains_nonumeric_values = False
         for row_idx in range(self.shape[0]):
             for col_idx in range(self.shape[1]):
                 if (value := self._get_cell_at(row_idx, col_idx).value) is not None:  # noqa E999
@@ -375,6 +546,14 @@ class Serialization(abc.ABC):
                         results[row_idx, col_idx] = value
                     else:
                         results[row_idx, col_idx] = numpy.nan
+                        # For logging that replacement is done
+                        contains_nonumeric_values = True
                 else:
                     results[row_idx, col_idx] = numpy.nan
+        # Log warning if needed
+        if contains_nonumeric_values:
+            self.warning_logger(
+                "Some values in the sheet are not numbers, the "
+                "nan value is set instead."
+            )
         return results

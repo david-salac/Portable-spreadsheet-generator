@@ -33,9 +33,9 @@ class CellIndices(object):
             number_of_columns (int): Number of columns.
             rows_columns (T_lg_col_row): List of all row names and column names
                 for each language.
-            rows_labels (List[str]): List of masks (nicknames) for row
+            rows_labels (List[str]): List of masks (aliases) for row
                 names.
-            columns_labels (List[str]): List of masks (nicknames) for column
+            columns_labels (List[str]): List of masks (aliases) for column
                 names.
             rows_help_text (List[str]): List of help texts for each row.
             columns_help_text (List[str]): List of help texts for each column.
@@ -65,14 +65,14 @@ class CellIndices(object):
                     raise ValueError(e_mess)
         if number_of_rows < 1 or number_of_columns < 1:
             raise ValueError("Number of rows and columns has to at least 1!")
-        # check the columns and rows nicknames sizes
+        # check the columns and rows aliases sizes
         if (rows_labels is not None
                 and len(rows_labels) != number_of_rows):
-            raise ValueError("Number of rows nicknames has to be the same"
+            raise ValueError("Number of rows aliases has to be the same"
                              "as number of rows!")
         if (columns_labels is not None
                 and len(columns_labels) != number_of_columns):
-            raise ValueError("Number of columns nicknames has to be the same"
+            raise ValueError("Number of columns aliases has to be the same"
                              "as number of columns!")
         # check the help texts sizes
         if (rows_help_text is not None
@@ -112,7 +112,7 @@ class CellIndices(object):
         # Define user defined names for rows and columns
         self.rows_labels: List[str] = copy.deepcopy(rows_labels)
         self.columns_labels: List[str] = copy.deepcopy(columns_labels)
-        # Or define auto generated nicknames as an integer sequence from 0
+        # Or define auto generated aliases as an integer sequence from 0
         if rows_labels is None:
             self.rows_labels = [str(_row_n) for _row_n in
                                 range(number_of_rows)]
@@ -156,8 +156,8 @@ class CellIndices(object):
                     new_number_of_columns: int,
                     new_rows_columns: Optional[T_lg_col_row] = None,
                     /, *,  # noqa E225
-                    new_rows_nicknames: List[str] = None,
-                    new_columns_nicknames: List[str] = None,
+                    new_rows_labels: List[str] = None,
+                    new_columns_labels: List[str] = None,
                     new_rows_help_text: List[str] = None,
                     new_columns_help_text: List[str] = None,
                     ) -> 'CellIndices':
@@ -168,9 +168,9 @@ class CellIndices(object):
             new_number_of_columns (int): Number of columns to be added.
             new_rows_columns (T_lg_col_row): List of all row names and column
                 names for each language to be added.
-            new_rows_nicknames (List[str]): List of masks (nicknames) for row
+            new_rows_labels (List[str]): List of masks (aliases) for row
                 names to be added.
-            new_columns_nicknames (List[str]): List of masks (nicknames) for
+            new_columns_labels (List[str]): List of masks (aliases) for
                 column names to be added.
             new_rows_help_text (List[str]): List of help texts for each row to
                 be added.
@@ -181,14 +181,14 @@ class CellIndices(object):
         # Quick sanity check:
         if new_number_of_rows < 1 and new_number_of_columns < 1:
             return
-        # check the columns and rows nicknames sizes
-        if (new_rows_nicknames is not None
-                and len(new_rows_nicknames) != new_number_of_rows):
-            raise ValueError("Number of rows nicknames has to be the same"
+        # check the columns and rows aliases sizes
+        if (new_rows_labels is not None
+                and len(new_rows_labels) != new_number_of_rows):
+            raise ValueError("Number of rows aliases has to be the same"
                              "as number of rows!")
-        if (new_columns_nicknames is not None
-                and len(new_columns_nicknames) != new_number_of_columns):
-            raise ValueError("Number of columns nicknames has to be the same"
+        if (new_columns_labels is not None
+                and len(new_columns_labels) != new_number_of_columns):
+            raise ValueError("Number of columns aliases has to be the same"
                              "as number of columns!")
         # check the help texts sizes
         if (new_rows_help_text is not None
@@ -244,20 +244,20 @@ class CellIndices(object):
             expanded.columns[language].extend(cols)
 
         # Define user defined names for rows and columns
-        if new_rows_nicknames is not None:
-            expanded.rows_labels.extend(new_rows_nicknames)
+        if new_rows_labels is not None:
+            expanded.rows_labels.extend(new_rows_labels)
         else:
             expanded.rows_labels = list(
                 range(expanded.number_of_rows + new_number_of_rows)
             )
-        if new_columns_nicknames is not None:
-            expanded.columns_labels.extend(new_columns_nicknames)
+        if new_columns_labels is not None:
+            expanded.columns_labels.extend(new_columns_labels)
         else:
             expanded.columns_labels = list(
                 range(expanded.number_of_columns + new_number_of_columns)
             )
-        # Or define auto generated nicknames as an integer sequence from 0
-        if new_columns_nicknames is None:
+        # Or define auto generated aliases as an integer sequence from 0
+        if new_columns_labels is None:
             expanded.columns_labels = list(
                 range(expanded.number_of_columns + new_number_of_columns)
             )

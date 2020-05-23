@@ -1,4 +1,4 @@
-from typing import Dict, Union
+from typing import Dict, Union, Optional
 import re
 import copy
 from numbers import Number
@@ -16,7 +16,7 @@ class _Location(object):
     Attributes:
         spreadsheet (Spreadsheet): Reference to spreadsheet instance.
         by_integer (bool): If True, indices are computed using integer value,
-            if False, labels (nicknames, typically string) are used.
+            if False, labels (aliases, typically string) are used.
     """
 
     def __init__(self,
@@ -27,7 +27,7 @@ class _Location(object):
         Args:
             spreadsheet (Spreadsheet): Reference to spreadsheet instance.
             by_integer (bool): If True, indices are computed using integer
-            value, if False, labels (nicknames, typically string) are used.
+            value, if False, labels (aliases, typically string) are used.
         """
         self.spreadsheet: 'Spreadsheet' = spreadsheet
         self.by_integer: str = by_integer
@@ -271,10 +271,14 @@ class _SheetVariables(object):
         Args:
             spreadsheet (Spreadsheet): Reference to spreadsheet instance.
         """
-        self._variables: Dict[str, object] = {}
+        self._variables: Dict[str, Dict[str, object]] = {}
         self.spreadsheet: 'Spreadsheet' = spreadsheet
 
-    def set_variable(self, name: str, value: Union[str, Number]) -> None:
+    def set_variable(self,
+                     name: str,
+                     value: Union[str, Number],
+                     description: Optional[str] = None,
+                     exclude_description_update: bool = False) -> None:
         """Check the name consistency and set the variable.
 
         If the variable with given name is already in the dictionary, it is
@@ -284,6 +288,9 @@ class _SheetVariables(object):
             name (str): Unique name for the variable. Has to be lower case
                 alphanumeric value maximally with underscore symbols.
             value (Union[str, Number]): A value to be set.
+            description (Optional[str]): Description of the variable
+            exclude_description_update (bool): If true, description is not
+                updated
 
         Raises:
             ValueError: If the structure of the name does not match the
@@ -306,17 +313,26 @@ class _SheetVariables(object):
             raise ValueError("Name of variable has to be alphanumeric value "
                              "maximally with underscores!")
 
+        # Use the existing description if required
+        if name in self._variables.keys():
+            if exclude_description_update:
+                description = self._variables[name]["description"]
+
         # Add the value to the dictionary:
-        self._variables[name] = value
+        self._variables[name] = {
+            "value": value,
+            "description": description
+        }
 
     @property
-    def variables_dict(self) -> Dict[str, object]:
+    def variables_dict(self) -> Dict[str, Dict[str, object]]:
         """Return the variables as a read-only dictionary with keys as a name
             of variable and value as actual value of the variable.
 
         Returns:
-            Dict[str, object]: Read-only dictionary with names of variables
-                (keys) and their values (value).
+            Dict[str, Dict[str, object]]: Read-only dictionary with names of
+                variables (keys) and their values and description (value).
+                Example: 'key' -> {'value': VALUE, "description": DESCRIPTION}
         """
         return copy.deepcopy(self._variables)
 
@@ -332,7 +348,7 @@ class _SheetVariables(object):
         return str(name) in self._variables.keys()
 
     def get_variable(self, name: str, /) -> Cell:  # noqa E225
-        """Get variable as a new Cell by its name.
+        """Get variable value as a new Cell by its name.
 
         Args:
             name (str): Name of the variable
@@ -342,7 +358,7 @@ class _SheetVariables(object):
                 Cell(None,
                      None,
                      variable_name=name,
-                     value=self._variables[name],
+                     value=self._variables[name]['value'],
                      is_variable=True,
                      cell_type=CellType.computational,
                      cell_indices=self.spreadsheet.cell_indices
@@ -353,5 +369,18 @@ class _SheetVariables(object):
                              f"the system!")
 
     def __getitem__(self, item):
-        """Overloads [item] operator"""
+        """Overloads [item] operator getter"""
         return self.get_variable(item)
+
+    def __setitem__(self, key, value):
+        """Overloads [item] operator setter"""
+        self.set_variable(key, value, exclude_description_update=True)
+
+    @property
+    def empty(self) -> bool:
+        """Return True if the variable set is empty, False otherwise.
+
+        Returns:
+            bool: Return True if the variable set is empty, False otherwise.
+        """
+        return len(self._variables) == 0

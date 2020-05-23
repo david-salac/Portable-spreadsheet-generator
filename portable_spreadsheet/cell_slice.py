@@ -29,7 +29,7 @@ class CellSlice(Serialization):
                  start_idx: Tuple[int, int],
                  end_idx: Tuple[int, int],
                  cell_subset: Iterable[Cell],
-                 driving_sheet
+                 driving_sheet: 'Spreadsheet'
                  ):
         """Create a cell slice from the spreadsheet.
 
@@ -41,6 +41,11 @@ class CellSlice(Serialization):
             cell_subset (Iterable[Cell]): The list of all cells in the slice.
             driving_sheet (Spreadsheet): Reference to the spreadsheet.
         """
+        # Initialise functionality for serialization:
+        super().__init__(export_offset=start_idx,
+                         warning_logger=driving_sheet.warning_logger,
+                         export_subset=True)
+
         self.start_idx: Tuple[int, int] = start_idx
         self.end_idx: Tuple[int, int] = end_idx
         self.start_cell: Cell = driving_sheet.iloc[start_idx]
@@ -119,6 +124,27 @@ class CellSlice(Serialization):
             Cell: a new cell with the result.
         """
         return Cell.count(self.start_cell, self.end_cell, self.cell_subset)
+
+    @property
+    def excel_format(self):
+        """Should not be accessible for slides."""
+        raise NotImplementedError
+
+    @excel_format.setter
+    def excel_format(self, new_format: dict):
+        """Set the Excel cell format/style.
+
+        Read the documentation: https://xlsxwriter.readthedocs.io/format.html
+
+        Args:
+            new_format (dict): New format definition.
+        """
+        if not isinstance(new_format, dict):
+            raise ValueError("New format has to be a dictionary!")
+        for row in range(self.start_idx[0], self.end_idx[0] + 1):
+            for col in range(self.start_idx[1],
+                             self.end_idx[1] + 1):
+                self.driving_sheet.iloc[row, col].excel_format = new_format
 
     def _set_value_on_position(self, other: Union[Cell, Number],
                                row: int, col: int) -> None:

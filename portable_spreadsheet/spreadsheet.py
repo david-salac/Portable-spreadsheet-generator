@@ -1,5 +1,5 @@
 from numbers import Number
-from typing import Tuple, List, Union, Optional
+from typing import Tuple, List, Union, Optional, Callable
 import copy
 
 from .cell import Cell
@@ -38,13 +38,19 @@ class Spreadsheet(Serialization):
     """
 
     def __init__(self,
-                 cell_indices: CellIndices):
+                 cell_indices: CellIndices,
+                 warning_logger: Optional[Callable[[str], None]] = None):
         """Initialize the spreadsheet object
 
         Args:
             cell_indices (CellIndices): The definition of the shape and columns
                 and rows labels, help texts and descriptors.
+            warning_logger (Optional[Callable[[str], None]]): Function that
+                logs the warnings (or None if skipped).
         """
+        # Initialise functionality for serialization:
+        super().__init__(warning_logger=warning_logger)
+
         self._cell_indices: CellIndices = copy.deepcopy(cell_indices)
 
         self._sheet: T_sheet = self._initialise_array()
@@ -58,15 +64,18 @@ class Spreadsheet(Serialization):
         self.var: _SheetVariables = _SheetVariables(self)
 
     @staticmethod
-    def create_new_sheet(number_of_rows: int,
-                         number_of_columns: int,
-                         rows_columns: Optional[T_lg_col_row] = None,
-                         /, *,  # noqa E999
-                         rows_labels: List[str] = None,
-                         columns_labels: List[str] = None,
-                         rows_help_text: List[str] = None,
-                         columns_help_text: List[str] = None,
-                         excel_append_labels: bool = True) -> 'Spreadsheet':
+    def create_new_sheet(
+            number_of_rows: int,
+            number_of_columns: int,
+            rows_columns: Optional[T_lg_col_row] = None,
+            /, *,  # noqa E999
+            rows_labels: List[str] = None,
+            columns_labels: List[str] = None,
+            rows_help_text: List[str] = None,
+            columns_help_text: List[str] = None,
+            excel_append_labels: bool = True,
+            warning_logger: Optional[Callable[[str], None]] = None
+    ) -> 'Spreadsheet':
         """Direct way of creating instance.
 
         Args:
@@ -74,14 +83,16 @@ class Spreadsheet(Serialization):
             number_of_columns (int): Number of columns.
             rows_columns (T_lg_col_row): List of all row names and column names
                 for each user defined language.
-            rows_labels (List[str]): List of masks (nicknames) for row
+            rows_labels (List[str]): List of masks (aliases) for row
                 names.
-            columns_labels (List[str]): List of masks (nicknames) for column
+            columns_labels (List[str]): List of masks (aliases) for column
                 names.
             rows_help_text (List[str]): List of help texts for each row.
             columns_help_text (List[str]): List of help texts for each column.
             excel_append_labels (bool): If True, one row and column is added
                 on the beginning of the sheet as an offset for labels.
+            warning_logger (Optional[Callable[[str], None]]): Function that
+                logs the warnings (or None if skipped).
 
         Returns:
             Spreadsheet: New instance of spreadsheet.
@@ -93,7 +104,7 @@ class Spreadsheet(Serialization):
                                   rows_help_text=rows_help_text,
                                   columns_help_text=columns_help_text,
                                   excel_append_labels=excel_append_labels)
-        return Spreadsheet(class_index)
+        return Spreadsheet(class_index, warning_logger)
 
     def _initialise_array(self) -> T_sheet:
         """Initialise the first empty spreadsheet array on the beginning.
@@ -112,22 +123,22 @@ class Spreadsheet(Serialization):
     def _set_item(self,
                   value: T_cell_val,
                   index_integer: Tuple[int, int] = None,
-                  index_nickname: Tuple[object, object] = None) -> None:
+                  index_label: Tuple[object, object] = None) -> None:
         """Set the spreadsheet cell on the desired index to the new value.
 
         Args:
             value (T_cell_val): New value to be inserted.
             index_integer (Tuple[int, int]): Return the value on the integer
                 index (row, column) inside spreadsheet (indexed from 0).
-            index_integer (Tuple[int, int]): Return the value on the nicknamed
-                index (row, column) inside spreadsheet.
+            index_label (Tuple[str, str]): Return the value on the index
+                (row label, column label) inside spreadsheet.
         """
-        if index_integer is not None and index_nickname is not None:
+        if index_integer is not None and index_label is not None:
             raise ValueError("Only one of parameters 'index_integer' and"
-                             "'index_nickname' has to be set!")
-        if index_nickname is not None:
-            _x = self.cell_indices.rows_labels.index(index_nickname[0])
-            _y = self.cell_indices.columns_labels.index(index_nickname[1])
+                             "'index_label' has to be set!")
+        if index_label is not None:
+            _x = self.cell_indices.rows_labels.index(index_label[0])
+            _y = self.cell_indices.columns_labels.index(index_label[1])
             index_integer = (_x, _y)
         if index_integer is not None:
             if isinstance(value, Cell):
@@ -145,84 +156,84 @@ class Spreadsheet(Serialization):
 
     def _get_item(self,
                   index_integer: Tuple[int, int] = None,
-                  index_nickname: Tuple[object, object] = None) -> Cell:
+                  index_label: Tuple[object, object] = None) -> Cell:
         """Get the cell on the particular index.
 
         Args:
             index_integer (Tuple[int, int]): Return the value on the integer
                 index (row, column) inside spreadsheet (indexed from 0).
-            index_integer (Tuple[int, int]): Return the value on the nicknamed
-                index (row, column) inside spreadsheet.
+            index_label (Tuple[str, str]): Return the value on the index
+                (row label, column label) inside spreadsheet.
 
         Returns:
             Cell: The Cell on the desired index.
         """
-        if index_integer is not None and index_nickname is not None:
+        if index_integer is not None and index_label is not None:
             raise ValueError("Only one of parameters 'index_integer' and"
-                             "'index_nickname' has to be set!")
-        if index_nickname is not None:
-            _x = self.cell_indices.rows_labels.index(index_nickname[0])
-            _y = self.cell_indices.columns_labels.index(index_nickname[1])
+                             "'index_label' has to be set!")
+        if index_label is not None:
+            _x = self.cell_indices.rows_labels.index(index_label[0])
+            _y = self.cell_indices.columns_labels.index(index_label[1])
             index_integer = (_x, _y)
         if index_integer is not None:
             return self._sheet[index_integer[0]][index_integer[1]]
 
     def _get_slice(self,
                    index_integer: Tuple[slice, slice],
-                   index_nickname: Tuple[slice, slice]) -> CellSlice:
+                   index_label: Tuple[slice, slice]) -> CellSlice:
         """Get the values in the slice.
 
         Args:
             index_integer (Tuple[int, int]): The position of the slice in the
-                spreadsheet. Mutually exclusive with parameter index_nickname
-            index_nickname (Tuple[object, object]): The position of the slice
+                spreadsheet. Mutually exclusive with parameter index_label
+            index_label (Tuple[object, object]): The position of the slice
                 in the spreadsheet. Mutually exclusive with parameter
                 index_integer (only one can be set to not None).
         Returns:
             CellSlice: Slice of the cells (aggregate).
         """
-        if index_integer is not None and index_nickname is not None:
+        if index_integer is not None and index_label is not None:
             raise ValueError("Only one of parameters 'index_integer' and"
-                             "'index_nickname' has to be set!")
+                             "'index_label' has to be set!")
 
-        if index_nickname is not None:
-            if isinstance(index_nickname[0], slice):
+        if index_label is not None:
+            if isinstance(index_label[0], slice):
                 # If the first index is slice
                 _x_start = 0
-                if index_nickname[0].start:
+                if index_label[0].start:
                     _x_start = self.cell_indices.rows_labels.index(
-                        index_nickname[0].start)
+                        index_label[0].start)
                 _x_end = self.shape[0]
-                if index_nickname[0].stop:
+                if index_label[0].stop:
                     _x_end = self.cell_indices.rows_labels.index(
-                        index_nickname[0].stop)
+                        index_label[0].stop)
                 _x_step = 1
-                if index_nickname[0].step:
-                    _x_step = int(index_nickname[0].step)
+                if index_label[0].step:
+                    _x_step = int(index_label[0].step)
             else:
                 # If the first index is scalar
                 _x_start = self.cell_indices.rows_labels.index(
-                    index_nickname[0])
+                    index_label[0])
                 _x_end = _x_start + 1
                 _x_step = 1
 
-            if isinstance(index_nickname[1], slice):
+            if isinstance(index_label[1], slice):
                 # If the second index is slice
                 _y_start = 0
-                if index_nickname[1].start:
+                if index_label[1].start:
                     _y_start = self.cell_indices.columns_labels.index(
-                        index_nickname[1].start)
+                        index_label[1].start)
                 _y_end = self.shape[1]
-                if index_nickname[1].stop:
+                if index_label[1].stop:
                     _y_end = self.cell_indices.columns_labels.index(
-                        index_nickname[1].stop)
+                        index_label[1].stop)
                 _y_step = 1
-                if index_nickname[1].step:
-                    _y_step = int(index_nickname[1].step)
+                if index_label[1].step:
+                    _y_step = int(index_label[1].step)
             else:
                 # If the first index is scalar
                 _y_start = self.cell_indices.columns_labels.index(
-                    index_nickname[1])
+                    index_label[1])
                 _y_end = _y_start + 1
                 _y_step = 1
 
@@ -287,18 +298,18 @@ class Spreadsheet(Serialization):
     def _set_slice(self,
                    value: T_cell_val,
                    index_integer: Tuple[int, int],
-                   index_nickname: Tuple[object, object]) -> None:
+                   index_label: Tuple[object, object]) -> None:
         """Set the value of each cell in the slice
 
         Args:
             value (T_cell_val): New value to be set.
             index_integer (Tuple[int, int]): The position of the slice in the
-                spreadsheet. Mutually exclusive with parameter index_nickname
-            index_nickname (Tuple[object, object]): The position of the slice
+                spreadsheet. Mutually exclusive with parameter index_label
+            index_label (Tuple[object, object]): The position of the slice
                 in the spreadsheet. Mutually exclusive with parameter
                 index_integer (only one can be set to not None).
         """
-        cell_slice: CellSlice = self._get_slice(index_integer, index_nickname)
+        cell_slice: CellSlice = self._get_slice(index_integer, index_label)
         cell_slice.set(value)
 
     def expand_size(self, cell_indices: CellIndices) -> None:

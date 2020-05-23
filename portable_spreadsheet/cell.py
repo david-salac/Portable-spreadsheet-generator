@@ -23,6 +23,8 @@ class Cell(object):
             each language.
         is_variable (bool): If True, cell is considered to be a varaible.
         variable_name (Optional[str]): The name of variable.
+        _excel_format (dict): Dictionary defining the Excel format style
+            for the cell.
     """
     def __init__(self,
                  row: Optional[int] = None,
@@ -62,6 +64,7 @@ class Cell(object):
         self.cell_indices: cell_indices = cell_indices  # pass only reference
         self.is_variable: bool = is_variable
         self.variable_name: Optional[str] = variable_name
+        self._excel_format: dict = {}
 
         if words is not None:
             self._constructing_words: WordConstructor = words
@@ -153,6 +156,28 @@ class Cell(object):
             Dict[str, str]: Words for each language
         """
         return self._constructing_words.parse(self)
+
+    @property
+    def excel_format(self) -> dict:
+        """Return style/format of the cell for Excel.
+
+        Returns:
+            dict: Excel format dictionary
+        """
+        return self._excel_format
+
+    @excel_format.setter
+    def excel_format(self, new_format: dict):
+        """Set the Excel cell format/style.
+
+        Read the documentation: https://xlsxwriter.readthedocs.io/format.html
+
+        Args:
+            new_format (dict): New format definition.
+        """
+        if not isinstance(new_format, dict):
+            raise ValueError("New format has to be a dictionary!")
+        self._excel_format = new_format
     # =====================================
 
     # === BINARY OPERATORS: ===
