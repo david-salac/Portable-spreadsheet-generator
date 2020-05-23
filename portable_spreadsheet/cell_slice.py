@@ -1,16 +1,18 @@
 from numbers import Number
-from typing import Iterable, Tuple, Union, List
+from typing import Iterable, Tuple, Union, List, Optional
 import copy
 
 import numpy as np
 
 from .cell import Cell
+from .cell_indices import CellIndices
+from .serialization import Serialization
 
 # Acceptable values for the slice
 T_slice = Union[np.ndarray, List[Number], List[Cell], Number, Cell]
 
 
-class CellSlice(object):
+class CellSlice(Serialization):
     """Encapsulate aggregating functionality and setting of the slices.
 
     Attributes:
@@ -27,7 +29,7 @@ class CellSlice(object):
                  start_idx: Tuple[int, int],
                  end_idx: Tuple[int, int],
                  cell_subset: Iterable[Cell],
-                 driving_sheet
+                 driving_sheet: 'Spreadsheet'
                  ):
         """Create a cell slice from the spreadsheet.
 
@@ -39,22 +41,17 @@ class CellSlice(object):
             cell_subset (Iterable[Cell]): The list of all cells in the slice.
             driving_sheet (Spreadsheet): Reference to the spreadsheet.
         """
+        # Initialise functionality for serialization:
+        super().__init__(export_offset=start_idx,
+                         warning_logger=driving_sheet.warning_logger,
+                         export_subset=True)
+
         self.start_idx: Tuple[int, int] = start_idx
         self.end_idx: Tuple[int, int] = end_idx
         self.start_cell: Cell = driving_sheet.iloc[start_idx]
         self.end_cell: Cell = driving_sheet.iloc[end_idx]
         self.cell_subset: Iterable[Cell] = cell_subset
         self.driving_sheet = driving_sheet
-
-    @property
-    def shape(self) -> Tuple[int, int]:
-        """Return the shape of the slice in the NumPy logic.
-
-        Returns:
-            Tuple[int]: Number of rows, Number of columns
-        """
-        return (self.end_idx[0] - self.start_idx[0] + 1,
-                self.end_idx[1] - self.start_idx[1] + 1)
 
     def sum(self) -> Cell:
         """Compute the sum of the aggregate.
@@ -103,6 +100,72 @@ class CellSlice(object):
             Cell: a new cell with the result.
         """
         return self.mean()
+
+    def stdev(self) -> Cell:
+        """Compute the standard deviation of the aggregate.
+
+        Returns:
+            Cell: a new cell with the result.
+        """
+        return Cell.stdev(self.start_cell, self.end_cell, self.cell_subset)
+
+    def median(self) -> Cell:
+        """Compute the median of the aggregate.
+
+        Returns:
+            Cell: a new cell with the result.
+        """
+        return Cell.median(self.start_cell, self.end_cell, self.cell_subset)
+
+    def count(self) -> Cell:
+        """Compute the number of items in the aggregate.
+
+        Returns:
+            Cell: a new cell with the result.
+        """
+        return Cell.count(self.start_cell, self.end_cell, self.cell_subset)
+
+    @property
+    def excel_format(self):
+        """Should not be accessible for slides."""
+        raise NotImplementedError
+
+    @excel_format.setter
+    def excel_format(self, new_format: dict):
+        """Set the Excel cell format/style.
+
+        Read the documentation: https://xlsxwriter.readthedocs.io/format.html
+
+        Args:
+            new_format (dict): New format definition.
+        """
+        if not isinstance(new_format, dict):
+            raise ValueError("New format has to be a dictionary!")
+        for row in range(self.start_idx[0], self.end_idx[0] + 1):
+            for col in range(self.start_idx[1],
+                             self.end_idx[1] + 1):
+                self.driving_sheet.iloc[row, col].excel_format = new_format
+
+    @property
+    def description(self) -> Optional[str]:
+        """Not implementable.
+        """
+        raise NotImplementedError
+
+    @description.setter
+    def description(self, new_description: Optional[str]):
+        """Set the cell description.
+
+        Args:
+            new_description (Optional[str]): description of the cell.
+        """
+        if (new_description is not None
+                and not isinstance(new_description, str)):
+            raise ValueError("Cell description has to be a string value!")
+        for row in range(self.start_idx[0], self.end_idx[0] + 1):
+            for col in range(self.start_idx[1],
+                             self.end_idx[1] + 1):
+                self.driving_sheet.iloc[row, col].description = new_description
 
     def _set_value_on_position(self, other: Union[Cell, Number],
                                row: int, col: int) -> None:
@@ -195,21 +258,40 @@ class CellSlice(object):
         """
         self.set(other)
 
-    def to_numpy(self) -> np.ndarray:
-        """Exports the values to the numpy.ndarray.
+    # ==== OVERRIDE ABSTRACT METHODS AND PROPERTIES OF SERIALIZATION CLASS ====
+    @Serialization.shape.getter
+    def shape(self) -> Tuple[int, int]:
+        """Return the shape of the sheet in the NumPy logic.
 
         Returns:
-            numpy.ndarray: 2 dimensions array with values
+            Tuple[int]: Number of rows, Number of columns
         """
-        results = np.zeros(self.shape)
-        i, j = 0, 0  # Indices relative to results
-        for row in range(self.start_idx[0], self.end_idx[0] + 1):
-            j = 0
-            for col in range(self.start_idx[1], self.end_idx[1] + 1):
-                if value := self.driving_sheet.iloc[row, col] is not None:  # noqa E999
-                    results[i, j] = value
-                else:
-                    results[i, j] = np.nan
-                j += 1
-            i += 1
-        return results
+        return (self.end_idx[0] - self.start_idx[0] + 1,
+                self.end_idx[1] - self.start_idx[1] + 1)
+
+    @Serialization.cell_indices.getter
+    def cell_indices(self) -> CellIndices:
+        """Get the cell indices.
+
+        Returns:
+            CellIndices: Cell indices of the spreadsheet.
+        """
+        return self.driving_sheet._cell_indices
+
+    def _get_cell_at(self, row: int, column: int) -> 'Cell':
+        """Get the particular cell on the (row, column) position.
+
+        Returns:
+            Cell: The call on given position.
+        """
+        return self.driving_sheet.iloc[self.start_idx[0] + row,
+                                       self.start_idx[1] + column]
+
+    def _get_variables(self) -> '_SheetVariables':
+        """Return the sheet variables as _SheetVariables object.
+
+        Returns:
+            _SheetVariables: Sheet variables.
+        """
+        return self.driving_sheet.var
+    # =========================================================================

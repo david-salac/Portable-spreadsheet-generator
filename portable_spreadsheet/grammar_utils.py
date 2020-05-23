@@ -1,3 +1,5 @@
+from typing import Set
+
 from .grammars import GRAMMAR_PATTERN, GRAMMARS
 
 
@@ -85,3 +87,12 @@ class GrammarUtils(object):
         else:
             raise ValueError(f"Language {language_name} is already in the "
                              "list.")
+
+    @staticmethod
+    def get_languages() -> Set[str]:
+        """Returns the set of included languages.
+
+        Returns:
+            Set[str]: Set of all languages included in the system.
+        """
+        return set([str(lang) for lang in GRAMMARS.keys()])

@@ -43,7 +43,7 @@ class WordConstructor(object):
             self.words: T_word = {key: "" for key in self.languages}
 
     @staticmethod
-    def init_from_new_cell(cell, /) -> 'WordConstructor':  # noqa E999
+    def init_from_new_cell(cell: 'Cell', /) -> 'WordConstructor':  # noqa E999
         """Initialise the words when the new cell is created.
 
         Args:
@@ -60,7 +60,9 @@ class WordConstructor(object):
             return WordConstructor(cell_indices=cell.cell_indices)
 
     @staticmethod
-    def _binary_operation(first, second, operation: str) -> 'WordConstructor':
+    def _binary_operation(first: 'Cell',
+                          second: 'Cell',
+                          operation: str) -> 'WordConstructor':
         """General binary operation.
 
         Args:
@@ -84,7 +86,7 @@ class WordConstructor(object):
         return instance
 
     @staticmethod
-    def add(first, second, /) -> 'WordConstructor':  # noqa E225
+    def add(first: 'Cell', second: 'Cell', /) -> 'WordConstructor':  # noqa E225
         """Add binary operation (+).
 
         Args:
@@ -97,7 +99,8 @@ class WordConstructor(object):
         """
         return WordConstructor._binary_operation(first, second, "add")
 
-    def subtract(first, second, /) -> 'WordConstructor':  # noqa E225
+    @staticmethod
+    def subtract(first: 'Cell', second: 'Cell', /) -> 'WordConstructor':  # noqa E225
         """Subtract binary operation (-).
 
         Args:
@@ -110,7 +113,8 @@ class WordConstructor(object):
         """
         return WordConstructor._binary_operation(first, second, "subtract")
 
-    def multiply(first, second, /) -> 'WordConstructor':  # noqa E225
+    @staticmethod
+    def multiply(first: 'Cell', second: 'Cell', /) -> 'WordConstructor':  # noqa E225
         """Multiply binary operation (*).
 
         Args:
@@ -123,7 +127,8 @@ class WordConstructor(object):
         """
         return WordConstructor._binary_operation(first, second, "multiply")
 
-    def divide(first, second, /) -> 'WordConstructor':  # noqa E225
+    @staticmethod
+    def divide(first: 'Cell', second: 'Cell', /) -> 'WordConstructor':  # noqa E225
         """Divide binary operation (/).
 
         Args:
@@ -136,7 +141,22 @@ class WordConstructor(object):
         """
         return WordConstructor._binary_operation(first, second, "divide")
 
-    def power(first, second, /) -> 'WordConstructor':  # noqa E225
+    @staticmethod
+    def modulo(first: 'Cell', second: 'Cell', /) -> 'WordConstructor':  # noqa E225
+        """Modulo binary operation (%).
+
+        Args:
+            first (Cell): The first cell (operand) of the operator.
+            second (Cell): The second cell (operand) of the operator.
+
+        Returns:
+            WordConstructor: Word constructed using binary operator and two
+                operands.
+        """
+        return WordConstructor._binary_operation(first, second, "modulo")
+
+    @staticmethod
+    def power(first: 'Cell', second: 'Cell', /) -> 'WordConstructor':  # noqa E225
         """Power binary operation (**).
 
         Args:
@@ -150,7 +170,128 @@ class WordConstructor(object):
         return WordConstructor._binary_operation(first, second, "power")
 
     @staticmethod
-    def _aggregation_parse_cell(cell,
+    def logicalConjunction(first: 'Cell',
+                           second: 'Cell', /) -> 'WordConstructor':  # noqa E225
+        """Logical conjunction operation (and).
+
+        Args:
+            first (Cell): The first cell (operand) of the operator.
+            second (Cell): The second cell (operand) of the operator.
+
+        Returns:
+            WordConstructor: Word constructed using binary operator and two
+                operands.
+        """
+        return WordConstructor._binary_operation(first, second,
+                                                 "logical-conjunction")
+
+    @staticmethod
+    def logicalDisjunction(first: 'Cell',
+                           second: 'Cell', /) -> 'WordConstructor':  # noqa E225
+        """Logical disjunction operation (or).
+
+        Args:
+            first (Cell): The first cell (operand) of the operator.
+            second (Cell): The second cell (operand) of the operator.
+
+        Returns:
+            WordConstructor: Word constructed using binary operator and two
+                operands.
+        """
+        return WordConstructor._binary_operation(first, second,
+                                                 "logical-disjunction")
+
+    @staticmethod
+    def equalTo(first: 'Cell', second: 'Cell', /) -> 'WordConstructor':  # noqa E225
+        """Equal to binary operation (==).
+
+        Args:
+            first (Cell): The first cell (operand) of the operator.
+            second (Cell): The second cell (operand) of the operator.
+
+        Returns:
+            WordConstructor: Word constructed using binary operator and two
+                operands.
+        """
+        return WordConstructor._binary_operation(first, second, "equal-to")
+
+    @staticmethod
+    def notEqualTo(first: 'Cell', second: 'Cell', /) -> 'WordConstructor':  # noqa E225
+        """Not equal to binary operation (!=).
+
+        Args:
+            first (Cell): The first cell (operand) of the operator.
+            second (Cell): The second cell (operand) of the operator.
+
+        Returns:
+            WordConstructor: Word constructed using binary operator and two
+                operands.
+        """
+        return WordConstructor._binary_operation(first, second, "not-equal-to")
+
+    @staticmethod
+    def greaterThan(first: 'Cell',
+                    second: 'Cell', /) -> 'WordConstructor':  # noqa E225
+        """Greater than binary operation (>).
+
+        Args:
+            first (Cell): The first cell (operand) of the operator.
+            second (Cell): The second cell (operand) of the operator.
+
+        Returns:
+            WordConstructor: Word constructed using binary operator and two
+                operands.
+        """
+        return WordConstructor._binary_operation(first, second, "greater-than")
+
+    @staticmethod
+    def greaterThanOrEqualTo(first: 'Cell',
+                             second: 'Cell', /) -> 'WordConstructor':  # noqa E225
+        """Greater than or equal to binary operation (>=).
+
+        Args:
+            first (Cell): The first cell (operand) of the operator.
+            second (Cell): The second cell (operand) of the operator.
+
+        Returns:
+            WordConstructor: Word constructed using binary operator and two
+                operands.
+        """
+        return WordConstructor._binary_operation(first, second,
+                                                 "greater-than-or-equal-to")
+
+    @staticmethod
+    def lessThan(first: 'Cell', second: 'Cell', /) -> 'WordConstructor':  # noqa E225
+        """Less than binary operation (<).
+
+        Args:
+            first (Cell): The first cell (operand) of the operator.
+            second (Cell): The second cell (operand) of the operator.
+
+        Returns:
+            WordConstructor: Word constructed using binary operator and two
+                operands.
+        """
+        return WordConstructor._binary_operation(first, second, "less-than")
+
+    @staticmethod
+    def lessThanOrEqualTo(first: 'Cell',
+                          second: 'Cell', /) -> 'WordConstructor':  # noqa E225
+        """Less than or equal to binary operation (<=).
+
+        Args:
+            first (Cell): The first cell (operand) of the operator.
+            second (Cell): The second cell (operand) of the operator.
+
+        Returns:
+            WordConstructor: Word constructed using binary operator and two
+                operands.
+        """
+        return WordConstructor._binary_operation(first, second,
+                                                 "less-than-or-equal-to")
+
+    @staticmethod
+    def _aggregation_parse_cell(cell: 'Cell',
                                 start_idx: Tuple[int, int],
                                 end_idx: Tuple[int, int],
                                 language: str
@@ -245,7 +386,7 @@ class WordConstructor(object):
         return cell_start, cell_end
 
     @staticmethod
-    def aggregation(cell_start, cell_end,
+    def aggregation(cell_start: 'Cell', cell_end: 'Cell',
                     grammar_method: str) -> 'WordConstructor':
         """General aggregation function.
 
@@ -286,9 +427,12 @@ class WordConstructor(object):
         return instance
 
     @staticmethod
-    def parse(cell) -> T_word:
+    def parse(cell: 'Cell') -> T_word:
         """Parse the cell word. This function is called when the cell should
             be inserted to spreadsheet.
+
+        Args:
+            cell (Cell): The cell that is the subject of parsing.
 
         Returns:
             T_word: Parsed cell.
@@ -309,7 +453,7 @@ class WordConstructor(object):
             return words
 
     @staticmethod
-    def empty(cell, /) -> 'WordConstructor':  # noqa E225
+    def empty(cell: 'Cell', /) -> 'WordConstructor':  # noqa E225
         """Returns the empty string.
 
         Args:
@@ -325,7 +469,7 @@ class WordConstructor(object):
         return instance
 
     @staticmethod
-    def reference(cell, /) -> 'WordConstructor':  # noqa E225
+    def reference(cell: 'Cell', /) -> 'WordConstructor':  # noqa E225
         """Return the reference to the cell.
 
         Args:
@@ -350,7 +494,7 @@ class WordConstructor(object):
         return instance
 
     @staticmethod
-    def constant(cell, /) -> 'WordConstructor':  # noqa E225
+    def constant(cell: 'Cell', /) -> 'WordConstructor':  # noqa E225
         """Return the value of the cell.
 
         Args:
@@ -367,8 +511,35 @@ class WordConstructor(object):
         return instance
 
     @staticmethod
+    def variable(cell: 'Cell', /) -> 'WordConstructor':  # noqa E225
+        """Return the cell as a variable.
+
+        Args:
+            cell (Cell): The cell which is considered as a variable.
+
+        Returns:
+            WordConstructor: Word with variable.
+        """
+        instance = WordConstructor(cell_indices=cell.cell_indices)
+        for language in instance.languages:
+            prefix = GRAMMARS[language]['cells']['variable']['prefix']
+            suffix = GRAMMARS[language]['cells']['variable']['suffix']
+            # Now add the value as a suffix if required
+            value_word = ""
+            value_grammar = GRAMMARS[language]['cells']['variable']['value']
+            if value_grammar['include']:
+                value_word += value_grammar['prefix']
+                value_word += str(cell.value)
+                value_word += value_grammar['suffix']
+            # Construct the whole word
+            instance.words[language] = (prefix + cell.variable_name
+                                        + value_word + suffix)
+
+        return instance
+
+    @staticmethod
     def _unary_operator(*,
-                        cell,
+                        cell: 'Cell',
                         prefix_path: Tuple[str],
                         suffix_path: Tuple[str]) -> 'WordConstructor':
         """Word creation logic for a general unary operator.
@@ -394,11 +565,11 @@ class WordConstructor(object):
         return instance
 
     @staticmethod
-    def brackets(cell, /) -> 'WordConstructor':  # noqa E225
+    def brackets(cell: 'Cell', /) -> 'WordConstructor':  # noqa E225
         """Add brackets around the cell.
 
         Args:
-            cell (Cell): The cell around that brackets are added.
+            cell (Cell): The cell around which brackets are added.
 
         Returns:
             WordConstructor: Word with brackets.
@@ -410,11 +581,11 @@ class WordConstructor(object):
         )
 
     @staticmethod
-    def logarithm(cell, /) -> 'WordConstructor':  # noqa E225
+    def logarithm(cell: 'Cell', /) -> 'WordConstructor':  # noqa E225
         """Add logarithm definition context around the cell.
 
         Args:
-            cell (Cell): The cell around that logarithm context is added.
+            cell (Cell): The cell around which logarithm context is added.
 
         Returns:
             WordConstructor: Word with logarithm context.
@@ -426,11 +597,11 @@ class WordConstructor(object):
         )
 
     @staticmethod
-    def exponential(cell, /) -> 'WordConstructor':  # noqa E225
+    def exponential(cell: 'Cell', /) -> 'WordConstructor':  # noqa E225
         """Add exponential definition context around the cell.
 
         Args:
-            cell (Cell): The cell around that exponential context is added.
+            cell (Cell): The cell around which exponential context is added.
 
         Returns:
             WordConstructor: Word with exponential context.
@@ -440,3 +611,247 @@ class WordConstructor(object):
             prefix_path=['operations', 'exponential', 'prefix'],
             suffix_path=['operations', 'exponential', 'suffix']
         )
+
+    @staticmethod
+    def ceil(cell: 'Cell', /) -> 'WordConstructor':  # noqa E225
+        """Add ceiling function definition context around the cell.
+
+        Args:
+            cell (Cell): The cell around which ceiling fn. context is added.
+
+        Returns:
+            WordConstructor: Word with ceiling function context.
+        """
+        return WordConstructor._unary_operator(
+            cell=cell,
+            prefix_path=['operations', 'ceil', 'prefix'],
+            suffix_path=['operations', 'ceil', 'suffix']
+        )
+
+    @staticmethod
+    def floor(cell: 'Cell', /) -> 'WordConstructor':  # noqa E225
+        """Add floor function definition context around the cell.
+
+        Args:
+            cell (Cell): The cell around which floor fn. context is added.
+
+        Returns:
+            WordConstructor: Word with floor function context.
+        """
+        return WordConstructor._unary_operator(
+            cell=cell,
+            prefix_path=['operations', 'floor', 'prefix'],
+            suffix_path=['operations', 'floor', 'suffix']
+        )
+
+    @staticmethod
+    def round(cell: 'Cell', /) -> 'WordConstructor':  # noqa E225
+        """Add rounding function definition context around the cell.
+
+        Args:
+            cell (Cell): The cell around which rounding fn. context is added.
+
+        Returns:
+            WordConstructor: Word with rounding function context.
+        """
+        return WordConstructor._unary_operator(
+            cell=cell,
+            prefix_path=['operations', 'round', 'prefix'],
+            suffix_path=['operations', 'round', 'suffix']
+        )
+
+    @staticmethod
+    def abs(cell: 'Cell', /) -> 'WordConstructor':  # noqa E225
+        """Add absolute value definition context around the cell.
+
+        Args:
+            cell (Cell): The cell around which absolute value context is added.
+
+        Returns:
+            WordConstructor: Word with absolute value function context.
+        """
+        return WordConstructor._unary_operator(
+            cell=cell,
+            prefix_path=['operations', 'abs', 'prefix'],
+            suffix_path=['operations', 'abs', 'suffix']
+        )
+
+    @staticmethod
+    def sqrt(cell: 'Cell', /) -> 'WordConstructor':  # noqa E225
+        """Add square root value definition context around the cell.
+
+        Args:
+            cell (Cell): The cell around which square root context is added.
+
+        Returns:
+            WordConstructor: Word with square root function context.
+        """
+        return WordConstructor._unary_operator(
+            cell=cell,
+            prefix_path=['operations', 'sqrt', 'prefix'],
+            suffix_path=['operations', 'sqrt', 'suffix']
+        )
+
+    @staticmethod
+    def logicalNegation(cell: 'Cell', /) -> 'WordConstructor':  # noqa E225
+        """Add logical negation definition context around the cell.
+
+        Args:
+            cell (Cell): The cell around which logical negation context is
+                added.
+
+        Returns:
+            WordConstructor: Word with logical negation function context.
+        """
+        return WordConstructor._unary_operator(
+            cell=cell,
+            prefix_path=['operations', 'logical-negation', 'prefix'],
+            suffix_path=['operations', 'logical-negation', 'suffix']
+        )
+
+    @staticmethod
+    def conditional(condition: 'Cell',
+                    consequent: 'Cell',
+                    alternative: 'Cell', /) -> 'WordConstructor':  # noqa E225
+        """Construct the word for the conditional statement (if-then-else).
+
+        Args:
+            condition (Cell): condition statement.
+            consequent (Cell): value if the condition is true.
+            alternative (Cell): value if the condition is false.
+
+        Returns:
+            WordConstructor: Word for the conditional statement
+        """
+        instance = WordConstructor(cell_indices=condition.cell_indices)
+
+        w_condition = condition.word.words
+        w_consequent = consequent.word.words
+        w_alternative = alternative.word.words
+
+        for language in instance.languages:
+            conditional_prefix = GRAMMARS[language]['conditional']['prefix']
+            conditional_suffix = GRAMMARS[language]['conditional']['suffix']
+
+            condition_prefix = GRAMMARS[language][
+                'conditional']['condition']['prefix']
+            condition_suffix = GRAMMARS[language][
+                'conditional']['condition']['suffix']
+            condition_word = condition_prefix + w_condition[language] + \
+                condition_suffix
+
+            consequent_prefix = GRAMMARS[language][
+                'conditional']['consequent']['prefix']
+            consequent_suffix = GRAMMARS[language][
+                'conditional']['consequent']['suffix']
+            consequent_word = consequent_prefix + w_consequent[language] + \
+                consequent_suffix
+
+            alternative_prefix = GRAMMARS[language][
+                'conditional']['alternative']['prefix']
+            alternative_suffix = GRAMMARS[language][
+                'conditional']['alternative']['suffix']
+            alternative_word = alternative_prefix + w_alternative[language] + \
+                alternative_suffix
+
+            # Swap the words to desired sequence
+            clausules_order = GRAMMARS[language]['conditional']['order']
+            prefered_order = ('condition', 'consequent', 'alternative')
+            words_in_prefered_order = (condition_word, consequent_word,
+                                       alternative_word)
+            words_in_correct_order = ["", "", ""]
+            # Do the permutation and construct the word:
+            for clausule_idx, clausule in enumerate(prefered_order):
+                clausule_permutated_idx = clausules_order.index(clausule)
+                words_in_correct_order[clausule_permutated_idx] = \
+                    words_in_prefered_order[clausule_idx]
+
+            # Merge words into one word
+            final_word = "".join(words_in_correct_order)
+
+            instance.words[language] = conditional_prefix + final_word + \
+                conditional_suffix
+
+        return instance
+
+    @staticmethod
+    def offset(reference: 'Cell',
+               row_skip: 'Cell',
+               column_skip: 'Cell', /) -> 'WordConstructor':  # noqa E225
+        """Construct the word for the offset statement (skip n rows and m
+            columns from the referential position).
+
+        Args:
+            reference (Cell): Reference cell from that the position is
+                computed.
+            row_skip (Cell): How many rows (down) should be skipped.
+            column_skip (Cell): How many columns (left) should be skipped.
+
+        Returns:
+            WordConstructor: Word for the offset statement.
+        """
+        instance = WordConstructor(cell_indices=reference.cell_indices)
+
+        # For shorter access to rows and column indices:
+        index_row = reference.cell_indices.rows
+        index_col = reference.cell_indices.columns
+
+        ref_row_skip = row_skip.parse
+        ref_col_skip = column_skip.parse
+
+        for language in instance.languages:
+            offset_prefix = GRAMMARS[language]['cells']['offset']['prefix']
+            offset_suffix = GRAMMARS[language]['cells']['offset']['suffix']
+
+            ref_row_prefix = GRAMMARS[language]['cells']['offset'][
+                'reference-cell-row']['prefix']
+            ref_row_suffix = GRAMMARS[language]['cells']['offset'][
+                'reference-cell-row']['suffix']
+            ref_row_word = (ref_row_prefix +
+                            index_row[language][reference.row] +
+                            ref_row_suffix)
+
+            ref_col_prefix = GRAMMARS[language]['cells']['offset'][
+                'reference-cell-column']['prefix']
+            ref_col_suffix = GRAMMARS[language]['cells']['offset'][
+                'reference-cell-column']['suffix']
+            ref_col_word = (ref_col_prefix +
+                            index_col[language][reference.column] +
+                            ref_col_suffix)
+            # HERE USING REFERENCE
+            skip_row_prefix = GRAMMARS[language]['cells']['offset'][
+                'skip-of-rows']['prefix']
+            skip_row_suffix = GRAMMARS[language]['cells']['offset'][
+                'skip-of-rows']['suffix']
+            skip_row_word = (skip_row_prefix +
+                             ref_row_skip[language] +
+                             skip_row_suffix)
+
+            skip_col_prefix = GRAMMARS[language]['cells']['offset'][
+                'skip-of-columns']['prefix']
+            skip_col_suffix = GRAMMARS[language]['cells']['offset'][
+                'skip-of-columns']['suffix']
+            skip_col_word = (skip_col_prefix +
+                             ref_col_skip[language] +
+                             skip_col_suffix)
+
+            # Swap the words to desired sequence
+            clausules_order = GRAMMARS[language]['cells']['offset']['order']
+            prefered_order = ('reference-cell-row', 'reference-cell-column',
+                              'skip-of-rows', 'skip-of-columns')
+            words_in_prefered_order = (ref_row_word, ref_col_word,
+                                       skip_row_word, skip_col_word)
+            words_in_correct_order = ["", "", "", ""]
+            # Do the permutation and construct the word:
+            for clausule_idx, clausule in enumerate(prefered_order):
+                clausule_permutated_idx = clausules_order.index(clausule)
+                words_in_correct_order[clausule_permutated_idx] = \
+                    words_in_prefered_order[clausule_idx]
+
+            # Merge words into one word
+            final_word = "".join(words_in_correct_order)
+
+            instance.words[language] = offset_prefix + final_word + \
+                offset_suffix
+
+        return instance

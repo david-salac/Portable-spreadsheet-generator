@@ -15,6 +15,15 @@ EXCEL = {
             "prefix": "",
             "suffix": "",
         },
+        "variable": {
+            "prefix": "",
+            "suffix": "",
+            "value": {
+                'include': False,
+                "prefix": "",
+                "suffix": ""
+            }
+        },
         "empty": {
             "content": ""
         },
@@ -53,6 +62,28 @@ EXCEL = {
             },
             # For example, Python exclude last cell when slicing
             "include_last_cell": False
+        },
+        "offset": {
+            "order": ('reference-cell-column', 'reference-cell-row',
+                      'skip-of-rows', 'skip-of-columns'),
+            "prefix": "OFFSET(",
+            "suffix": ")",
+            'reference-cell-column': {
+                "prefix": "",
+                "suffix": "",
+            },
+            'reference-cell-row': {
+                "prefix": "",
+                "suffix": ",",
+            },
+            'skip-of-rows': {
+                "prefix": "",
+                "suffix": ",",
+            },
+            'skip-of-columns': {
+                "prefix": "",
+                "suffix": "",
+            },
         }
     },
     "operations": {
@@ -81,6 +112,12 @@ EXCEL = {
             "suffix": "",
             "separator": "/",
         },
+        # like 7%3
+        "modulo": {
+            "prefix": "MOD(",
+            "suffix": ")",
+            "separator": ",",
+        },
         # like 7^3
         "power": {
             "prefix": "",
@@ -108,6 +145,18 @@ EXCEL = {
             "prefix": "MAX(",
             "suffix": ")",
         },
+        "stdev": {
+            "prefix": "STDEV(",
+            "suffix": ")",
+        },
+        "median": {
+            "prefix": "MEDIAN(",
+            "suffix": ")",
+        },
+        "count": {
+            "prefix": "COUNT(",
+            "suffix": ")",
+        },
         # BASIC OPERATIONS
         "exponential": {
             "prefix": "EXP(",
@@ -117,10 +166,92 @@ EXCEL = {
             "prefix": "LN(",
             "suffix": ")",
         },
+        "ceil": {
+            "prefix": "CEILING(",
+            "suffix": ")",
+        },
+        "floor": {
+            "prefix": "FLOOR(",
+            "suffix": ")",
+        },
+        "round": {
+            "prefix": "ROUND(",
+            "suffix": ")",
+        },
+        "abs": {
+            "prefix": "ABS(",
+            "suffix": ")",
+        },
+        "sqrt": {
+            "prefix": "SQRT(",
+            "suffix": ")",
+        },
+        # LOGICAL OPERATIONS
+        "equal-to": {
+            "prefix": "",
+            "suffix": "",
+            "separator": "=",
+        },
+        "not-equal-to": {
+            "prefix": "",
+            "suffix": "",
+            "separator": "<>",
+        },
+        "greater-than": {
+            "prefix": "",
+            "suffix": "",
+            "separator": ">",
+        },
+        "greater-than-or-equal-to": {
+            "prefix": "",
+            "suffix": "",
+            "separator": ">=",
+        },
+        "less-than": {
+            "prefix": "",
+            "suffix": "",
+            "separator": "<",
+        },
+        "less-than-or-equal-to": {
+            "prefix": "",
+            "suffix": "",
+            "separator": "<=",
+        },
+        "logical-conjunction": {
+            "prefix": "AND(",
+            "suffix": ")",
+            "separator": ", ",
+        },
+        "logical-disjunction": {
+            "prefix": "OR(",
+            "suffix": ")",
+            "separator": ", ",
+        },
+        "logical-negation": {
+            "prefix": "NOT(",
+            "suffix": ")",
+        },
     },
     "brackets": {
         "prefix": "(",
         "suffix": ")"
+    },
+    "conditional": {
+        "order": ('condition', 'consequent', 'alternative'),
+        "prefix": "IF(",
+        "suffix": ")",
+        'condition': {
+            "prefix": "",
+            "suffix": ","
+        },
+        'consequent': {
+            "prefix": "",
+            "suffix": ","
+        },
+        'alternative': {
+            "prefix": "",
+            "suffix": ""
+        }
     }
 }
 NATIVE = {
@@ -139,6 +270,15 @@ NATIVE = {
         "constant": {
             "prefix": "",
             "suffix": "",
+        },
+        "variable": {
+            "prefix": "value of variable '",
+            "suffix": "'",
+            "value": {
+                'include': True,
+                "prefix": " (=",
+                "suffix": ")"
+            }
         },
         "empty": {
             "content": ""
@@ -178,6 +318,28 @@ NATIVE = {
             },
             # For example, Python exclude last cell when slicing
             "include_last_cell": True
+        },
+        "offset": {
+            "order": ('reference-cell-row', 'skip-of-rows',
+                      'reference-cell-column', 'skip-of-columns'),
+            "prefix": "skip from ",
+            "suffix": "",
+            'reference-cell-column': {
+                "prefix": "and from the column at position ",
+                "suffix": " exactly ",
+            },
+            'reference-cell-row': {
+                "prefix": "the row at position ",
+                "suffix": " exactly ",
+            },
+            'skip-of-rows': {
+                "prefix": "",
+                "suffix": " items down, ",
+            },
+            'skip-of-columns': {
+                "prefix": "",
+                "suffix": " items left",
+            },
         }
     },
     "operations": {
@@ -206,6 +368,12 @@ NATIVE = {
             "suffix": "",
             "separator": " / ",
         },
+        # like 7%3
+        "modulo": {
+            "prefix": "",
+            "suffix": "",
+            "separator": " mod ",
+        },
         # like 7^3
         "power": {
             "prefix": "",
@@ -233,6 +401,18 @@ NATIVE = {
             "prefix": "maximum of ",
             "suffix": "",
         },
+        "stdev": {
+            "prefix": "standard deviation of ",
+            "suffix": "",
+        },
+        "median": {
+            "prefix": "median of ",
+            "suffix": "",
+        },
+        "count": {
+            "prefix": " number of items in the slice ",
+            "suffix": "",
+        },
         # BASIC OPERATIONS
         "exponential": {
             "prefix": "exponential function of ",
@@ -242,10 +422,92 @@ NATIVE = {
             "prefix": "logarithm of ",
             "suffix": "",
         },
+        "ceil": {
+            "prefix": "ceiling function of ",
+            "suffix": "",
+        },
+        "floor": {
+            "prefix": "floor function of ",
+            "suffix": "",
+        },
+        "round": {
+            "prefix": "round of ",
+            "suffix": "",
+        },
+        "abs": {
+            "prefix": "absolute value of ",
+            "suffix": "",
+        },
+        "sqrt": {
+            "prefix": "square root of ",
+            "suffix": "",
+        },
+        # LOGICAL OPERATIONS
+        "equal-to": {
+            "prefix": "",
+            "suffix": "",
+            "separator": " equal to ",
+        },
+        "not-equal-to": {
+            "prefix": "",
+            "suffix": "",
+            "separator": " not equal to ",
+        },
+        "greater-than": {
+            "prefix": "",
+            "suffix": "",
+            "separator": " greater than ",
+        },
+        "greater-than-or-equal-to": {
+            "prefix": "",
+            "suffix": "",
+            "separator": " greater than or equal to ",
+        },
+        "less-than": {
+            "prefix": "",
+            "suffix": "",
+            "separator": " less than ",
+        },
+        "less-than-or-equal-to": {
+            "prefix": "",
+            "suffix": "",
+            "separator": " less than or equal to ",
+        },
+        "logical-conjunction": {
+            "prefix": "",
+            "suffix": "",
+            "separator": " and ",
+        },
+        "logical-disjunction": {
+            "prefix": "",
+            "suffix": "",
+            "separator": " or ",
+        },
+        "logical-negation": {
+            "prefix": "negation (",
+            "suffix": ")",
+        },
     },
     "brackets": {
         "prefix": "(",
         "suffix": ")"
+    },
+    "conditional": {
+        "order": ('condition', 'consequent', 'alternative'),
+        "prefix": "(",
+        "suffix": ")",
+        'condition': {
+            "prefix": "if ",
+            "suffix": ""
+        },
+        'consequent': {
+            "prefix": " then ",
+            "suffix": ""
+        },
+        'alternative': {
+            "prefix": " else ",
+            "suffix": ""
+        }
     }
 }
 PYTHON_NUMPY = {
@@ -267,6 +529,15 @@ PYTHON_NUMPY = {
         },
         "empty": {
             "content": ""
+        },
+        "variable": {
+            "prefix": "",
+            "suffix": "",
+            "value": {
+                'include': False,
+                "prefix": "",
+                "suffix": ""
+            }
         },
         # Like [row,column]
         "reference": {
@@ -303,6 +574,28 @@ PYTHON_NUMPY = {
             },
             # For example, Python exclude last cell when slicing
             "include_last_cell": True
+        },
+        "offset": {
+            "order": ('reference-cell-row', 'skip-of-rows',
+                      'reference-cell-column', 'skip-of-columns'),
+            "prefix": "values[",
+            "suffix": "]",
+            'reference-cell-column': {
+                "prefix": "",
+                "suffix": "+",
+            },
+            'reference-cell-row': {
+                "prefix": "",
+                "suffix": "+",
+            },
+            'skip-of-rows': {
+                "prefix": "",
+                "suffix": ",",
+            },
+            'skip-of-columns': {
+                "prefix": "",
+                "suffix": "",
+            },
         }
     },
     "operations": {
@@ -331,6 +624,12 @@ PYTHON_NUMPY = {
             "suffix": "",
             "separator": "/",
         },
+        # like 7%3
+        "modulo": {
+            "prefix": "",
+            "suffix": "",
+            "separator": "%",
+        },
         # like 7^3
         "power": {
             "prefix": "",
@@ -358,6 +657,18 @@ PYTHON_NUMPY = {
             "prefix": "np.max(",
             "suffix": ")",
         },
+        "stdev": {
+            "prefix": "np.std(",
+            "suffix": ")",
+        },
+        "median": {
+            "prefix": "np.median(",
+            "suffix": ")",
+        },
+        "count": {
+            "prefix": "((lambda var=",
+            "suffix": ": var.shape[0] * var.shape[1])())",
+        },
         # BASIC OPERATIONS
         "exponential": {
             "prefix": "np.exp(",
@@ -367,10 +678,92 @@ PYTHON_NUMPY = {
             "prefix": "np.log(",
             "suffix": ")",
         },
+        "ceil": {
+            "prefix": "np.ceil(",
+            "suffix": ")",
+        },
+        "floor": {
+            "prefix": "np.floor(",
+            "suffix": ")",
+        },
+        "round": {
+            "prefix": "np.round(",
+            "suffix": ")",
+        },
+        "abs": {
+            "prefix": "np.abs(",
+            "suffix": ")",
+        },
+        "sqrt": {
+            "prefix": "np.sqrt(",
+            "suffix": ")",
+        },
+        # LOGICAL OPERATIONS
+        "equal-to": {
+            "prefix": "",
+            "suffix": "",
+            "separator": "==",
+        },
+        "not-equal-to": {
+            "prefix": "",
+            "suffix": "",
+            "separator": "!=",
+        },
+        "greater-than": {
+            "prefix": "",
+            "suffix": "",
+            "separator": ">",
+        },
+        "greater-than-or-equal-to": {
+            "prefix": "",
+            "suffix": "",
+            "separator": ">=",
+        },
+        "less-than": {
+            "prefix": "",
+            "suffix": "",
+            "separator": "<",
+        },
+        "less-than-or-equal-to": {
+            "prefix": "",
+            "suffix": "",
+            "separator": "<=",
+        },
+        "logical-conjunction": {
+            "prefix": "",
+            "suffix": "",
+            "separator": " and ",
+        },
+        "logical-disjunction": {
+            "prefix": "",
+            "suffix": "",
+            "separator": " or ",
+        },
+        "logical-negation": {
+            "prefix": "not (",
+            "suffix": ")",
+        },
     },
     "brackets": {
         "prefix": "(",
         "suffix": ")"
+    },
+    "conditional": {
+        "order": ('consequent', 'condition', 'alternative'),
+        "prefix": "(",
+        "suffix": ")",
+        'condition': {
+            "prefix": " if (",
+            "suffix": ") "
+        },
+        'consequent': {
+            "prefix": "(",
+            "suffix": ")"
+        },
+        'alternative': {
+            "prefix": " else (",
+            "suffix": ")"
+        }
     }
 }
 
@@ -411,6 +804,19 @@ GRAMMAR_PATTERN: dict = {
         "constant": {
             "prefix": str,
             "suffix": str,
+        },
+
+        # Variable definition (e.g. pi)
+        "variable": {
+            "prefix": str,
+            "suffix": str,
+            # If is included (parameter include), also add the value inside
+            #   the variable as a suffix (always) after variable name
+            "value": {
+                'include': bool,
+                "prefix": str,
+                "suffix": str
+            }
         },
 
         # Empty cell definition
@@ -470,6 +876,35 @@ GRAMMAR_PATTERN: dict = {
             # cell is included, if False, the last cell is the previous plus
             # one in the index.
             "include_last_cell": bool
+        },
+        # Return the reference to the cell n-down top and m-columns left
+        "offset": {
+            # Some ordered subset of ('reference-cell-row', 'skip-of-rows',
+            # 'reference-cell-column', 'skip-of-columns') defining in what
+            # order the offset is computed.
+            "order": tuple,
+            "prefix": str,
+            "suffix": str,
+            # Label (index) for the column of the reference cell
+            'reference-cell-column': {
+                "prefix": str,
+                "suffix": str,
+            },
+            # Label (index) for the row of the reference cell
+            'reference-cell-row': {
+                "prefix": str,
+                "suffix": str,
+            },
+            # How many rows are skipped down (reference to the cell, or value)
+            'skip-of-rows': {
+                "prefix": str,
+                "suffix": str,
+            },
+            # How many columns are skipped left (reference to cell, or value)
+            'skip-of-columns': {
+                "prefix": str,
+                "suffix": str,
+            },
         }
     },
     "operations": {
@@ -497,6 +932,12 @@ GRAMMAR_PATTERN: dict = {
             "prefix": str,
             "suffix": str,
             "separator": str,  # Typically /
+        },
+        # Modulo, like 7%3
+        "modulo": {
+            "prefix": str,
+            "suffix": str,
+            "separator": str,  # Typically %
         },
         # Power to, like 7^3
         "power": {
@@ -526,10 +967,25 @@ GRAMMAR_PATTERN: dict = {
             "prefix": str,  # Like MIN(
             "suffix": str,  # Like )
         },
+        # Standard deviation of aggregated cells.
+        "stdev": {
+            "prefix": str,
+            "suffix": str,
+        },
+        # Median of aggregated cells.
+        "median": {
+            "prefix": str,
+            "suffix": str,
+        },
         # Maximum of aggregated cells.
         "maximum": {
             "prefix": str,  # Like MAX(
             "suffix": str,  # Like )
+        },
+        # Number of aggregated cells.
+        "count": {
+            "prefix": str,
+            "suffix": str,
         },
 
         # === BASIC UNARY OPERATIONS (that takes only one operand) ===
@@ -543,10 +999,113 @@ GRAMMAR_PATTERN: dict = {
             "prefix": str,  # Like LN(
             "suffix": str,  # Like )
         },
+        # Ceiling function
+        "ceil": {
+            "prefix": str,
+            "suffix": str,
+        },
+        # Floor function
+        "floor": {
+            "prefix": str,
+            "suffix": str,
+        },
+        # Round the number
+        "round": {
+            "prefix": str,
+            "suffix": str,
+        },
+        # Absolute value
+        "abs": {
+            "prefix": str,
+            "suffix": str,
+        },
+        # Absolute value
+        "sqrt": {
+            "prefix": str,
+            "suffix": str,
+        },
+        # === LOGICAL OPERATIONS (returns true or false) ===
+        # Equal to
+        "equal-to": {
+            "prefix": str,
+            "suffix": str,
+            "separator": str,
+        },
+        # Not equal to
+        "not-equal-to": {
+            "prefix": str,
+            "suffix": str,
+            "separator": str,
+        },
+        # Greater than
+        "greater-than": {
+            "prefix": str,
+            "suffix": str,
+            "separator": str,
+        },
+        # Greater than or equal to
+        "greater-than-or-equal-to": {
+            "prefix": str,
+            "suffix": str,
+            "separator": str,
+        },
+        # Less than
+        "less-than": {
+            "prefix": str,
+            "suffix": str,
+            "separator": str,
+        },
+        # Less than or equal to
+        "less-than-or-equal-to": {
+            "prefix": str,
+            "suffix": str,
+            "separator": str,
+        },
+        # Logical conjunction
+        "logical-conjunction": {
+            "prefix": str,
+            "suffix": str,
+            "separator": str,
+        },
+        # Logical disjunction
+        "logical-disjunction": {
+            "prefix": str,
+            "suffix": str,
+            "separator": str,
+        },
+        # Logical negation
+        "logical-negation": {
+            "prefix": str,
+            "suffix": str,
+        },
     },
     # Brackets around the statement
     "brackets": {
         "prefix": str,  # Almost always just '('
         "suffix": str,  # Almost always just ')'
+    },
+    # Conditional: standard if-then-else statement
+    "conditional": {
+        # Defines order of clausules ('consequent', 'condition', 'alternative')
+        "order": tuple,
+        # Defines prefix of the whole conditional
+        "prefix": str,
+        # Defines suffix of the whole conditional
+        "suffix": str,
+        # Conditional statement (e. g. 'A > 5 or C < 5')
+        'condition': {
+            "prefix": str,
+            "suffix": str
+        },
+        # Consequent (then part): part that occurs if the condition is true.
+        'consequent': {
+            "prefix": str,
+            "suffix": str
+        },
+        # Alternative (else part): part that occurs if the condition is false.
+        'alternative': {
+            "prefix": str,
+            "suffix": str
+        }
     }
 }

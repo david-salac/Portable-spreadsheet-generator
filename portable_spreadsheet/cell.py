@@ -21,6 +21,11 @@ class Cell(object):
             each used language.
         _constructing_words (WordConstructor): The words defining the cell in
             each language.
+        is_variable (bool): If True, cell is considered to be a varaible.
+        variable_name (Optional[str]): The name of variable.
+        _excel_format (dict): Dictionary defining the Excel format style
+            for the cell.
+        _description (Optional[str]): Optional description of the cell.
     """
     def __init__(self,
                  row: Optional[int] = None,
@@ -30,6 +35,8 @@ class Cell(object):
                  # Private arguments
                  cell_type: CellType = CellType.value_only,
                  words: Optional[WordConstructor] = None,
+                 is_variable: bool = False,
+                 variable_name: Optional[str] = None,
                  ):
         """Create single cell.
 
@@ -44,6 +51,8 @@ class Cell(object):
                 directly.
             words (Optional[WordConstructor]): The words defining the cell
                 in each language. Do not use this argument directly.
+            is_variable (bool): If True, cell is considered to be a variable.
+            variable_name (Optional[str]): The name of variable.
         """
         if row is not None and column is None \
                 or row is None and column is not None:
@@ -54,6 +63,10 @@ class Cell(object):
         self._value: Optional[float] = value
         self.cell_type: CellType = cell_type
         self.cell_indices: cell_indices = cell_indices  # pass only reference
+        self.is_variable: bool = is_variable
+        self.variable_name: Optional[str] = variable_name
+        self._excel_format: dict = {}
+        self._description: Optional[str] = None
 
         if words is not None:
             self._constructing_words: WordConstructor = words
@@ -61,6 +74,7 @@ class Cell(object):
             self._constructing_words: WordConstructor = \
                 WordConstructor.init_from_new_cell(self)
 
+    # === CLASS METHODS and PROPERTIES: ===
     @property
     def word(self) -> WordConstructor:
         """Return correct word. If the cell is anchored, returns just the
@@ -116,6 +130,80 @@ class Cell(object):
         """
         return self._value
 
+    def __str__(self) -> str:
+        """Override the method __str__ to allow human-readable string
+            generations of inside.
+
+        Returns:
+            str: String representation of inner value.
+        """
+        return str(self.parse)
+
+    @property
+    def constructing_words(self) -> WordConstructor:
+        """Get the constructing words.
+
+        Returns:
+            WordConstructor: the constructing word of the cell.
+        """
+        return self._constructing_words
+
+    @property
+    def parse(self) -> Dict[str, str]:
+        """Return the dictionary with keys: language, values: constructing
+            word. This function is called when the cell should be inserted to
+            a spreadsheet.
+
+        Returns:
+            Dict[str, str]: Words for each language
+        """
+        return self._constructing_words.parse(self)
+
+    @property
+    def excel_format(self) -> dict:
+        """Return style/format of the cell for Excel.
+
+        Returns:
+            dict: Excel format dictionary
+        """
+        return self._excel_format
+
+    @excel_format.setter
+    def excel_format(self, new_format: dict):
+        """Set the Excel cell format/style.
+
+        Read the documentation: https://xlsxwriter.readthedocs.io/format.html
+
+        Args:
+            new_format (dict): New format definition.
+        """
+        if not isinstance(new_format, dict):
+            raise ValueError("New format has to be a dictionary!")
+        self._excel_format = new_format
+
+    @property
+    def description(self) -> Optional[str]:
+        """Return description of the cell or None.
+
+        Returns:
+            str: description of the cell or None.
+        """
+        return self._description
+
+    @description.setter
+    def description(self, new_description: Optional[str]):
+        """Set the cell description.
+
+        Args:
+            new_description (Optional[str]): description of the cell.
+        """
+        if (new_description is not None
+                and not isinstance(new_description, str)):
+            raise ValueError("Cell description has to be a string value!")
+        self._description = new_description
+    # =====================================
+
+    # === BINARY OPERATORS: ===
     def add(self, other: 'Cell', /) -> 'Cell':  # noqa E225
         """Add two values.
 
@@ -176,6 +264,21 @@ class Cell(object):
                     cell_type=CellType.computational
                     )
 
+    def modulo(self, other: 'Cell', /) -> 'Cell':  # noqa E225
+        """Modulo of two values.
+
+        Args:
+            other (Cell): Another operand.
+
+        Returns:
+            Cell: self / other
+        """
+        return Cell(value=self.value % other.value,
+                    words=WordConstructor.modulo(self, other),
+                    cell_indices=other.cell_indices,
+                    cell_type=CellType.computational
+                    )
+
     def power(self, other: 'Cell', /) -> 'Cell':  # noqa E225
         """Self power to other.
 
@@ -190,6 +293,142 @@ class Cell(object):
                     cell_indices=other.cell_indices,
                     cell_type=CellType.computational
                     )
+
+    def equalTo(self, other: 'Cell', /) -> 'Cell':  # noqa E225
+        """Boolean equal operator.
+
+        Args:
+            other (Cell): Another operand.
+
+        Returns:
+            Cell: self equal to other
+        """
+        return Cell(value=self.value == other.value,
+                    words=WordConstructor.equalTo(self, other),
+                    cell_indices=other.cell_indices,
+                    cell_type=CellType.computational
+                    )
+
+    def notEqualTo(self, other: 'Cell', /) -> 'Cell':  # noqa E225
+        """Boolean not equal operator.
+
+        Args:
+            other (Cell): Another operand.
+
+        Returns:
+            Cell: self not equal to other
+        """
+        return Cell(value=self.value != other.value,
+                    words=WordConstructor.notEqualTo(self, other),
+                    cell_indices=other.cell_indices,
+                    cell_type=CellType.computational
+                    )
+
+    def greaterThan(self, other: 'Cell', /) -> 'Cell':  # noqa E225
+        """Boolean greater than operator.
+
+        Args:
+            other (Cell): Another operand.
+
+        Returns:
+            Cell: self greater than other
+        """
+        return Cell(value=self.value > other.value,
+                    words=WordConstructor.greaterThan(self, other),
+                    cell_indices=other.cell_indices,
+                    cell_type=CellType.computational
+                    )
+
+    def greaterThan(self, other: 'Cell', /) -> 'Cell':  # noqa E225
+        """Boolean greater than operator.
+
+        Args:
+            other (Cell): Another operand.
+
+        Returns:
+            Cell: self greater than other
+        """
+        return Cell(value=self.value > other.value,
+                    words=WordConstructor.greaterThan(self, other),
+                    cell_indices=other.cell_indices,
+                    cell_type=CellType.computational
+                    )
+
+    def greaterThanOrEqualTo(self, other: 'Cell', /) -> 'Cell':  # noqa E225
+        """Boolean greater than or equal to operator.
+
+        Args:
+            other (Cell): Another operand.
+
+        Returns:
+            Cell: self greater than or equal to other
+        """
+        return Cell(value=self.value >= other.value,
+                    words=WordConstructor.greaterThanOrEqualTo(self, other),
+                    cell_indices=other.cell_indices,
+                    cell_type=CellType.computational
+                    )
+
+    def lessThan(self, other: 'Cell', /) -> 'Cell':  # noqa E225
+        """Boolean less than operator.
+
+        Args:
+            other (Cell): Another operand.
+
+        Returns:
+            Cell: self less than other
+        """
+        return Cell(value=self.value < other.value,
+                    words=WordConstructor.lessThan(self, other),
+                    cell_indices=other.cell_indices,
+                    cell_type=CellType.computational
+                    )
+
+    def lessThanOrEqualTo(self, other: 'Cell', /) -> 'Cell':  # noqa E225
+        """Boolean less than or equal to operator.
+
+        Args:
+            other (Cell): Another operand.
+
+        Returns:
+            Cell: self less than or equal to other
+        """
+        return Cell(value=self.value <= other.value,
+                    words=WordConstructor.lessThanOrEqualTo(self, other),
+                    cell_indices=other.cell_indices,
+                    cell_type=CellType.computational
+                    )
+
+    def logicalConjunction(self, other: 'Cell', /) -> 'Cell':  # noqa E225
+        """Logical conjunction operator.
+
+        Args:
+            other (Cell): Another operand.
+
+        Returns:
+            Cell: self and other
+        """
+        return Cell(value=self.value and other.value,
+                    words=WordConstructor.logicalConjunction(self, other),
+                    cell_indices=other.cell_indices,
+                    cell_type=CellType.computational
+                    )
+
+    def logicalDisjunction(self, other: 'Cell', /) -> 'Cell':  # noqa E225
+        """Logical disjunction operator.
+
+        Args:
+            other (Cell): Another operand.
+
+        Returns:
+            Cell: self or other
+        """
+        return Cell(value=self.value or other.value,
+                    words=WordConstructor.logicalDisjunction(self, other),
+                    cell_indices=other.cell_indices,
+                    cell_type=CellType.computational
+                    )
+    # =========================
 
     # ==== OPERATOR OVERLOADING ====
     def __mul__(self, other):
@@ -211,37 +450,49 @@ class Cell(object):
     def __pow__(self, power, modulo=None):
         """Overload the operator '**'."""
         return self.power(power)
+
+    def __mod__(self, other):
+        """Overload the operator '%'."""
+        return self.modulo(other)
+
+    def __eq__(self, other):
+        """Overload the operator '=='."""
+        return self.equalTo(other)
+
+    def __ne__(self, other):
+        """Overload the operator '!='."""
+        return self.notEqualTo(other)
+
+    def __gt__(self, other):
+        """Overload the operator '>'."""
+        return self.greaterThan(other)
+
+    def __ge__(self, other):
+        """Overload the operator '>='."""
+        return self.greaterThanOrEqualTo(other)
+
+    def __lt__(self, other):
+        """Overload the operator '<'."""
+        return self.lessThan(other)
+
+    def __le__(self, other):
+        """Overload the operator '<='."""
+        return self.lessThanOrEqualTo(other)
+
+    def __and__(self, other):
+        """Overload the operator 'and'."""
+        return self.logicalConjunction(other)
+
+    def __or__(self, other):
+        """Overload the operator 'or'."""
+        return self.logicalDisjunction(other)
+
+    def __invert__(self):
+        """Overload the operator '~'."""
+        return self.logicalNegation(self)
     # ==============================
 
-    def __str__(self) -> str:
-        """Override the method __str__ to allow human-readable string
-            generations of inside.
-
-        Returns:
-            str: String representation of inner value.
-        """
-        return str(self.parse)
-
-    @property
-    def constructing_words(self) -> WordConstructor:
-        """Get the constructing words.
-
-        Returns:
-            WordConstructor: the constructing word of the cell.
-        """
-        return self._constructing_words
-
-    @property
-    def parse(self) -> Dict[str, str]:
-        """Return the dictionary with keys: language, values: constructing
-            word. This function is called when the cell should be inserted to
-            a spreadsheet.
-
-        Returns:
-            Dict[str, str]: Words for each language
-        """
-        return self._constructing_words.parse(self)
-
+    # === AGGREGATE OPERATORS ===
     @staticmethod
     def sum(cell_start: 'Cell', cell_end: 'Cell',
             subset: Iterable['Cell']) -> 'Cell':
@@ -323,6 +574,54 @@ class Cell(object):
                                    'maximum', np.max)
 
     @staticmethod
+    def stdev(cell_start: 'Cell', cell_end: 'Cell',
+              subset: Iterable['Cell']) -> 'Cell':
+        """Compute the standard deviation of the slice.
+
+        Args:
+            cell_start (Cell): Starting cell of the slice (left top).
+            cell_end: (Cell'): Ending cell of the slice (bottom right).
+            subset (Iterable['Cell']): List of all cells in the subset.
+
+        Returns:
+            Cell: the cell with aggregated and computed results.
+        """
+        return Cell._aggregate_fun(cell_start, cell_end, subset,
+                                   'stdev', np.std)
+
+    @staticmethod
+    def median(cell_start: 'Cell', cell_end: 'Cell',
+               subset: Iterable['Cell']) -> 'Cell':
+        """Compute the median of the slice.
+
+        Args:
+            cell_start (Cell): Starting cell of the slice (left top).
+            cell_end: (Cell'): Ending cell of the slice (bottom right).
+            subset (Iterable['Cell']): List of all cells in the subset.
+
+        Returns:
+            Cell: the cell with aggregated and computed results.
+        """
+        return Cell._aggregate_fun(cell_start, cell_end, subset,
+                                   'median', np.median)
+
+    @staticmethod
+    def count(cell_start: 'Cell', cell_end: 'Cell',
+              subset: Iterable['Cell']) -> 'Cell':
+        """Compute the number of items the slice.
+
+        Args:
+            cell_start (Cell): Starting cell of the slice (left top).
+            cell_end: (Cell'): Ending cell of the slice (bottom right).
+            subset (Iterable['Cell']): List of all cells in the subset.
+
+        Returns:
+            Cell: the cell with aggregated and computed results.
+        """
+        return Cell._aggregate_fun(cell_start, cell_end, subset,
+                                   'count', len)
+
+    @staticmethod
     def _aggregate_fun(
             cell_start: 'Cell',
             cell_end: 'Cell',
@@ -342,7 +641,13 @@ class Cell(object):
 
         Returns:
             Cell: the cell with aggregated and computed results.
+
+        Raises:
+            ValueError: If the starting or ending cells are not anchored.
         """
+        if not(cell_start.anchored and cell_end.anchored):
+            raise ValueError("All cells in the slice has to be anchored!")
+
         return Cell(value=method_np([c.value for c in subset]),
                     words=WordConstructor.aggregation(
                         cell_start, cell_end, grammar_method
@@ -350,7 +655,9 @@ class Cell(object):
                     cell_indices=cell_start.cell_indices,
                     cell_type=CellType.computational
                     )
+    # ===========================
 
+    # === UNARY OPERATORS: ===
     @staticmethod
     def reference(other: 'Cell', /) -> 'Cell':  # noqa E225
         """Create a reference to some anchored cell.
@@ -366,6 +673,24 @@ class Cell(object):
 
         return Cell(value=other.value,
                     words=WordConstructor.reference(other),
+                    cell_indices=other.cell_indices,
+                    cell_type=CellType.computational
+                    )
+
+    @staticmethod
+    def variable(other: 'Cell', /) -> 'Cell':  # noqa E225
+        """The cell as a variable.
+
+        Args:
+            other (Cell): Cell that is interpreted as a variable.
+
+        Returns:
+            Cell: variable.
+        """
+        if not other.is_variable:
+            raise ValueError("Only the variable type cell is accepted!")
+        return Cell(value=other.value,
+                    words=WordConstructor.variable(other),
                     cell_indices=other.cell_indices,
                     cell_type=CellType.computational
                     )
@@ -417,3 +742,167 @@ class Cell(object):
                     cell_indices=other.cell_indices,
                     cell_type=CellType.computational
                     )
+
+    @staticmethod
+    def ceil(other: 'Cell', /) -> 'Cell':  # noqa E225
+        """Ceiling function of the value in the cell.
+
+        Args:
+            other (Cell): Argument of the ceiling function.
+
+        Returns:
+            Cell: ceiling function value of the input
+        """
+        return Cell(value=np.ceil(other.value),
+                    words=WordConstructor.ceil(other),
+                    cell_indices=other.cell_indices,
+                    cell_type=CellType.computational
+                    )
+
+    @staticmethod
+    def floor(other: 'Cell', /) -> 'Cell':  # noqa E225
+        """Floor function of the value in the cell.
+
+        Args:
+            other (Cell): Argument of the floor function.
+
+        Returns:
+            Cell: floor function value of the input
+        """
+        return Cell(value=np.floor(other.value),
+                    words=WordConstructor.floor(other),
+                    cell_indices=other.cell_indices,
+                    cell_type=CellType.computational
+                    )
+
+    @staticmethod
+    def round(other: 'Cell', /) -> 'Cell':  # noqa E225
+        """Round the value in the cell.
+
+        Args:
+            other (Cell): Argument of the rounding function.
+
+        Returns:
+            Cell: round of the input numeric value
+        """
+        return Cell(value=np.round(other.value),
+                    words=WordConstructor.round(other),
+                    cell_indices=other.cell_indices,
+                    cell_type=CellType.computational
+                    )
+
+    @staticmethod
+    def abs(other: 'Cell', /) -> 'Cell':  # noqa E225
+        """Absolute value of the value in the cell.
+
+        Args:
+            other (Cell): Argument of the absolute value function.
+
+        Returns:
+            Cell: absolute value of the input numeric value
+        """
+        return Cell(value=np.abs(other.value),
+                    words=WordConstructor.abs(other),
+                    cell_indices=other.cell_indices,
+                    cell_type=CellType.computational
+                    )
+
+    @staticmethod
+    def sqrt(other: 'Cell', /) -> 'Cell':  # noqa E225
+        """Square root of the value in the cell.
+
+        Args:
+            other (Cell): Argument of the square root function.
+
+        Returns:
+            Cell: square root of the input numeric value
+        """
+        return Cell(value=np.sqrt(other.value),
+                    words=WordConstructor.sqrt(other),
+                    cell_indices=other.cell_indices,
+                    cell_type=CellType.computational
+                    )
+
+    @staticmethod
+    def logicalNegation(other: 'Cell', /) -> 'Cell':  # noqa E225
+        """Logical negation of the value in the cell.
+
+        Args:
+            other (Cell): Argument of the logical negation.
+
+        Returns:
+            Cell: logical negation the input value
+        """
+        return Cell(value=not other.value,
+                    words=WordConstructor.logicalNegation(other),
+                    cell_indices=other.cell_indices,
+                    cell_type=CellType.computational
+                    )
+    # ========================
+
+    # === Conditional (if-then-else statement) ===
+    @staticmethod
+    def conditional(condition: 'Cell',
+                    consequent: 'Cell',
+                    alternative: 'Cell', /) -> 'Cell':  # noqa E225
+        """Conditional statement (standard if-then-else statement).
+
+        Evaluate the value of the condition, if it is true, take the value
+            of the consequent, if not take the value of the alternative.
+
+        Args:
+            condition (Cell): Cell defining the condition (boolean value)
+            consequent (Cell): What is pass if the condition is true (the
+                part right after the if)
+            alternative (Cell): What is pass if the condition is false (the
+                part right after the else)
+
+        Returns:
+            Cell: The if-then-else conditional statement and correctly
+                chosen value.
+        """
+        return Cell(value=(consequent.value
+                           if condition.value else alternative.value),
+                    words=WordConstructor.conditional(
+                        condition, consequent, alternative
+                    ),
+                    cell_indices=condition.cell_indices,
+                    cell_type=CellType.computational
+                    )
+    # ============================================
+
+    # === OFFSET ===
+    @staticmethod
+    def offset(reference: 'Cell',
+               row_skip: 'Cell',
+               column_skip: 'Cell', /, *, # noqa E225
+               target: 'Cell') -> 'Cell':
+        """Return the cell with value computed as offset from reference cell
+            plus row_skip rows and column_skip columns.
+
+        Args:
+            reference (Cell): Reference cell from that the position is
+                computed.
+            row_skip (Cell): How many rows (down) should be skipped.
+            column_skip (Cell): How many columns (left) should be skipped.
+            target (Cell): Target cell (place where user really skips).
+
+        Returns:
+            Cell: Cell with offset operation and value from the cell on the
+                referential position.
+
+        Raises:
+            ValueError: If any of reference or target cells are not anchored.
+        """
+        # Test if both reference and target cells are anchored
+        if not(reference.anchored and target.anchored):
+            raise ValueError("Both reference cell and target cell must be"
+                             " anchored!")
+        return Cell(value=target.value,
+                    words=WordConstructor.offset(
+                        reference, row_skip, column_skip
+                    ),
+                    cell_indices=reference.cell_indices,
+                    cell_type=CellType.computational
+                    )
+    # ==============
