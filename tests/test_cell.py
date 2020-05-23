@@ -130,6 +130,8 @@ class TestCellBinaryOperations(unittest.TestCase):
 
         self.u_operand_1 = Cell(value=7, cell_indices=self.cell_indices)
         self.u_operand_2 = Cell(value=8, cell_indices=self.cell_indices)
+        self.value_u_1 = "7"
+        self.value_u_2 = "8"
 
     def _check_binary_operation(
             self,
@@ -141,6 +143,7 @@ class TestCellBinaryOperations(unittest.TestCase):
             excel_suffix: str = "",
     ):
         """Run the binary operation, compare numeric result, compare words."""
+        # A) Anchored
         a_res_cell = operation_method(self.a_operand_1, self.a_operand_2)
         # Compare words
         a_res_parsed = a_res_cell.parse
@@ -154,10 +157,28 @@ class TestCellBinaryOperations(unittest.TestCase):
                           python_numpy_separator +
                           self.coord_operand_2_python)
                          )
-        # Compare results
+        # Compare results of anchored
         self.assertEqual(a_res_cell.value,
                          real_operation_fn(self.a_operand_1.value,
                                            self.a_operand_2.value))
+        # B) Un-anchored
+        u_res_cell = operation_method(self.u_operand_1, self.u_operand_2)
+        # Compare words
+        u_res_parsed = u_res_cell.parse
+        self.assertEqual(u_res_parsed['excel'],
+                         (excel_prefix + self.value_u_1 +
+                          excel_separator +
+                          self.value_u_2 + excel_suffix)
+                         )
+        self.assertEqual(u_res_parsed['python_numpy'],
+                         (self.value_u_1 +
+                          python_numpy_separator +
+                          self.value_u_2)
+                         )
+        # Compare results of un-anchored
+        self.assertEqual(u_res_cell.value,
+                         real_operation_fn(self.u_operand_1.value,
+                                           self.u_operand_2.value))
 
     def test_add(self):
         """Test adding"""
@@ -262,3 +283,29 @@ class TestCellBinaryOperations(unittest.TestCase):
                                      " or ",
                                      excel_prefix="=OR(",
                                      excel_suffix=")")
+
+    def test_chain_of_operation(self):
+        """Test multiple operations in a sequence"""
+        result = self.a_operand_1 + self.a_operand_2 * self.u_operand_1
+        self.assertDictEqual({'python_numpy': 'values[3,4]+values[2,4]*7',
+                              'excel': '=F5+F4*7'},
+                             result.parse)
+        self.assertEqual(result.value, 35)
+
+
+class TestCellAggregationFunctionality(unittest.TestCase):
+    """Test aggregation functions"""
+    def setUp(self) -> None:
+        self.cell_indices: CellIndices = CellIndices(5, 7)
+        self.a_operand_start = Cell(1, 2, 7, cell_indices=self.cell_indices)
+        self.a_operand_end = Cell(3, 5, 4, cell_indices=self.cell_indices)
+        self.slice_python = "values[1:4,2:6]"
+        self.slice_excel = "C2:F4"
+        self.cell_set = [Cell(1, 2, 7, cell_indices=self.cell_indices)
+                         for _ in range(12)]
+
+    # TODO
+
+    def test_sum(self):
+        """Test the sum"""
+        pass
