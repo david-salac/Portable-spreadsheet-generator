@@ -6,6 +6,7 @@ from numbers import Number
 import xlsxwriter
 import numpy
 
+from .cell import Cell
 from .cell_type import CellType
 from .cell_indices import CellIndices
 
@@ -87,7 +88,7 @@ class Serialization(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def _get_cell_at(self, row: int, column: int) -> 'Cell':
+    def _get_cell_at(self, row: int, column: int) -> Cell:
         """Get the particular cell on the (row, column) position.
 
         Returns:
@@ -96,7 +97,7 @@ class Serialization(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def _get_variables(self) -> '_SheetVariables':
+    def _get_variables(self):
         """Return the sheet variables as _SheetVariables object.
 
         Returns:
@@ -189,7 +190,7 @@ class Serialization(abc.ABC):
         # Iterate through all columns and rows and add data
         for row_idx in range(self.shape[0]):
             for col_idx in range(self.shape[1]):
-                cell: 'Cell' = self._get_cell_at(row_idx, col_idx)
+                cell: Cell = self._get_cell_at(row_idx, col_idx)
                 if cell.value is not None:
                     # Offset here is either 0 or 1, indicates if we writes
                     # row/column labels to the first row and column.
