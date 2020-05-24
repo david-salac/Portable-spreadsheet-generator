@@ -298,26 +298,26 @@ NATIVE = {
         # like values from (1.1.2015, 25%) to (1.1.2015, 50%)
         "aggregation": {
             "prefix": "values from ",
-            "separator": " to ",
+            "separator": " and ",
             "suffix": "",
             "start_cell": {
-                "prefix": "(",
-                "suffix": ")",
-                "separator": ", ",
-                "rows_only": False,
+                "prefix": "row ",
+                "suffix": "",
+                "separator": " to row ",
+                "rows_only": True,
                 "cols_only": False,
                 "row_first": True,
             },
             "end_cell": {
-                "prefix": "(",
-                "suffix": ")",
-                "separator": ", ",
+                "prefix": "from column ",
+                "suffix": "",
+                "separator": " to column ",
                 "rows_only": False,
-                "cols_only": False,
+                "cols_only": True,
                 "row_first": True,
             },
             # For example, Python exclude last cell when slicing
-            "include_last_cell": True
+            "include_last_cell": False
         },
         "offset": {
             "order": ('reference-cell-row', 'skip-of-rows',

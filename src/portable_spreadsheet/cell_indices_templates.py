@@ -45,9 +45,9 @@ def native_generator(rows: int, columns: int,
                      offset: int = 0) -> Tuple[List[str], List[str]]:
     rows = list([str(row) for row in range(
         1 + offset, rows + offset + 1)]
-                ) + ["end of the row"]
+                )
     cols = list([str(col) for col in range(
-        1 + offset, columns + offset + 1)]) + ["end of the column"]
+        1 + offset, columns + offset + 1)])
     return rows, cols
 
 

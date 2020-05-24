@@ -1,4 +1,5 @@
 import abc
+import json
 from typing import Tuple, List, Dict, Union, Callable, Optional
 from types import MappingProxyType
 from numbers import Number
@@ -247,8 +248,7 @@ class Serialization(abc.ABC):
                       spaces_replacement: str = ' ',
                       skip_nan_cell: bool = False,
                       nan_replacement: object = None) -> T_out_dict:
-        """Export this spreadsheet to the dictionary that can be parsed to the
-            JSON format.
+        """Export this spreadsheet to the dictionary.
 
         Args:
             languages (List[str]): List of languages that should be exported.
@@ -382,6 +382,56 @@ class Serialization(abc.ABC):
             values['column-labels'] = x
         return values
 
+    def to_json(self,
+                languages: List[str] = None,
+                /, *,  # noqa E999
+                by_row: bool = True,
+                languages_pseudonyms: List[str] = None,
+                spaces_replacement: str = ' ',
+                skip_nan_cell: bool = False,
+                nan_replacement: object = None) -> str:
+        """Dumps the exported dictionary to the JSON object.
+
+        Args:
+            languages (List[str]): List of languages that should be exported.
+                If it has value None, all the languages are exported.
+            by_row (bool): If True, rows are the first indices and columns
+                are the second in the order. If False it is vice-versa.
+            languages_pseudonyms (List[str]): Rename languages to the strings
+                inside this list.
+            spaces_replacement (str): All the spaces in the rows and columns
+                descriptions (labels) are replaced with this string.
+            skip_nan_cell (bool): If True, None (NaN) values are skipped.
+            nan_replacement (object): Replacement for the None (NaN) value
+
+        Returns:
+            Dict[object, Dict[object, Dict[str, Union[str, float]]]]:
+                Dictionary with keys: 1. column/row, 2. row/column, 3. language
+                or language pseudonym or 'value' keyword for values -> value as
+                a value or as a cell building string.
+        """
+        class _NumPyEncoder(json.JSONEncoder):
+            """Encodes the NumPy variables to export"""
+            def default(self, obj):
+                if isinstance(obj, numpy.integer):
+                    return int(obj)
+                elif isinstance(obj, numpy.floating):
+                    return float(obj)
+                elif isinstance(obj, numpy.ndarray):
+                    return obj.tolist()
+                else:
+                    return super(_NumPyEncoder, self).default(obj)
+        # Return correctly encoded JSON
+        return json.dumps(
+            self.to_dictionary(languages,
+                               by_row=by_row,
+                               languages_pseudonyms=languages_pseudonyms,
+                               spaces_replacement=spaces_replacement,
+                               skip_nan_cell=skip_nan_cell,
+                               nan_replacement=nan_replacement),
+            cls=_NumPyEncoder
+        )
+
     def to_string_of_values(self) -> str:
         """Export values inside table to the Python array definition string.
 
@@ -425,7 +475,8 @@ class Serialization(abc.ABC):
                top_right_corner_text: str = "Sheet",
                sep: str = ',',
                line_terminator: str = '\n',
-               na_rep: str = '') -> str:
+               na_rep: str = '',
+               skip_labels: bool = False) -> str:
         """Export values to the string in the CSV logic
 
         Args:
@@ -435,6 +486,8 @@ class Serialization(abc.ABC):
             sep (str): Separator of values in a row.
             line_terminator (str): Ending sequence (character) of a row.
             na_rep (str): Replacement for the missing data.
+            skip_labels (bool): If true, first row and column with labels is
+                skipped
 
         Returns:
             str: CSV of the values
@@ -445,6 +498,8 @@ class Serialization(abc.ABC):
         export = ""
         for row_idx in range(-1, self.shape[0]):
             if row_idx == -1:
+                if skip_labels:
+                    continue
                 export += top_right_corner_text + sep
                 # Insert labels of columns:
                 for col_i in range(self.shape[1]):
@@ -455,10 +510,11 @@ class Serialization(abc.ABC):
                     if col_i < self.shape[1] - 1:
                         export += sep
             else:
-                # Insert labels of rows
-                export += self.cell_indices.rows_labels[
-                              row_idx + self.export_offset[0]
-                          ].replace(' ', spaces_replacement) + sep
+                if not skip_labels:
+                    # Insert labels of rows
+                    export += self.cell_indices.rows_labels[
+                                  row_idx + self.export_offset[0]
+                              ].replace(' ', spaces_replacement) + sep
                 # Insert actual values in the spreadsheet
                 for col_idx in range(self.shape[1]):
                     value = self._get_cell_at(row_idx, col_idx).value
@@ -474,7 +530,8 @@ class Serialization(abc.ABC):
     def to_markdown(self, *,
                     spaces_replacement: str = ' ',
                     top_right_corner_text: str = "Sheet",
-                    na_rep: str = ''):
+                    na_rep: str = '',
+                    skip_labels: bool = False):
         """Export values to the string in the Markdown (MD) file logic
 
         Args:
@@ -482,6 +539,8 @@ class Serialization(abc.ABC):
                 descriptions (labels) are replaced with this string.
             top_right_corner_text (str): Text in the top right corner.
             na_rep (str): Replacement for the missing data.
+            skip_labels (bool): If true, first row and column with labels is
+                skipped
 
         Returns:
             str: Markdown (MD) compatible table of the values
@@ -492,6 +551,12 @@ class Serialization(abc.ABC):
         export = ""
         for row_idx in range(-2, self.shape[0]):
             if row_idx == -2:
+                if skip_labels:
+                    export += "|"
+                    for col_i in range(self.shape[1]):
+                        export += "|"
+                    export += "|\n"
+                    continue
                 # Add the labels and top right corner text
                 export += "| " + top_right_corner_text + " |"
                 for col_i in range(self.shape[1]):
@@ -513,12 +578,15 @@ class Serialization(abc.ABC):
                     if col_i == self.shape[1] - 1:
                         export += "\n"
             else:
-                export += "| *"
                 # Insert row labels
-                export += self.cell_indices.rows_labels[
-                              row_idx + self.export_offset[0]
-                          ].replace(' ', spaces_replacement)
-                export += "*" + " | "
+                if not skip_labels:
+                    export += "| *"
+                    export += self.cell_indices.rows_labels[
+                                  row_idx + self.export_offset[0]
+                              ].replace(' ', spaces_replacement)
+                    export += "* "
+
+                export += "| "
 
                 for col_idx in range(self.shape[1]):
                     value = self._get_cell_at(row_idx, col_idx).value
@@ -567,7 +635,8 @@ class Serialization(abc.ABC):
                       spaces_replacement: str = ' ',
                       top_right_corner_text: str = "Sheet",
                       na_rep: str = '',
-                      language_for_description: str = None) -> str:
+                      language_for_description: str = None,
+                      skip_labels: bool = False) -> str:
         """Export values to the string in the HTML table logic
 
         Args:
@@ -578,6 +647,8 @@ class Serialization(abc.ABC):
             language_for_description (str): If not None, the description
                 of each computational cell is inserted as word of this
                 language (if the property description is not set).
+            skip_labels (bool): If true, first row and column with labels is
+                skipped
 
         Returns:
             str: HTML table definition
@@ -587,6 +658,8 @@ class Serialization(abc.ABC):
 
         export = "<table>"
         for row_idx in range(-1, self.shape[0]):
+            if skip_labels and row_idx == -1:
+                continue
             export += "<tr>"
             if row_idx == -1:
                 export += "<th>"
@@ -610,21 +683,23 @@ class Serialization(abc.ABC):
                     export += "</a>"
                     export += "</th>"
             else:
-                # Insert labels of rows
-                if (help_text :=  # noqa 203
-                        self.cell_indices.rows_help_text) is not None:
-                    title_attr = ' title="{}"'.format(
-                        help_text[row_idx + self.export_offset[1]]
-                    )
-                else:
-                    title_attr = ""
-                export += "<td>"
-                export += f'<a href="javascript:;" {title_attr}>'
-                export += self.cell_indices.rows_labels[
-                              row_idx + self.export_offset[0]
-                              ].replace(' ', spaces_replacement)
-                export += "</a>"
-                export += "</td>"
+                if not skip_labels:
+                    # Insert labels of rows
+                    if (help_text :=  # noqa 203
+                    self.cell_indices.rows_help_text) is not None:
+                        title_attr = ' title="{}"'.format(
+                            help_text[row_idx + self.export_offset[1]]
+                        )
+                    else:
+                        title_attr = ""
+                    export += "<td>"
+                    export += f'<a href="javascript:;" {title_attr}>'
+                    export += self.cell_indices.rows_labels[
+                                  row_idx + self.export_offset[0]
+                                  ].replace(' ', spaces_replacement)
+                    export += "</a>"
+                    export += "</td>"
+
                 # Insert actual values in the spreadsheet
                 for col_idx in range(self.shape[1]):
                     title_attr = ""

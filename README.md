@@ -550,8 +550,9 @@ or to any slice (CellSlice instance):
 1. **Excel format**, method `to_excel`:
 Export the sheet to the Excel-compatible file.
 2. **Dictionary of values**, method `to_dictionary`:
-Export the sheet to the dictionary (`dict` type) that can be used for
-creating of JSON.
+Export the sheet to the dictionary (`dict` type).
+3. **JSON format**, method `to_json`:
+Export the sheet to the JSON format (serialize output of `to_dictionary`).
 3. **2D array as a string**, method: `to_string_of_values`:
 Export values to the string that looks like Python array definition string.
 4. **CSV**, method `to_csv`:
@@ -584,9 +585,21 @@ sheet.iloc[i:j, k:l].description = "Text describing each cell in the slice"
 #### Exporting to Excel
 It can be done using the interface:
 ```
-sheet.to_excel(file_path: str, /, *, sheet_name: str = "Results", 
-               spaces_replacement: str = ' ', 
-               label_format: dict = {'bold': True})
+sheet.to_excel(
+    file_path: str,
+    /, *,
+    sheet_name: str = "Results",
+    spaces_replacement: str = ' ',
+    label_row_format: dict = {'bold': True},
+    label_column_format: dict = {'bold': True},
+    variables_sheet_name: Optional[str] = None,
+    variables_sheet_header: Dict[str, str] = MappingProxyType(
+    {
+        "name": "Name",
+        "value": "Value",
+        "description": "Description"
+    })
+)
 ```
 The only required argument is the path to the destination file (positional
 only parameter). Other parameters are passed as keywords (non-positional only). 
@@ -620,19 +633,27 @@ sheet.iloc[i, j].excel_format = {'bold': True}
 # Set the format of the cell slice (use bold value and red color)
 sheet.iloc[i:j, k:l].excel_format = {'bold': True, 'color': 'red'}
 ```
+##### Appending to existing Excel file
+Appending to existing Excel (`.xlsx`) format **is currently not supported** due
+to the missing functionality of the package XlsxWriter on which this
+library relies.
 
-#### Exporting to the dictionary
+#### Exporting to the dictionary (and JSON)
 It can be done using the interface:
 ```
-sheet.to_excel(languages: List[str] = None, /, *, 
-               by_row: bool = True,
-               languages_pseudonyms: List[str] = None,
-               spaces_replacement: str = ' ',
-               skip_nan_cell: bool = False)
+sheet.to_dictionary(languages: List[str] = None, /, *, 
+                    by_row: bool = True,
+                    languages_pseudonyms: List[str] = None,
+                    spaces_replacement: str = ' ',
+                    skip_nan_cell: bool = False,
+                    nan_replacement: object = None)
 ```
-Parameters are (all optional):
+**Parameters are (all optional):**
 
+_Positional only:_
 * `languages (List[str])`: List of languages that should be exported.
+
+_Key-value only:_
 * `by_row (bool)`: If True, rows are the first indices and columns are the
 second in the order. If False it is vice-versa.
 * `languages_pseudonyms (List[str])`: Rename languages to the strings inside
@@ -649,51 +670,306 @@ Dictionary with keys: 1. column/row, 2. row/column, 3. language or
 language pseudonym or 'value' keyword for values -> value as a value or
 as a cell building string.
 
+##### Exporting to JSON
+Exporting to JSON string is available using `to_json` method with exactly the
+same interface. The return value is the string.
+
+The reason why this method is separate is because of some values inserted
+from NumPy arrays cannot be serialized using native serializer.
+
+##### Output example
+Output of the JSON format
+```
+{
+   "rows":{
+      "R_0":{
+         "columns":{
+            "NL_C_0":{
+               "excel":"1",
+               "python_numpy":"1",
+               "native":"1",
+               "value":1,
+               "description":"DescFor0,0",
+               "help_text":"HT_C_0"
+            },
+            "NL_C_1":{
+               "excel":"2",
+               "python_numpy":"2",
+               "native":"2",
+               "value":2,
+               "description":"DescFor0,1",
+               "help_text":"HT_C_1"
+            },
+            "NL_C_2":{
+               "excel":"3",
+               "python_numpy":"3",
+               "native":"3",
+               "value":3,
+               "description":"DescFor0,2",
+               "help_text":"HT_C_2"
+            },
+            "NL_C_3":{
+               "excel":"4",
+               "python_numpy":"4",
+               "native":"4",
+               "value":4,
+               "description":"DescFor0,3",
+               "help_text":"HT_C_3"
+            }
+         },
+         "help_text":"HT_R_0"
+      },
+      "R_1":{
+         "columns":{
+            "NL_C_0":{
+               "excel":"5",
+               "python_numpy":"5",
+               "native":"5",
+               "value":5,
+               "description":"DescFor1,0",
+               "help_text":"HT_C_0"
+            },
+            "NL_C_1":{
+               "excel":"6",
+               "python_numpy":"6",
+               "native":"6",
+               "value":6,
+               "description":"DescFor1,1",
+               "help_text":"HT_C_1"
+            },
+            "NL_C_2":{
+               "excel":"7",
+               "python_numpy":"7",
+               "native":"7",
+               "value":7,
+               "description":"DescFor1,2",
+               "help_text":"HT_C_2"
+            },
+            "NL_C_3":{
+               "excel":"8",
+               "python_numpy":"8",
+               "native":"8",
+               "value":8,
+               "description":"DescFor1,3",
+               "help_text":"HT_C_3"
+            }
+         },
+         "help_text":"HT_R_1"
+      },
+      "R_2":{
+         "columns":{
+            "NL_C_0":{
+               "excel":"9",
+               "python_numpy":"9",
+               "native":"9",
+               "value":9,
+               "description":"DescFor2,0",
+               "help_text":"HT_C_0"
+            },
+            "NL_C_1":{
+               "excel":"10",
+               "python_numpy":"10",
+               "native":"10",
+               "value":10,
+               "description":"DescFor2,1",
+               "help_text":"HT_C_1"
+            },
+            "NL_C_2":{
+               "excel":"11",
+               "python_numpy":"11",
+               "native":"11",
+               "value":11,
+               "description":"DescFor2,2",
+               "help_text":"HT_C_2"
+            },
+            "NL_C_3":{
+               "excel":"12",
+               "python_numpy":"12",
+               "native":"12",
+               "value":12,
+               "description":"DescFor2,3",
+               "help_text":"HT_C_3"
+            }
+         },
+         "help_text":"HT_R_2"
+      },
+      "R_3":{
+         "columns":{
+            "NL_C_0":{
+               "excel":"13",
+               "python_numpy":"13",
+               "native":"13",
+               "value":13,
+               "description":"DescFor3,0",
+               "help_text":"HT_C_0"
+            },
+            "NL_C_1":{
+               "excel":"14",
+               "python_numpy":"14",
+               "native":"14",
+               "value":14,
+               "description":"DescFor3,1",
+               "help_text":"HT_C_1"
+            },
+            "NL_C_2":{
+               "excel":"15",
+               "python_numpy":"15",
+               "native":"15",
+               "value":15,
+               "description":"DescFor3,2",
+               "help_text":"HT_C_2"
+            },
+            "NL_C_3":{
+               "excel":"16",
+               "python_numpy":"16",
+               "native":"16",
+               "value":16,
+               "description":"DescFor3,3",
+               "help_text":"HT_C_3"
+            }
+         },
+         "help_text":"HT_R_3"
+      },
+      "R_4":{
+         "columns":{
+            "NL_C_0":{
+               "excel":"17",
+               "python_numpy":"17",
+               "native":"17",
+               "value":17,
+               "description":"DescFor4,0",
+               "help_text":"HT_C_0"
+            },
+            "NL_C_1":{
+               "excel":"18",
+               "python_numpy":"18",
+               "native":"18",
+               "value":18,
+               "description":"DescFor4,1",
+               "help_text":"HT_C_1"
+            },
+            "NL_C_2":{
+               "excel":"19",
+               "python_numpy":"19",
+               "native":"19",
+               "value":19,
+               "description":"DescFor4,2",
+               "help_text":"HT_C_2"
+            },
+            "NL_C_3":{
+               "excel":"20",
+               "python_numpy":"20",
+               "native":"20",
+               "value":20,
+               "description":"DescFor4,3",
+               "help_text":"HT_C_3"
+            }
+         },
+         "help_text":"HT_R_4"
+      }
+   },
+   "variables":{
+
+   },
+   "row-labels":[
+      "R_0",
+      "R_1",
+      "R_2",
+      "R_3",
+      "R_4"
+   ],
+   "column-labels":[
+      "NL_C_0",
+      "NL_C_1",
+      "NL_C_2",
+      "NL_C_3"
+   ]
+}
+```
+
 #### Exporting to the CSV
 It can be done using the interface:
 ```
-sheet.to_excel(*, spaces_replacement: str = ' ', sep: str = ',',
-               line_terminator: str = '\n', na_rep: str = '')
+sheet.to_excel(*,
+    spaces_replacement: str = ' ',
+    top_right_corner_text: str = "Sheet",
+    sep: str = ',',
+    line_terminator: str = '\n',
+    na_rep: str = '',
+    skip_labels: bool = False
+)
 ```
-Parameters are (all optional):
+Parameters are (all optional and key-value only):
 
 * `spaces_replacement (str)`: All the spaces in the rows and columns
-descriptions (labels) are replaced with this string.
+ descriptions (labels) are replaced with this string.
+* `top_right_corner_text (str)`: Text in the top right corner.
 * `sep (str)`: Separator of values in a row.
 * `line_terminator (str)`: Ending sequence (character) of a row.
 * `na_rep (str)`: Replacement for the missing data.
+* `skip_labels (bool)`: If true, first row and column with labels is
+ skipped
 
 **The return value is:** 
 
 CSV of the values as a string.
 
+##### Output example
+```
+Sheet,NL_C_0,NL_C_1,NL_C_2,NL_C_3
+R_0,1,2,3,4
+R_1,5,6,7,8
+R_2,9,10,11,12
+R_3,13,14,15,16
+R_4,17,18,19,20
+```
+
 #### Exporting to Markdown (MD) format
 It can be done using the interface:
 ```
-sheet.to_markdown(*, spaces_replacement: str = ' ', 
-                  top_right_corner_text: str = "Sheet", na_rep: str = '')
+sheet.to_markdown(*,
+    spaces_replacement: str = ' ',
+    top_right_corner_text: str = "Sheet",
+    na_rep: str = '',
+    skip_labels: bool = False
+)
 ```
-Parameters are (all optional):
+Parameters are (all optional, all key-value only):
 
 * `spaces_replacement (str)`: All the spaces in the rows and columns
 descriptions (labels) are replaced with this string.
 * `top_right_corner_text (str)`: Text in the top right corner.
 * `na_rep (str)`: Replacement for the missing data.
-
+* `skip_labels (bool)`: If true, first row and column with labels is
+skipped
+                
 **The return value is:** 
 
 Markdown (MD) compatible table of the values as a string.
+
+##### Output example
+```
+| Sheet |*NL_C_0* | *NL_C_1* | *NL_C_2* | *NL_C_3* |
+|----|----|----|----|----|
+| *R_0* | 1 | 2 | 3 | 4 |
+| *R_1* | 5 | 6 | 7 | 8 |
+| *R_2* | 9 | 10 | 11 | 12 |
+| *R_3* | 13 | 14 | 15 | 16 |
+| *R_4* | 17 | 18 | 19 | 20 |
+```
 
 #### Exporting to HTML table format
 It can be done using the interface:
 ```
 sheet.to_html_table(*,
-                    spaces_replacement: str = ' ',
-                    top_right_corner_text: str = "Sheet",
-                    na_rep: str = '',
-                    language_for_description: str = None)
+    spaces_replacement: str = ' ',
+    top_right_corner_text: str = "Sheet",
+    na_rep: str = '',
+    language_for_description: str = None,
+    skip_labels: bool = False
+)
 ```
-Parameters are (all optional):
+Parameters are (all optional, all key-value only):
 
 * `spaces_replacement (str)`: All the spaces in the rows and columns
 descriptions (labels) are replaced with this string.
@@ -702,11 +978,61 @@ descriptions (labels) are replaced with this string.
 * `language_for_description (str)`: If not `None`, the description
 of each computational cell is inserted as word of this language
 (if the property description is not set).
+* `skip_labels (bool)`: If true, first row and column with labels is
+skipped
 
 **The return value is:** 
 
 HTML table of the values as a string. Table is usable mainly for debugging
 purposes.
+
+##### Output example
+```
+<table>
+   <tr>
+      <th>Sheet</th>
+      <th><a href="javascript:;"  title="HT_C_0">NL_C_0</a></th>
+      <th><a href="javascript:;"  title="HT_C_1">NL_C_1</a></th>
+      <th><a href="javascript:;"  title="HT_C_2">NL_C_2</a></th>
+      <th><a href="javascript:;"  title="HT_C_3">NL_C_3</a></th>
+   </tr>
+   <tr>
+      <td><a href="javascript:;"  title="HT_R_0">R_0</a></td>
+      <td><a href="javascript:;"  title="DescFor0,0">1</a></td>
+      <td><a href="javascript:;"  title="DescFor0,1">2</a></td>
+      <td><a href="javascript:;"  title="DescFor0,2">3</a></td>
+      <td><a href="javascript:;"  title="DescFor0,3">4</a></td>
+   </tr>
+   <tr>
+      <td><a href="javascript:;"  title="HT_R_1">R_1</a></td>
+      <td><a href="javascript:;"  title="DescFor1,0">5</a></td>
+      <td><a href="javascript:;"  title="DescFor1,1">6</a></td>
+      <td><a href="javascript:;"  title="DescFor1,2">7</a></td>
+      <td><a href="javascript:;"  title="DescFor1,3">8</a></td>
+   </tr>
+   <tr>
+      <td><a href="javascript:;"  title="HT_R_2">R_2</a></td>
+      <td><a href="javascript:;"  title="DescFor2,0">9</a></td>
+      <td><a href="javascript:;"  title="DescFor2,1">10</a></td>
+      <td><a href="javascript:;"  title="DescFor2,2">11</a></td>
+      <td><a href="javascript:;"  title="DescFor2,3">12</a></td>
+   </tr>
+   <tr>
+      <td><a href="javascript:;"  title="HT_R_3">R_3</a></td>
+      <td><a href="javascript:;"  title="DescFor3,0">13</a></td>
+      <td><a href="javascript:;"  title="DescFor3,1">14</a></td>
+      <td><a href="javascript:;"  title="DescFor3,2">15</a></td>
+      <td><a href="javascript:;"  title="DescFor3,3">16</a></td>
+   </tr>
+   <tr>
+      <td><a href="javascript:;"  title="HT_R_4">R_4</a></td>
+      <td><a href="javascript:;"  title="DescFor4,0">17</a></td>
+      <td><a href="javascript:;"  title="DescFor4,1">18</a></td>
+      <td><a href="javascript:;"  title="DescFor4,2">19</a></td>
+      <td><a href="javascript:;"  title="DescFor4,3">20</a></td>
+   </tr>
+</table>
+```
 
 ## Remarks and definitions
 * **Anchored cell** is a cell that is located in the sheet and can be

@@ -22,10 +22,8 @@ class TestSpreadsheetBasicFunctionality(unittest.TestCase):
         self.columns_labels = [f"NL_C_{c_i}" for c_i in range(self.nr_col)]
         self.rows_help_text = [f"HT_R_{r_i}" for r_i in range(self.nr_row)]
         self.columns_help_text = [f"HT_C_{c_i}" for c_i in range(self.nr_col)]
-        self.native_rows = [f"NL_R_{r_i}" for r_i in range(self.nr_row)] + \
-                           ["row_end"]
-        self.native_cols = [f"NL_C_{c_i}" for c_i in range(self.nr_col)] + \
-                           ["col_end"]
+        self.native_rows = [f"NL_R_{r_i}" for r_i in range(self.nr_row)]
+        self.native_cols = [f"NL_C_{c_i}" for c_i in range(self.nr_col)]
         self.sheet = Spreadsheet.create_new_sheet(
             self.nr_row, self.nr_col, {
                 'native': (
@@ -55,10 +53,8 @@ class TestSpreadsheetBasicFunctionality(unittest.TestCase):
         old_sheet: Spreadsheet = copy.deepcopy(self.sheet)
         expand_row = 3
         expand_col = 5
-        new_native_rows = [f'eR_{r_i}' for r_i in range(expand_row)] + \
-                          ["row_end"]
-        new_native_cols = [f'eC_{c_i}' for c_i in range(expand_col)] + \
-                          ["col_end"]
+        new_native_rows = [f'eR_{r_i}' for r_i in range(expand_row)]
+        new_native_cols = [f'eC_{c_i}' for c_i in range(expand_col)]
         new_rows_labels = [f'LeR_{r_i}' for r_i in range(expand_row)]
         new_columns_labels = [f'LeC_{c_i}' for c_i in range(expand_col)]
         new_rows_help_text = [f'HeR_{r_i}' for r_i in range(expand_row)]
@@ -87,7 +83,7 @@ class TestSpreadsheetBasicFunctionality(unittest.TestCase):
         )
         # Check rows in each language
         self.assertListEqual(cell_indices.rows['native'],
-                             self.native_rows[:-1] + new_native_rows)
+                             self.native_rows + new_native_rows)
         self.assertListEqual(
             cell_indices.rows['python_numpy'],
             [str(i) for i in range(0, self.nr_row + expand_row + 1)]
@@ -98,7 +94,7 @@ class TestSpreadsheetBasicFunctionality(unittest.TestCase):
         )
         # Check columns in each language
         self.assertListEqual(cell_indices.columns['native'],
-                             self.native_cols[:-1] + new_native_cols)
+                             self.native_cols + new_native_cols)
         self.assertListEqual(
             cell_indices.columns['python_numpy'],
             [str(i) for i in range(0, self.nr_col + expand_col + 1)]
