@@ -12,3 +12,4 @@ dist/*
 portable_spreadsheet.egg-info/*
 TODO.md
 src/__init__.py
+src/portable_spreadsheet.egg-info/*
