@@ -724,7 +724,7 @@ class Cell(object):
             Cell: exponential of the value
         """
         return Cell(value=np.exp(other.value),
-                    words=WordConstructor.logarithm(other),
+                    words=WordConstructor.exponential(other),
                     cell_indices=other.cell_indices,
                     cell_type=CellType.computational
                     )

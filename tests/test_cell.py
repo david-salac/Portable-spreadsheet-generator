@@ -54,7 +54,7 @@ class TestCellBasicFunctionality(unittest.TestCase):
         self.assertEqual(a_cell.word.words['python_numpy'], 'values[3,4]')
         self.assertTrue(a_cell.anchored)
 
-        # Unanchored cell
+        # Un-anchored cell
         u_cell = Cell(value=7, cell_indices=self.cell_indices)
         self.assertEqual(u_cell.word.words['excel'], '7')
         self.assertEqual(u_cell.word.words['python_numpy'], '7')
@@ -66,7 +66,7 @@ class TestCellBasicFunctionality(unittest.TestCase):
         a_cell = Cell(3, 4, 7, cell_indices=self.cell_indices)
         self.assertTupleEqual(a_cell.coordinates, (3, 4))
 
-        # Unanchored cell
+        # Un-anchored cell
         u_cell = Cell(value=7, cell_indices=self.cell_indices)
         self.assertTupleEqual(u_cell.coordinates, (None, None))
         # Test setter
@@ -123,6 +123,47 @@ class TestCellBasicFunctionality(unittest.TestCase):
         """Test the constructing words property."""
         t_cell = Cell(3, 4, 7, cell_indices=self.cell_indices)
         self.assertEqual(t_cell.constructing_words, t_cell._constructing_words)
+
+    def test_conditional(self):
+        """Regression test for the conditional."""
+        a_cell_cond_1 = Cell(1, 3, 8, cell_indices=self.cell_indices)
+        u_cell_cond_2 = Cell(value=7, cell_indices=self.cell_indices)
+        a_cell_conseq = Cell(2, 3, 11, cell_indices=self.cell_indices)
+        u_cell_altern = Cell(value=5, cell_indices=self.cell_indices)
+
+        u_res = Cell.conditional(a_cell_cond_1 == u_cell_cond_2,  # <- IF
+                                 a_cell_conseq,  # <- THEN
+                                 u_cell_altern)  # <- ELSE
+        # Test generated words
+        res_word = u_res.parse
+        word_expected = {
+            'python_numpy': '((values[2,3]) if (values[1,3]==7) else (5))',
+            'excel': '=IF(E3=7,E4,5)'
+        }
+        self.assertDictEqual(word_expected, res_word)
+        # Test generated values
+        value_computed = u_res.value
+        value_expected = u_cell_altern.value
+        self.assertEqual(value_expected, value_computed)
+
+    def test_offset(self):
+        """Regression test for the offset."""
+        a_cell_ref = Cell(1, 3, 8, cell_indices=self.cell_indices)
+        u_cell_row = Cell(value=7, cell_indices=self.cell_indices)
+        a_cell_col = Cell(2, 3, 11, cell_indices=self.cell_indices)
+        u_cell_tar = Cell(5, 5, 5, cell_indices=self.cell_indices)
+
+        u_res = Cell.offset(a_cell_ref, u_cell_row, a_cell_col,
+                            target=u_cell_tar)
+        # Test generated words
+        res_word = u_res.parse
+        word_expected = {'excel': '=OFFSET(E3,7,E4)',
+                         'python_numpy': 'values[1+7,3+values[2,3]]'}
+        self.assertDictEqual(word_expected, res_word)
+        # Test generated values
+        value_computed = u_res.value
+        value_expected = u_cell_tar.value
+        self.assertEqual(value_expected, value_computed)
 
 
 class TestCellBinaryOperations(unittest.TestCase):
@@ -192,9 +233,9 @@ class TestCellBinaryOperations(unittest.TestCase):
                           self.coord_operand_2_python)
                          )
         # Compare results of anchored
-        self.assertEqual(a_res_cell.value,
-                         real_operation_fn(self.a_operand_1.value,
-                                           self.a_operand_2.value))
+        self.assertAlmostEqual(a_res_cell.value,
+                               real_operation_fn(self.a_operand_1.value,
+                                                 self.a_operand_2.value))
         # B) Un-anchored
         u_res_cell = operation_method(self.u_operand_1, self.u_operand_2)
         # Compare words
@@ -212,9 +253,9 @@ class TestCellBinaryOperations(unittest.TestCase):
                           self.value_u_2)
                          )
         # Compare results of un-anchored
-        self.assertEqual(u_res_cell.value,
-                         real_operation_fn(self.u_operand_1.value,
-                                           self.u_operand_2.value))
+        self.assertAlmostEqual(u_res_cell.value,
+                               real_operation_fn(self.u_operand_1.value,
+                                                 self.u_operand_2.value))
 
     def test_add(self):
         """Test adding"""
@@ -293,7 +334,7 @@ class TestCellBinaryOperations(unittest.TestCase):
                                      "^",
                                      "**")
         # Operator test
-        self._check_binary_operation(Cell.__mod__,
+        self._check_binary_operation(Cell.__pow__,
                                      lambda x, y: x ** y,
                                      "^",
                                      "**")
@@ -416,7 +457,7 @@ class TestCellBinaryOperations(unittest.TestCase):
         self.assertDictEqual({'python_numpy': 'values[3,4]+values[2,4]*7',
                               'excel': '=F5+F4*7'},
                              result.parse)
-        self.assertEqual(result.value, 35)
+        self.assertAlmostEqual(result.value, 35)
 
 
 class TestCellAggregationFunctionality(unittest.TestCase):
@@ -478,7 +519,7 @@ class TestCellAggregationFunctionality(unittest.TestCase):
         # Check the values
         u_value_computed = u_result.value
         value_expected = real_operation_fn(self.cell_values)
-        self.assertEqual(u_value_computed, value_expected)
+        self.assertAlmostEqual(u_value_computed, value_expected)
 
         # Compare words
         u_res_parsed = u_result.parse
@@ -533,3 +574,163 @@ class TestCellAggregationFunctionality(unittest.TestCase):
                                        "COUNT(", ")",
                                        "((lambda var=",
                                        ": var.shape[0] * var.shape[1])())")
+
+
+class TestCellUnaryFunctionality(unittest.TestCase):
+    """Test unary operators (functions with just one parameter).
+
+    Notice:
+        if variable start with prefix 'a_' it means that cell is anchored
+        (located in grid), if with prefix 'u_' it means that it is NOT
+        anchored, with prefix 't' it does not matter (just a testing variable).
+    """
+    def setUp(self) -> None:
+        self.cell_indices: CellIndices = CellIndices(5, 7)
+        self.a_operand = Cell(3, 4, 7, cell_indices=self.cell_indices)
+        self.coord_operand_python = "values[3,4]"
+        self.coord_operand_excel = "F5"
+
+        self.u_operand = Cell(value=7, cell_indices=self.cell_indices)
+        self.value_u = "7"
+
+    def test_reference(self):
+        """Test the referencing to some cell"""
+        with self.assertRaises(ValueError):
+            Cell.reference(self.u_operand)
+        u_reference = Cell.reference(self.a_operand)
+        u_ref_word = u_reference.parse
+        self.assertEqual(u_ref_word['excel'], "=" + self.coord_operand_excel)
+        self.assertEqual(u_ref_word['python_numpy'], self.coord_operand_python)
+
+    def test_variable(self):
+        """Test the variables parsing"""
+        with self.assertRaises(ValueError):
+            Cell.variable(self.a_operand)
+
+        variable_name = "test_var"
+        var_value = 99
+        # Un-anchored variable
+        u_var_cell = Cell(None, None, 99, cell_indices=self.cell_indices,
+                          is_variable=True, variable_name=variable_name,
+                          cell_type=CellType.computational)
+        self.assertEqual(u_var_cell.value, var_value)
+        # Reference to variable
+        u_ref_cell = Cell.variable(u_var_cell)
+        u_ref_cell_word = u_ref_cell.parse
+        self.assertEqual(u_ref_cell_word['python_numpy'], str(variable_name))
+        self.assertEqual(u_ref_cell_word['excel'], '=' + str(variable_name))
+
+    def _check_unary_operation(
+            self,
+            operation_method: Callable[[Cell], Cell],
+            real_operation_fn: Callable[[float], float],
+            excel_prefix: str = "",
+            excel_suffix: str = "",
+            python_prefix: str = "",
+            python_suffix: str = "",
+            *,
+            excel_reference_prefix: str = "=",
+            python_reference_prefix: str = "",
+    ) -> None:
+        """Run the unary operation, compare numeric result, compare words.
+
+        Args:
+            operation_method (Callable[[Cell, Cell], Cell]): Pointer to the
+                method inside the Cell class.
+            real_operation_fn (Callable[[float, float], float]): Pointer to the
+                Python method that compute the same.
+            excel_prefix (str): Prefix for the operation in Excel language.
+            excel_suffix (str): Suffix for the operation in Excel language.
+            python_prefix (str): Prefix for the operation in Python_NumPy
+                language.
+            python_suffix (str): Suffix for the operation in Python_NumPy
+                language.
+            excel_reference_prefix (str): Prefix of the word that reference
+                to some computation in Excel.
+            python_reference_prefix (str): Prefix of the word that reference
+                to some computation in Python.
+        """
+        # A) Anchored
+        a_res_cell = operation_method(self.a_operand)
+        # Compare words
+        a_res_parsed = a_res_cell.parse
+        self.assertEqual(a_res_parsed['excel'],
+                         (excel_reference_prefix + excel_prefix +
+                          self.coord_operand_excel + excel_suffix)
+                         )
+        self.assertEqual(a_res_parsed['python_numpy'],
+                         (python_reference_prefix + python_prefix +
+                          self.coord_operand_python + python_suffix)
+                         )
+        # Compare results of anchored
+        self.assertAlmostEqual(a_res_cell.value,
+                               real_operation_fn(self.a_operand.value))
+        # B) Un-anchored
+        u_res_cell = operation_method(self.u_operand)
+        # Compare words
+        u_res_parsed = u_res_cell.parse
+        self.assertEqual(u_res_parsed['excel'],
+                         (excel_reference_prefix + excel_prefix +
+                          self.value_u + excel_suffix)
+                         )
+        self.assertEqual(u_res_parsed['python_numpy'],
+                         (python_reference_prefix + python_prefix +
+                          self.value_u + python_suffix)
+                         )
+        # Compare results of un-anchored
+        self.assertAlmostEqual(u_res_cell.value,
+                               real_operation_fn(self.u_operand.value))
+
+    def test_brackets(self):
+        """Test the brackets parsing"""
+        self._check_unary_operation(Cell.brackets,
+                                    lambda x: x,
+                                    "(", ")", "(", ")")
+
+    def test_logarithm(self):
+        """Test the logarithm parsing"""
+        self._check_unary_operation(Cell.logarithm,
+                                    np.log,
+                                    "LN(", ")", "np.log(", ")")
+
+    def test_exponential(self):
+        """Test the exponential parsing"""
+        self._check_unary_operation(Cell.exponential,
+                                    np.exp,
+                                    "EXP(", ")", "np.exp(", ")")
+
+    def test_ceil(self):
+        """Test the ceil parsing"""
+        self._check_unary_operation(Cell.ceil,
+                                    np.ceil,
+                                    "CEILING(", ")", "np.ceil(", ")")
+
+    def test_floor(self):
+        """Test the floor parsing"""
+        self._check_unary_operation(Cell.floor,
+                                    np.floor,
+                                    "FLOOR(", ")", "np.floor(", ")")
+
+    def test_round(self):
+        """Test the round parsing"""
+        self._check_unary_operation(Cell.round,
+                                    np.round,
+                                    "ROUND(", ")", "np.round(", ")")
+
+    def test_abs(self):
+        """Test the abs parsing"""
+        self._check_unary_operation(Cell.abs,
+                                    np.abs,
+                                    "ABS(", ")", "np.abs(", ")")
+
+    def test_sqrt(self):
+        """Test the square root parsing"""
+        self._check_unary_operation(Cell.sqrt,
+                                    np.sqrt,
+                                    "SQRT(", ")", "np.sqrt(", ")")
+
+    def test_logicalNegation(self):
+        """Test the logical negation parsing"""
+        self._check_unary_operation(Cell.logicalNegation,
+                                    lambda x: not x,
+                                    "NOT(", ")", "not (", ")")

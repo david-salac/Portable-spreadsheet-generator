@@ -761,7 +761,7 @@ PYTHON_NUMPY = {
             "suffix": ")"
         },
         'alternative': {
-            "prefix": " else (",
+            "prefix": "else (",
             "suffix": ")"
         }
     }

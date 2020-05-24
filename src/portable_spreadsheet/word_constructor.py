@@ -796,8 +796,8 @@ class WordConstructor(object):
         index_row = reference.cell_indices.rows
         index_col = reference.cell_indices.columns
 
-        ref_row_skip = row_skip.parse
-        ref_col_skip = column_skip.parse
+        ref_row_skip = row_skip.word.words
+        ref_col_skip = column_skip.word.words
 
         for language in instance.languages:
             offset_prefix = GRAMMARS[language]['cells']['offset']['prefix']
