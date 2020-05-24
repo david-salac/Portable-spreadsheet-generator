@@ -20,7 +20,7 @@ class _Location(object):
     """
 
     def __init__(self,
-                 spreadsheet: 'Spreadsheet',
+                 spreadsheet,
                  by_integer: bool):
         """Initialise location
 
@@ -29,7 +29,7 @@ class _Location(object):
             by_integer (bool): If True, indices are computed using integer
             value, if False, labels (aliases, typically string) are used.
         """
-        self.spreadsheet: 'Spreadsheet' = spreadsheet
+        self.spreadsheet = spreadsheet
         self.by_integer: str = by_integer
 
     def __setitem__(self, index, val):
@@ -77,7 +77,7 @@ class _Functionality(object):
         spreadsheet (Spreadsheet): Reference to spreadsheet instance.
     """
 
-    def __init__(self, spreadsheet: 'Spreadsheet'):
+    def __init__(self, spreadsheet):
         """
         Args:
             spreadsheet (Spreadsheet): Reference to spreadsheet instance.
@@ -205,9 +205,9 @@ class _Functionality(object):
         return Cell.logicalNegation(value)
 
     @staticmethod
-    def conditional(condition: 'Cell',
-                    consequent: 'Cell',
-                    alternative: 'Cell', /) -> 'Cell':  # noqa E225
+    def conditional(condition: Cell,
+                    consequent: Cell,
+                    alternative: Cell, /) -> Cell:  # noqa E225
         """Conditional statement (standard if-then-else statement).
 
         Evaluate the value of the condition, if it is true, take the value
@@ -266,13 +266,13 @@ class _SheetVariables(object):
             variable.
         spreadsheet (Spreadsheet): Reference to spreadsheet instance.
     """
-    def __init__(self, spreadsheet: 'Spreadsheet'):
+    def __init__(self, spreadsheet):
         """
         Args:
             spreadsheet (Spreadsheet): Reference to spreadsheet instance.
         """
         self._variables: Dict[str, Dict[str, object]] = {}
-        self.spreadsheet: 'Spreadsheet' = spreadsheet
+        self.spreadsheet = spreadsheet
 
     def set_variable(self,
                      name: str,

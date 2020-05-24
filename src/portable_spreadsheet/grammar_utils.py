@@ -69,6 +69,11 @@ class GrammarUtils(object):
                 raise ve
             else:
                 return False
+        except KeyError as ke:
+            if raise_exception:
+                raise ValueError("Invalid keys in input!") from ke
+            else:
+                return False
         return True
 
     @staticmethod
@@ -86,7 +91,21 @@ class GrammarUtils(object):
             GRAMMARS[language_name] = grammar_definition
         else:
             raise ValueError(f"Language {language_name} is already in the "
-                             "list.")
+                             "system.")
+
+    @staticmethod
+    def remove_grammar(language_name: str) -> None:
+        """Remove the grammar from the system.
+
+        Args:
+            language_name (str): Name of the language (like 'excel', 'python')
+        """
+        # Add the grammar
+        if language_name in GRAMMARS.keys():
+            del GRAMMARS[language_name]
+        else:
+            raise ValueError(f"Language {language_name} is not in the "
+                             "system.")
 
     @staticmethod
     def get_languages() -> Set[str]:
@@ -96,3 +115,17 @@ class GrammarUtils(object):
             Set[str]: Set of all languages included in the system.
         """
         return set([str(lang) for lang in GRAMMARS.keys()])
+
+    @staticmethod
+    def check_system_consistency() -> bool:
+        """Check if the system contains all neccessary grammars.
+
+        Returns:
+            bool: True if system is consistent, False otherwise
+        """
+        languages_in_system = GrammarUtils.get_languages()
+        if len({'excel', 'python_numpy'} & languages_in_system) != 2:
+            return False
+        validation = GrammarUtils.validate_grammar(GRAMMARS['excel']) \
+            and GrammarUtils.validate_grammar(GRAMMARS['python_numpy'])
+        return validation

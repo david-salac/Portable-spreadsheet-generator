@@ -154,7 +154,7 @@ class CellIndices(object):
     def expand_size(self,
                     new_number_of_rows: int,
                     new_number_of_columns: int,
-                    new_rows_columns: Optional[T_lg_col_row] = None,
+                    new_rows_columns: Optional[T_lg_col_row] = {},
                     /, *,  # noqa E225
                     new_rows_labels: List[str] = None,
                     new_columns_labels: List[str] = None,

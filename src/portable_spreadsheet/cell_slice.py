@@ -29,7 +29,7 @@ class CellSlice(Serialization):
                  start_idx: Tuple[int, int],
                  end_idx: Tuple[int, int],
                  cell_subset: Iterable[Cell],
-                 driving_sheet: 'Spreadsheet'
+                 driving_sheet
                  ):
         """Create a cell slice from the spreadsheet.
 
@@ -287,7 +287,7 @@ class CellSlice(Serialization):
         return self.driving_sheet.iloc[self.start_idx[0] + row,
                                        self.start_idx[1] + column]
 
-    def _get_variables(self) -> '_SheetVariables':
+    def _get_variables(self):
         """Return the sheet variables as _SheetVariables object.
 
         Returns:
