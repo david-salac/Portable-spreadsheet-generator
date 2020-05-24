@@ -13,7 +13,7 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/david-salac/Portable-spreadsheet-generator",
-    package_dir={'': 'src'},
+    packages=setuptools.find_packages(),
     install_requires=['numpy', 'XlsxWriter'],
     classifiers=[
         "Programming Language :: Python :: 3",
