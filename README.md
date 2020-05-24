@@ -107,6 +107,14 @@ of values in the slice.
 Cell slice is represented in the class `CellSlice` in the
 file `cell_slice.py`.
 
+If you want to assign some value to a `CellSlice` object, you can use
+overloaded operator `<<=`
+```
+some_slice = spreadsheet_instance.iloc[1,:]
+average_of_slice <<= 55.6  # Some assigned value
+```
+However, it is strongly recommended to use standard assigning through
+the Spreadsheet object described below.
 #### Functionality of the CellSlice class
 Cell slice is mainly related to the aggregating functions described in
 the subsection _Aggregate functions_ bellow.

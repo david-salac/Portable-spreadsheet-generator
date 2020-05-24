@@ -7,6 +7,7 @@ import xlsxwriter
 import numpy
 
 from .cell_type import CellType
+from .cell_indices import CellIndices
 
 # ==== TYPES ====
 # Type for the output dictionary with the
@@ -77,7 +78,7 @@ class Serialization(abc.ABC):
         raise NotImplementedError
 
     @property
-    def cell_indices(self) -> 'CellIndices':
+    def cell_indices(self) -> CellIndices:
         """Get the cell indices.
 
         Returns:
@@ -596,8 +597,8 @@ class Serialization(abc.ABC):
                     col = self.cell_indices.columns_labels[
                         col_i + self.export_offset[1]
                         ]
-                    if (help_text := self.cell_indices.columns_help_text) \
-                            is not None:
+                    if (help_text :=  # noqa 203
+                            self.cell_indices.columns_help_text) is not None:
                         title_attr = ' title="{}"'.format(
                             help_text[col_i + self.export_offset[1]]
                         )
@@ -609,8 +610,8 @@ class Serialization(abc.ABC):
                     export += "</th>"
             else:
                 # Insert labels of rows
-                if (help_text := self.cell_indices.rows_help_text) \
-                        is not None:
+                if (help_text :=  # noqa 203
+                        self.cell_indices.rows_help_text) is not None:
                     title_attr = ' title="{}"'.format(
                         help_text[row_idx + self.export_offset[1]]
                     )
@@ -627,8 +628,8 @@ class Serialization(abc.ABC):
                 for col_idx in range(self.shape[1]):
                     title_attr = ""
                     cell_at_pos = self._get_cell_at(row_idx, col_idx)
-                    if (description := cell_at_pos.description) \
-                            is not None:
+                    if (description := # noqa 203
+                            cell_at_pos.description) is not None:
                         title_attr = ' title="{}"'.format(description)
                     elif language_for_description is not None:
                         if cell_at_pos.cell_type == CellType.computational:

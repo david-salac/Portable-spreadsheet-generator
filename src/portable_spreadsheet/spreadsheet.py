@@ -141,6 +141,13 @@ class Spreadsheet(Serialization):
             _y = self.cell_indices.columns_labels.index(index_label[1])
             index_integer = (_x, _y)
         if index_integer is not None:
+            _x = index_integer[0]
+            _y = index_integer[1]
+            # If negative, take n-th item from the end
+            if _x < 0:
+                _x += self.shape[0]
+            if _y < 0:
+                _y += self.shape[1]
             if isinstance(value, Cell):
                 if value.anchored:
                     _value = Cell.reference(value)
@@ -148,11 +155,11 @@ class Spreadsheet(Serialization):
                     # Create a deep copy
                     _value = copy.deepcopy(value)
                     # Anchor it:
-                    _value.coordinates = (index_integer[0], index_integer[1])
+                    _value.coordinates = (_x, _y)
             else:
-                _value = Cell(index_integer[0], index_integer[1],
+                _value = Cell(_x, _y,
                               value=value, cell_indices=self.cell_indices)
-            self._sheet[index_integer[0]][index_integer[1]] = _value
+            self._sheet[_x][_y] = _value
 
     def _get_item(self,
                   index_integer: Tuple[int, int] = None,
@@ -176,7 +183,14 @@ class Spreadsheet(Serialization):
             _y = self.cell_indices.columns_labels.index(index_label[1])
             index_integer = (_x, _y)
         if index_integer is not None:
-            return self._sheet[index_integer[0]][index_integer[1]]
+            _x = index_integer[0]
+            _y = index_integer[1]
+            # If negative, take n-th item from the end
+            if _x < 0:
+                _x += self.shape[0]
+            if _y < 0:
+                _y += self.shape[1]
+            return self._sheet[_x][_y]
 
     def _get_slice(self,
                    index_integer: Tuple[slice, slice],
