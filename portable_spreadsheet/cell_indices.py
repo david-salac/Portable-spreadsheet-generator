@@ -46,9 +46,11 @@ class CellIndices(object):
                 logs the warnings (or None if skipped).
         """
         # Quick sanity check:
-        if len(set(rows_labels)) != len(rows_labels):
+        if rows_labels is not None \
+                and len(set(rows_labels)) != len(rows_labels):
             warning_logger("There are some duplications in row labels.")
-        if len(set(columns_labels)) != len(columns_labels):
+        if columns_labels is not None \
+                and len(set(columns_labels)) != len(columns_labels):
             warning_logger("There are some duplications in column labels.")
 
         if rows_columns is not None:
