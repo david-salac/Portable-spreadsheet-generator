@@ -247,7 +247,8 @@ class Serialization(abc.ABC):
                       languages_pseudonyms: List[str] = None,
                       spaces_replacement: str = ' ',
                       skip_nan_cell: bool = False,
-                      nan_replacement: object = None) -> T_out_dict:
+                      nan_replacement: object = None,
+                      append_dict: dict = {}) -> T_out_dict:
         """Export this spreadsheet to the dictionary.
 
         Args:
@@ -261,6 +262,7 @@ class Serialization(abc.ABC):
                 descriptions (labels) are replaced with this string.
             skip_nan_cell (bool): If True, None (NaN) values are skipped.
             nan_replacement (object): Replacement for the None (NaN) value
+            append_dict (dict): Append this dictionary to output.
 
         Returns:
             Dict[object, Dict[object, Dict[str, Union[str, float]]]]:
@@ -380,6 +382,11 @@ class Serialization(abc.ABC):
         else:
             values['row-labels'] = y
             values['column-labels'] = x
+
+        # Append dictionary:
+        for a_key, a_val in append_dict.items():
+            values[a_key] = a_val
+
         return values
 
     def to_json(self,
@@ -389,7 +396,8 @@ class Serialization(abc.ABC):
                 languages_pseudonyms: List[str] = None,
                 spaces_replacement: str = ' ',
                 skip_nan_cell: bool = False,
-                nan_replacement: object = None) -> str:
+                nan_replacement: object = None,
+                append_dict: dict = {}) -> str:
         """Dumps the exported dictionary to the JSON object.
 
         Args:
@@ -403,6 +411,7 @@ class Serialization(abc.ABC):
                 descriptions (labels) are replaced with this string.
             skip_nan_cell (bool): If True, None (NaN) values are skipped.
             nan_replacement (object): Replacement for the None (NaN) value
+            append_dict (dict): Append this dictionary to output.
 
         Returns:
             Dict[object, Dict[object, Dict[str, Union[str, float]]]]:
@@ -428,7 +437,8 @@ class Serialization(abc.ABC):
                                languages_pseudonyms=languages_pseudonyms,
                                spaces_replacement=spaces_replacement,
                                skip_nan_cell=skip_nan_cell,
-                               nan_replacement=nan_replacement),
+                               nan_replacement=nan_replacement,
+                               append_dict=append_dict),
             cls=_NumPyEncoder
         )
 

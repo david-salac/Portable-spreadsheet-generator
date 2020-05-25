@@ -103,7 +103,8 @@ class Spreadsheet(Serialization):
                                   columns_labels=columns_labels,
                                   rows_help_text=rows_help_text,
                                   columns_help_text=columns_help_text,
-                                  excel_append_labels=excel_append_labels)
+                                  excel_append_labels=excel_append_labels,
+                                  warning_logger=warning_logger)
         return Spreadsheet(class_index, warning_logger)
 
     def _initialise_array(self) -> T_sheet:
@@ -116,7 +117,7 @@ class Spreadsheet(Serialization):
         for row_idx in range(self.cell_indices.shape[0]):
             row: List[Cell] = []
             for col_idx in range(self.cell_indices.shape[1]):
-                row.append(Cell(cell_indices=self.cell_indices))
+                row.append(Cell(row_idx, col_idx, cell_indices=self.cell_indices))
             array.append(row)
         return array
 

@@ -53,77 +53,135 @@ class CellSlice(Serialization):
         self.cell_subset: Iterable[Cell] = cell_subset
         self.driving_sheet = driving_sheet
 
-    def sum(self) -> Cell:
+    def sum(self, skip_none_cell: bool = True) -> Cell:
         """Compute the sum of the aggregate.
 
         Returns:
             Cell: a new cell with the result.
+            skip_none_cell (bool): If true, skips all the cells with None as
+                a value (and does not raise exception).
         """
-        return Cell.sum(self.start_cell, self.end_cell, self.cell_subset)
+        if skip_none_cell:
+            cell_subset = [nn_cell for nn_cell in self.cell_subset
+                           if nn_cell.value is not None]
+        else:
+            cell_subset = self.cell_subset
+        return Cell.sum(self.start_cell, self.end_cell, cell_subset)
 
-    def product(self) -> Cell:
+    def product(self, skip_none_cell: bool = True) -> Cell:
         """Compute the product of the aggregate.
 
         Returns:
             Cell: a new cell with the result.
+            skip_none_cell (bool): If true, skips all the cells with None as
+                a value (and does not raise exception).
         """
-        return Cell.product(self.start_cell, self.end_cell, self.cell_subset)
+        if skip_none_cell:
+            cell_subset = [nn_cell for nn_cell in self.cell_subset
+                           if nn_cell.value is not None]
+        else:
+            cell_subset = self.cell_subset
+        return Cell.product(self.start_cell, self.end_cell, cell_subset)
 
-    def min(self) -> Cell:
+    def min(self, skip_none_cell: bool = True) -> Cell:
         """Find the minimum of the aggregate.
 
         Returns:
             Cell: a new cell with the result.
+            skip_none_cell (bool): If true, skips all the cells with None as
+                a value (and does not raise exception).
         """
-        return Cell.min(self.start_cell, self.end_cell, self.cell_subset)
+        if skip_none_cell:
+            cell_subset = [nn_cell for nn_cell in self.cell_subset
+                           if nn_cell.value is not None]
+        else:
+            cell_subset = self.cell_subset
+        return Cell.min(self.start_cell, self.end_cell, cell_subset)
 
-    def max(self) -> Cell:
+    def max(self, skip_none_cell: bool = True) -> Cell:
         """Find the maximum of the aggregate.
 
         Returns:
             Cell: a new cell with the result.
+            skip_none_cell (bool): If true, skips all the cells with None as
+                a value (and does not raise exception).
         """
-        return Cell.max(self.start_cell, self.end_cell, self.cell_subset)
+        if skip_none_cell:
+            cell_subset = [nn_cell for nn_cell in self.cell_subset
+                           if nn_cell.value is not None]
+        else:
+            cell_subset = self.cell_subset
+        return Cell.max(self.start_cell, self.end_cell, cell_subset)
 
-    def mean(self) -> Cell:
+    def mean(self, skip_none_cell: bool = True) -> Cell:
         """Compute the mean-average of the aggregate.
 
         Returns:
             Cell: a new cell with the result.
+            skip_none_cell (bool): If true, skips all the cells with None as
+                a value (and does not raise exception).
         """
-        return Cell.mean(self.start_cell, self.end_cell, self.cell_subset)
+        if skip_none_cell:
+            cell_subset = [nn_cell for nn_cell in self.cell_subset
+                           if nn_cell.value is not None]
+        else:
+            cell_subset = self.cell_subset
+        return Cell.mean(self.start_cell, self.end_cell, cell_subset)
 
-    def average(self) -> Cell:
+    def average(self, skip_none_cell: bool = True) -> Cell:
         """Compute the mean-average of the aggregate.
 
         Returns:
             Cell: a new cell with the result.
+            skip_none_cell (bool): If true, skips all the cells with None as
+                a value (and does not raise exception).
         """
-        return self.mean()
+        return self.mean(skip_none_cell=skip_none_cell)
 
-    def stdev(self) -> Cell:
+    def stdev(self, skip_none_cell: bool = True) -> Cell:
         """Compute the standard deviation of the aggregate.
 
         Returns:
             Cell: a new cell with the result.
+            skip_none_cell (bool): If true, skips all the cells with None as
+                a value (and does not raise exception).
         """
-        return Cell.stdev(self.start_cell, self.end_cell, self.cell_subset)
+        if skip_none_cell:
+            cell_subset = [nn_cell for nn_cell in self.cell_subset
+                           if nn_cell.value is not None]
+        else:
+            cell_subset = self.cell_subset
+        return Cell.stdev(self.start_cell, self.end_cell, cell_subset)
 
-    def median(self) -> Cell:
+    def median(self, skip_none_cell: bool = True) -> Cell:
         """Compute the median of the aggregate.
 
         Returns:
             Cell: a new cell with the result.
+            skip_none_cell (bool): If true, skips all the cells with None as
+                a value (and does not raise exception).
         """
-        return Cell.median(self.start_cell, self.end_cell, self.cell_subset)
+        if skip_none_cell:
+            cell_subset = [nn_cell for nn_cell in self.cell_subset
+                           if nn_cell.value is not None]
+        else:
+            cell_subset = self.cell_subset
+        return Cell.median(self.start_cell, self.end_cell, cell_subset)
 
-    def count(self) -> Cell:
+    def count(self, skip_none_cell: bool = True) -> Cell:
         """Compute the number of items in the aggregate.
 
         Returns:
             Cell: a new cell with the result.
+            skip_none_cell (bool): If true, skips all the cells with None as
+                a value (and does not raise exception).
         """
-        return Cell.count(self.start_cell, self.end_cell, self.cell_subset)
+        if skip_none_cell:
+            cell_subset = [nn_cell for nn_cell in self.cell_subset
+                           if nn_cell.value is not None]
+        else:
+            cell_subset = self.cell_subset
+        return Cell.count(self.start_cell, self.end_cell, cell_subset)
 
     @property
     def excel_format(self):

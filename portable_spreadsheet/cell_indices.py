@@ -1,4 +1,4 @@
-from typing import List, Tuple, Dict, Optional
+from typing import List, Tuple, Dict, Optional, Callable
 import copy
 
 from .grammars import GRAMMARS
@@ -24,7 +24,8 @@ class CellIndices(object):
                  columns_labels: List[str] = None,
                  rows_help_text: List[str] = None,
                  columns_help_text: List[str] = None,
-                 excel_append_labels: bool = True
+                 excel_append_labels: bool = True,
+                 warning_logger: Optional[Callable[[str], None]] = None
                  ):
         """Create cell indices object.
 
@@ -41,8 +42,15 @@ class CellIndices(object):
             columns_help_text (List[str]): List of help texts for each column.
             excel_append_labels (bool): If True, one row and column is added
                 on the beginning of the sheet as a offset for labels.
+            warning_logger (Optional[Callable[[str], None]]): Function that
+                logs the warnings (or None if skipped).
         """
         # Quick sanity check:
+        if len(set(rows_labels)) != len(rows_labels):
+            warning_logger("There are some duplications in row labels.")
+        if len(set(columns_labels)) != len(columns_labels):
+            warning_logger("There are some duplications in column labels.")
+
         if rows_columns is not None:
             for language in rows_columns.keys():
                 # Does the language include the last cell?
