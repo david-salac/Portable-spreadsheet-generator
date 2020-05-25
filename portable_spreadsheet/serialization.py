@@ -294,24 +294,24 @@ class Serialization(abc.ABC):
         x = [label.replace(' ', spaces_replacement)
              for label in self.cell_indices.columns_labels[
                           # Reflects the column offset for export
-                          self.export_offset[1]:
+                          self.export_offset[1]:self.shape[1]
                           ]
              ]
         if (x_helptext := self.cell_indices.columns_help_text) is not None:  # noqa E203
             # Reflects the column offset for export
-            x_helptext = x_helptext[self.export_offset[1]:]
+            x_helptext = x_helptext[self.export_offset[1]:self.shape[1]]
         x_start_key = 'columns'
         # The y-axes represents the rows
         y_range = self.shape[0]
         y = [label.replace(' ', spaces_replacement)
              for label in self.cell_indices.rows_labels[
                           # Reflects the row offset for export
-                          self.export_offset[0]:
+                          self.export_offset[0]:self.shape[0]
                           ]
              ]
         if (y_helptext := self.cell_indices.rows_help_text) is not None:  # noqa E203
             # Reflects the row offset for export
-            y_helptext = y_helptext[self.export_offset[0]:]
+            y_helptext = y_helptext[self.export_offset[0]:self.shape[0]]
         y_start_key = 'rows'
 
         # B) The x-axes represents the rows:
@@ -320,23 +320,23 @@ class Serialization(abc.ABC):
             x = [label.replace(' ', spaces_replacement)
                  for label in self.cell_indices.rows_labels[
                           # Reflects the row offset for export
-                          self.export_offset[0]:
+                          self.export_offset[0]:self.shape[0]
                           ]
                  ]
             if (x_helptext := self.cell_indices.rows_help_text) is not None:  # noqa E203
                 # Reflects the row offset for export
-                x_helptext = x_helptext[self.export_offset[0]:]
+                x_helptext = x_helptext[self.export_offset[0]:self.shape[0]]
             x_start_key = 'rows'
             # The y-axes represents the columns
             y_range = self.shape[1]
             y = [label.replace(' ', spaces_replacement)
                  for label in self.cell_indices.columns_labels[
                           # Reflects the column offset for export
-                          self.export_offset[1]:
+                          self.export_offset[1]:self.shape[1]
                           ]]
             if (y_helptext := self.cell_indices.columns_help_text) is not None:  # noqa E203
                 # Reflects the column offset for export
-                y_helptext = y_helptext[self.export_offset[1]:]
+                y_helptext = y_helptext[self.export_offset[1]:self.shape[1]]
             y_start_key = 'columns'
 
         # Export the spreadsheet to the dictionary (that can by JSON-ified)

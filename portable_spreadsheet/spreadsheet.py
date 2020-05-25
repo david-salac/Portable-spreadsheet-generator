@@ -117,7 +117,8 @@ class Spreadsheet(Serialization):
         for row_idx in range(self.cell_indices.shape[0]):
             row: List[Cell] = []
             for col_idx in range(self.cell_indices.shape[1]):
-                row.append(Cell(row_idx, col_idx, cell_indices=self.cell_indices))
+                row.append(Cell(row_idx, col_idx,
+                                cell_indices=self.cell_indices))
             array.append(row)
         return array
 

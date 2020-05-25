@@ -8,8 +8,13 @@ setuptools.setup(
     version="0.1.2",
     author="David Salac",
     author_email="info@davidsalac.eu",
-    description="Simple spreadsheet that keeps tracks of each operation "
-                "in defined languages.",
+    description="Simple spreadsheet that keeps tracks of each operation in "
+                "defined programming languages. Logic allows export sheets to "
+                "Excel files (and see how each cell is computed), to the "
+                "JSON strings with description of computation e. g. in "
+                "native language. Other formats like HTML, CSV and "
+                "Markdown (MD) are also supported. It also allows to "
+                "reconstruct behaviours in native Python with NumPy.",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/david-salac/Portable-spreadsheet-generator",
