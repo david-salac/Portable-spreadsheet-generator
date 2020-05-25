@@ -326,6 +326,12 @@ slice.
 
 Aggregate functions always return the cell with the result.
 
+All aggregate functions have parameters:
+
+1. `skip_none_cell (bool)`: If true, skips all the cells with `None` as
+a value (and does not raise an exception), if false an exception is raised
+if the slice contains a cell with `None` value (empty cell).
+
 ### Conditional
 There is a support for the conditional statement (aka if-then-else statement).
 Functionality is implemented in the property `fn` of the `Spreadsheet`
@@ -646,7 +652,8 @@ sheet.to_dictionary(languages: List[str] = None, /, *,
                     languages_pseudonyms: List[str] = None,
                     spaces_replacement: str = ' ',
                     skip_nan_cell: bool = False,
-                    nan_replacement: object = None)
+                    nan_replacement: object = None,
+                    append_dict: dict = {})
 ```
 **Parameters are (all optional):**
 
@@ -663,6 +670,7 @@ descriptions (labels) are replaced with this string.
 * `skip_nan_cell (bool)`: If true, `None` (NaN, empty cells) values are
 skipped, default value is false (NaN values are included).
 * `nan_replacement (object)`: Replacement for the `None` (NaN) value
+* `append_dict (dict)`: Append this dictionary to output.
 
 **The return value is:** 
 
