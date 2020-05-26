@@ -507,6 +507,22 @@ class WordConstructor(object):
             return words
 
     @staticmethod
+    def raw(cell, words: T_word, /) -> 'WordConstructor':  # noqa: E225
+        """Returns the raw statement string.
+
+        Args:
+            cell (Cell): Some cell.
+            words (T_word): Custom word definition
+
+        Returns:
+            WordConstructor: Defined word.
+        """
+        instance = WordConstructor(cell_indices=cell.cell_indices)
+        for language in instance.languages:
+            instance.words[language] = words[language]
+        return instance
+
+    @staticmethod
     def empty(cell, /) -> 'WordConstructor':  # noqa E225
         """Returns the empty string.
 
@@ -744,6 +760,22 @@ class WordConstructor(object):
             cell=cell,
             prefix_path=['operations', 'sqrt', 'prefix'],
             suffix_path=['operations', 'sqrt', 'suffix']
+        )
+
+    @staticmethod
+    def signum(cell, /) -> 'WordConstructor':  # noqa E225
+        """Add signum value definition context around the cell.
+
+        Args:
+            cell (Cell): The cell around which signum context is added.
+
+        Returns:
+            WordConstructor: Word with signum function context.
+        """
+        return WordConstructor._unary_operator(
+            cell=cell,
+            prefix_path=['operations', 'signum', 'prefix'],
+            suffix_path=['operations', 'signum', 'suffix']
         )
 
     @staticmethod

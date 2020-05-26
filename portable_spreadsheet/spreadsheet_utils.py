@@ -97,6 +97,23 @@ class _Functionality(object):
                     cell_indices=self.spreadsheet.cell_indices)
 
     @staticmethod
+    def raw(value: Cell, words: Dict[str, str]) -> Cell:
+        """Add the raw statement and use the value of input cell.
+
+        Args:
+            value (Cell): Input cell that defines value and type of output.
+            words (Dict[str, str]): Word for each language (language is a key,
+                word is a value)
+
+        Warnings:
+            Do not use this feature unless you really have to.
+
+        Returns:
+            Cell: Expression with defined word
+        """
+        return Cell.raw(value, words)
+
+    @staticmethod
     def brackets(body: Cell) -> Cell:
         """Shortcut for adding bracket around body.
 
@@ -191,6 +208,18 @@ class _Functionality(object):
             Cell: Square root of the input value.
         """
         return Cell.sqrt(value)
+
+    @staticmethod
+    def sign(value: Cell) -> Cell:
+        """Signum function of the input.
+
+        Args:
+            value (Cell): The input value for computation.
+
+        Returns:
+            Cell: Signum function value of the input value.
+        """
+        return Cell.signum(value)
 
     @staticmethod
     def neg(value: Cell) -> Cell:

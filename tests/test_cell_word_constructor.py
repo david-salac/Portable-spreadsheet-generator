@@ -459,6 +459,17 @@ class TestCellBinaryOperations(unittest.TestCase):
                              result.parse)
         self.assertAlmostEqual(result.value, 35)
 
+    def test_raw_statement(self):
+        """Test raw statement"""
+        result = Cell.raw(self.a_operand_1, {
+            'python_numpy': "Hello from Python",
+            'excel': "Excel welcomes"
+        })
+        self.assertDictEqual({
+            'python_numpy': "Hello from Python",
+            'excel': "=Excel welcomes"  # Always computational
+        }, result.parse)
+        self.assertAlmostEqual(self.a_operand_1.value, 7)
 
     def test_concatenate(self):
         """Test string concatenation."""
