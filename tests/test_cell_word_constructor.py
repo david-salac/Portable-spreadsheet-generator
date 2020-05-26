@@ -460,6 +460,83 @@ class TestCellBinaryOperations(unittest.TestCase):
         self.assertAlmostEqual(result.value, 35)
 
 
+    def test_concatenate(self):
+        """Test string concatenation."""
+        # Define grammar rules
+        excel_reference_prefix = "="
+        excel_prefix = "CONCATENATE("
+        excel_separator = ","
+        excel_suffix = ")"
+        python_reference_prefix = ""
+        python_numpy_separator = "+"
+        # A) Anchored
+        a_res_cell = self.a_operand_1.concatenate(self.a_operand_2)
+        # Compare words
+        a_res_parsed = a_res_cell.parse
+        self.assertEqual((excel_reference_prefix + excel_prefix +
+                          self.coord_operand_1_excel + excel_separator +
+                          self.coord_operand_2_excel + excel_suffix),
+                         a_res_parsed['excel'])
+        self.assertEqual((python_reference_prefix +
+                          self.coord_operand_1_python +
+                          python_numpy_separator +
+                          self.coord_operand_2_python),
+                         a_res_parsed['python_numpy']
+                         )
+        # Compare results of anchored
+        self.assertAlmostEqual(a_res_cell.value,
+                               str(self.a_operand_1.value) +
+                               str(self.a_operand_2.value))
+
+        # B) Un-anchored, numerical
+        u_res_cell = self.u_operand_1.concatenate(self.u_operand_2)
+        # Compare words
+        u_res_parsed = u_res_cell.parse
+        self.assertEqual(u_res_parsed['excel'],
+                         (excel_reference_prefix +
+                          excel_prefix +
+                          self.value_u_1 +
+                          excel_separator +
+                          self.value_u_2 +
+                          excel_suffix)
+                         )
+        self.assertEqual(u_res_parsed['python_numpy'],
+                         ('"' + python_reference_prefix +
+                          self.value_u_1 + '"' +
+                          python_numpy_separator +
+                          '"' + self.value_u_2 + '"')
+                         )
+        # Compare results of un-anchored
+        self.assertAlmostEqual(u_res_cell.value,
+                               str(self.u_operand_1.value) +
+                               str(self.u_operand_2.value))
+
+        # C) Un-anchored, strings
+        str_value = "6ppW1lPT"
+        u_operand_1 = Cell(value=str_value, cell_indices=self.cell_indices)
+        u_res_cell = u_operand_1.concatenate(self.u_operand_2)
+        # Compare words
+        u_res_parsed = u_res_cell.parse
+        self.assertEqual(u_res_parsed['excel'],
+                         (excel_reference_prefix +
+                          excel_prefix +
+                          '"' + str_value + '"' +
+                          excel_separator +
+                          self.value_u_2 +
+                          excel_suffix)
+                         )
+        self.assertEqual(u_res_parsed['python_numpy'],
+                         (python_reference_prefix +
+                          str_value +
+                          python_numpy_separator +
+                          '"' + self.value_u_2 + '"')
+                         )
+        # Compare results of un-anchored
+        self.assertAlmostEqual(u_res_cell.value,
+                               u_operand_1.value +
+                               str(self.u_operand_2.value))
+
+
 class TestCellAggregationFunctionality(unittest.TestCase):
     """Test aggregation functions.
 

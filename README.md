@@ -507,6 +507,10 @@ operand is true or another operand is true, false otherwise.
     Usage: `sheet.iloc[i,j] = OPERAND_1 | OPERAND_2`.
     **_BEWARE that operator `or` IS NOT OVERLOADED! Because it is not
     technically possible._**
+14. **Concatenate strings**: return string concatenation of inputs.
+    For example: CONCATENATE(7, "Hello") <=> "7Hello".
+    Available as the overloaded operator `<<`.
+    Usage: `sheet.iloc[i,j] = OPERAND_1 << OPERAND_2`
 
 Operations can be chained in the string:
 ```

@@ -1,4 +1,5 @@
 import copy
+from numbers import Number
 from typing import Dict, Set, Tuple
 
 from .grammars import GRAMMARS
@@ -289,6 +290,59 @@ class WordConstructor(object):
         """
         return WordConstructor._binary_operation(first, second,
                                                  "less-than-or-equal-to")
+
+    @staticmethod
+    def concatenate(first,
+                    second) -> 'WordConstructor':
+        """Concatenate values as two strings and create a word.
+
+        Args:
+            first (Cell): The first cell (operand) of the operator.
+            second (Cell): The second cell (operand) of the operator.
+
+        Returns:
+            WordConstructor: Word constructed using binary operator concatenate
+                and two operands.
+        """
+        # Inline function for appending context to inputs
+        def _generate_word_string_concatenate(in_cell) -> T_word:
+            """Generate word for each operand.
+
+            Returns:
+                T_word: Words for each language.
+            """
+            if in_cell.anchored:
+                return WordConstructor.reference(in_cell).words
+            else:
+                if in_cell.cell_type == CellType.computational:
+                    return in_cell._constructing_words.words
+                elif in_cell.cell_type == CellType.value_only:
+                    words: T_word = {}
+                    for language in instance.languages:
+                        if isinstance(in_cell.value, str):
+                            pref = GRAMMARS[language]['operations'][
+                                'concatenate']['string-value']['prefix']
+                            suff = GRAMMARS[language]['operations'][
+                                'concatenate']['string-value']['suffix']
+                            words[language] = pref + str(in_cell.value) + suff
+                        if isinstance(in_cell.value, Number):
+                            pref = GRAMMARS[language]['operations'][
+                                'concatenate']['numeric-value']['prefix']
+                            suff = GRAMMARS[language]['operations'][
+                                'concatenate']['numeric-value']['suffix']
+                            words[language] = pref + str(in_cell.value) + suff
+                    return words
+
+        instance = copy.deepcopy(first.word)
+        first_words = _generate_word_string_concatenate(first)
+        second_word = _generate_word_string_concatenate(second)
+        for language in instance.languages:
+            pref = GRAMMARS[language]['operations']['concatenate']['prefix']
+            suff = GRAMMARS[language]['operations']['concatenate']['suffix']
+            sp = GRAMMARS[language]['operations']['concatenate']['separator']
+            instance.words[language] = pref + first_words[language] + sp \
+                + second_word[language] + suff
+        return instance
 
     @staticmethod
     def _aggregation_parse_cell(cell,

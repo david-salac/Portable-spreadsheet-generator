@@ -124,6 +124,22 @@ EXCEL = {
             "suffix": "",
             "separator": "^",
         },
+        # Merge two strings
+        'concatenate': {
+            "prefix": "CONCATENATE(",
+            "suffix": ")",
+            "separator": ",",
+            # Context of string
+            "string-value": {
+                "prefix": '"',
+                "suffix": '"',
+            },
+            # Context of numbers
+            "numeric-value": {
+                "prefix": '',
+                "suffix": '',
+            },
+        },
         # AGGREGATE FUNCTIONS
         "sum": {
             "prefix": "SUM(",
@@ -373,6 +389,22 @@ NATIVE = {
             "prefix": "",
             "suffix": "",
             "separator": " mod ",
+        },
+        # Merge two strings
+        'concatenate': {
+            "prefix": "concatenate string ",
+            "suffix": " and ",
+            "separator": "",
+            # Context of string
+            "string-value": {
+                "prefix": "'",
+                "suffix": "'",
+            },
+            # Context of numbers
+            "numeric-value": {
+                "prefix": "'",
+                "suffix": "'",
+            },
         },
         # like 7^3
         "power": {
@@ -635,6 +667,22 @@ PYTHON_NUMPY = {
             "prefix": "",
             "suffix": "",
             "separator": "**",
+        },
+        # Merge two strings
+        'concatenate': {
+            "prefix": "",
+            "suffix": "",
+            "separator": "+",
+            # Context of string
+            "string-value": {
+                "prefix": '',
+                "suffix": '',
+            },
+            # Context of numbers
+            "numeric-value": {
+                "prefix": '"',
+                "suffix": '"',
+            },
         },
         # AGGREGATE FUNCTIONS
         "sum": {
@@ -944,6 +992,22 @@ GRAMMAR_PATTERN: dict = {
             "prefix": str,
             "suffix": str,
             "separator": str,  # Typically '^' (in Python '**')
+        },
+        # Merge two strings, like "a" + "b" = "ab"
+        'concatenate': {
+            "prefix": str,
+            "suffix": str,
+            "separator": str,
+            # Context of the string constant
+            "string-value": {
+                "prefix": str,
+                "suffix": str,
+            },
+            # Context of the numbers constant
+            "numeric-value": {
+                "prefix": str,
+                "suffix": str,
+            },
         },
 
         # === AGGREGATE FUNCTIONS (functions for aggregated cells) ===
