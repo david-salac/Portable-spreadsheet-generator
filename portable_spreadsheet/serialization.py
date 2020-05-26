@@ -265,7 +265,7 @@ class Serialization(abc.ABC):
             append_dict (dict): Append this dictionary to output.
 
         Returns:
-            Dict[object, Dict[object, Dict[str, Union[str, float]]]]:
+            dict:
                 Dictionary with keys: 1. column/row, 2. row/column, 3. language
                 or language pseudonym or 'value' keyword for values -> value as
                 a value or as a cell building string.
@@ -373,21 +373,28 @@ class Serialization(abc.ABC):
             if x_helptext is not None:
                 values[x_start_key][x[idx_x]][
                     'help_text'] = x_helptext[idx_x]
+
+        # Create data parent
+        data = {'data': values}
+
         # Add variables
-        values['variables'] = self._get_variables().variables_dict
+        data['variables'] = self._get_variables().variables_dict
         # Add a row and column labels as arrays
         if by_row:
-            values['row-labels'] = x
-            values['column-labels'] = y
+            data['row-labels'] = x
+            data['column-labels'] = y
         else:
-            values['row-labels'] = y
-            values['column-labels'] = x
+            data['row-labels'] = y
+            data['column-labels'] = x
+
+        # Create table parent
+        table = {'table': data}
 
         # Append dictionary:
         for a_key, a_val in append_dict.items():
-            values[a_key] = a_val
+            table[a_key] = a_val
 
-        return values
+        return table
 
     def to_json(self,
                 languages: List[str] = None,
