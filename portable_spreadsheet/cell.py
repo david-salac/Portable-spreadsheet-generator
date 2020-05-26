@@ -205,7 +205,7 @@ class Cell(object):
     # =====================================
 
     # === BINARY OPERATORS: ===
-    def add(self, other: 'Cell', /) -> 'Cell':  # noqa E225
+    def add(self, other: 'Cell', /) -> 'Cell':  # noqa: E225
         """Add two values.
 
         Args:
@@ -220,7 +220,7 @@ class Cell(object):
                     cell_type=CellType.computational
                     )
 
-    def subtract(self, other: 'Cell', /) -> 'Cell':  # noqa E225
+    def subtract(self, other: 'Cell', /) -> 'Cell':  # noqa: E225
         """Subtract two values.
 
         Args:
@@ -235,7 +235,7 @@ class Cell(object):
                     cell_type=CellType.computational
                     )
 
-    def multiply(self, other: 'Cell', /) -> 'Cell':  # noqa E225
+    def multiply(self, other: 'Cell', /) -> 'Cell':  # noqa: E225
         """Multiply two values.
 
         Args:
@@ -250,7 +250,7 @@ class Cell(object):
                     cell_type=CellType.computational
                     )
 
-    def divide(self, other: 'Cell', /) -> 'Cell':  # noqa E225
+    def divide(self, other: 'Cell', /) -> 'Cell':  # noqa: E225
         """Divide two values.
 
         Args:
@@ -265,7 +265,7 @@ class Cell(object):
                     cell_type=CellType.computational
                     )
 
-    def modulo(self, other: 'Cell', /) -> 'Cell':  # noqa E225
+    def modulo(self, other: 'Cell', /) -> 'Cell':  # noqa: E225
         """Modulo of two values.
 
         Args:
@@ -280,7 +280,7 @@ class Cell(object):
                     cell_type=CellType.computational
                     )
 
-    def power(self, other: 'Cell', /) -> 'Cell':  # noqa E225
+    def power(self, other: 'Cell', /) -> 'Cell':  # noqa: E225
         """Self power to other.
 
         Args:
@@ -295,7 +295,7 @@ class Cell(object):
                     cell_type=CellType.computational
                     )
 
-    def equalTo(self, other: 'Cell', /) -> 'Cell':  # noqa E225
+    def equalTo(self, other: 'Cell', /) -> 'Cell':  # noqa: E225
         """Boolean equal operator.
 
         Args:
@@ -310,7 +310,7 @@ class Cell(object):
                     cell_type=CellType.computational
                     )
 
-    def notEqualTo(self, other: 'Cell', /) -> 'Cell':  # noqa E225
+    def notEqualTo(self, other: 'Cell', /) -> 'Cell':  # noqa: E225
         """Boolean not equal operator.
 
         Args:
@@ -325,7 +325,7 @@ class Cell(object):
                     cell_type=CellType.computational
                     )
 
-    def greaterThan(self, other: 'Cell', /) -> 'Cell':  # noqa E225
+    def greaterThan(self, other: 'Cell', /) -> 'Cell':  # noqa: E225
         """Boolean greater than operator.
 
         Args:
@@ -340,7 +340,7 @@ class Cell(object):
                     cell_type=CellType.computational
                     )
 
-    def greaterThanOrEqualTo(self, other: 'Cell', /) -> 'Cell':  # noqa E225
+    def greaterThanOrEqualTo(self, other: 'Cell', /) -> 'Cell':  # noqa: E225
         """Boolean greater than or equal to operator.
 
         Args:
@@ -355,7 +355,7 @@ class Cell(object):
                     cell_type=CellType.computational
                     )
 
-    def lessThan(self, other: 'Cell', /) -> 'Cell':  # noqa E225
+    def lessThan(self, other: 'Cell', /) -> 'Cell':  # noqa: E225
         """Boolean less than operator.
 
         Args:
@@ -370,7 +370,7 @@ class Cell(object):
                     cell_type=CellType.computational
                     )
 
-    def lessThanOrEqualTo(self, other: 'Cell', /) -> 'Cell':  # noqa E225
+    def lessThanOrEqualTo(self, other: 'Cell', /) -> 'Cell':  # noqa: E225
         """Boolean less than or equal to operator.
 
         Args:
@@ -385,7 +385,7 @@ class Cell(object):
                     cell_type=CellType.computational
                     )
 
-    def logicalConjunction(self, other: 'Cell', /) -> 'Cell':  # noqa E225
+    def logicalConjunction(self, other: 'Cell', /) -> 'Cell':  # noqa: E225
         """Logical conjunction operator.
 
         Args:
@@ -400,7 +400,7 @@ class Cell(object):
                     cell_type=CellType.computational
                     )
 
-    def logicalDisjunction(self, other: 'Cell', /) -> 'Cell':  # noqa E225
+    def logicalDisjunction(self, other: 'Cell', /) -> 'Cell':  # noqa: E225
         """Logical disjunction operator.
 
         Args:
@@ -411,6 +411,21 @@ class Cell(object):
         """
         return Cell(value=self.value or other.value,
                     words=WordConstructor.logicalDisjunction(self, other),
+                    cell_indices=other.cell_indices,
+                    cell_type=CellType.computational
+                    )
+
+    def concatenate(self, other: 'Cell', /) -> 'Cell':  # noqa: E225
+        """Concatenate two values as strings.
+
+        Args:
+            other (Cell): Another operand.
+
+        Returns:
+            Cell: self concatenate with other
+        """
+        return Cell(value=str(self.value) + str(other.value),
+                    words=WordConstructor.concatenate(self, other),
                     cell_indices=other.cell_indices,
                     cell_type=CellType.computational
                     )
@@ -476,6 +491,10 @@ class Cell(object):
     def __invert__(self):
         """Overload the operator '~'."""
         return self.logicalNegation(self)
+
+    def __lshift__(self, other):
+        """Overload the operator '<<' to string concatenation."""
+        return self.concatenate(other)
     # ==============================
 
     # === AGGREGATE OPERATORS ===
