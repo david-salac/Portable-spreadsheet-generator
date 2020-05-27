@@ -3,6 +3,7 @@ import json
 
 import tempfile
 import os
+import copy
 
 import numpy as np
 
@@ -92,7 +93,7 @@ R_4,17,18,19,20"""
 
     def test_to_markdown(self):
         """MD (Markdown) language export"""
-        expected_no_skip = """| Sheet |*NL_C_0* | *NL_C_1* | *NL_C_2* | *NL_C_3* |
+        expected_no_skip = """| *Sheet* | *NL_C_0* | *NL_C_1* | *NL_C_2* | *NL_C_3* |
 |----|----|----|----|----|
 | *R_0* | 1 | 2 | 3 | 4 |
 | *R_1* | 5 | 6 | 7 | 8 |
@@ -102,7 +103,7 @@ R_4,17,18,19,20"""
 """
 
         expected_skip = """||||||
-|----|----|----|----|----|
+|----|----|----|----|
 | 1 | 2 | 3 | 4 |
 | 5 | 6 | 7 | 8 |
 | 9 | 10 | 11 | 12 |
@@ -169,11 +170,44 @@ class TestSerializationToArrays(unittest.TestCase):
 
     def test_to_2d_list(self):
         """Test the serialization to 2D list"""
-        computed_2d_list = self.sheet.to_2d_list()
+        # Check values
+        computed_2d_list = self.sheet.to_2d_list(skip_labels=True)
         self.assertTrue(isinstance(computed_2d_list, list))
         self.assertTrue(
             np.allclose(np.array(computed_2d_list), self.inserted_rand_values)
             )
+        # Check labels:
+        corner = "yMq7W0bk"
+        computed_2d_list = self.sheet.to_2d_list(skip_labels=False,
+                                                 top_right_corner_text=corner)
+        self.assertTrue(isinstance(computed_2d_list, list))
+        self.assertTrue(computed_2d_list[0][0], corner)
+        # Check row labels
+        for row_idx, row_label in enumerate(
+                self.sheet.cell_indices.rows_labels):
+            self.assertEqual(computed_2d_list[row_idx + 1][0], row_label)
+        # Check column labels
+        for col_idx, col_label in enumerate(
+                self.sheet.cell_indices.columns_labels):
+            self.assertEqual(computed_2d_list[0][col_idx + 1], col_label)
+        # Check values inside:
+        computed = [arr[1:] for arr in computed_2d_list[1:]]
+        self.assertTrue(
+            np.allclose(np.array(computed), self.inserted_rand_values)
+        )
+        # Check the language export
+        sheet = copy.deepcopy(self.sheet)
+        sheet.iloc[0, 0] = sheet.iloc[0,1] * sheet.iloc[1,0]
+        computed_2d_list = sheet.to_2d_list(skip_labels=True,
+                                            language='excel')
+        # Regression test
+        self.assertEqual(sheet.iloc[0, 0].parse['excel'], '=C2*B3')
+        # Test all the values inside
+        for row_idx in range(sheet.shape[0]):
+            for col_idx in range(sheet.shape[1]):
+                computed = computed_2d_list[row_idx][col_idx]
+                expected = sheet.iloc[row_idx, col_idx].parse['excel']
+                self.assertEqual(expected, computed)
 
     def test_to_string_of_values(self):
         """Test the serialization to 2D list"""

@@ -178,17 +178,19 @@ exported (which can lead to data losses).
 
 #### How to change the size of the spreadsheet
 You can only expand the size of the spreadsheet (it's because of the
-built-in behaviour of languages). We, however, strongly recommend not to
-do so.
+built-in behaviour of language construction). We, however, strongly recommend
+not to do so. Simplified logic looks like:
 ```
-sheet.expand_size(
-    sheet.cell_indices.expand_size(
-        number_of_new_rows, number_of_new_columns, [new_rows_columns]
-    )
+# Append 7 rows and 8 columns to existing sheet:
+sheet.expand(
+    7, 8,  
+    {
+        "native": ([...], [...])  # Fill 8 new values for rows, columns here
+    }
 )
 ```
-Parameters of the `cell_indices.expand_size` method are of the same
-logic as the parameters of `Spreadsheet.create_new_sheet`.
+Parameters of the `Spreadsheet.expand` method are of the same
+logic and order as the parameters of `Spreadsheet.create_new_sheet`.
 
 ### Shape of the Spreadsheet object
 If you want to know what is the actual size of the spreadsheet, you can
@@ -362,6 +364,31 @@ sheet.iloc[i,j] = sheet.fn.conditional(
 )
 ```
 
+### Raw statement
+The raw statement represents the extreme way how to set-up value and
+computation string of the cell. It should be used only to circumvent
+issues with missing or defective functionality.
+
+The raw statement is accessible using `fn` property of the Spreadsheet class
+object.
+
+The raw statement should never be used unless you really have to.
+
+#### Example of raw statement
+Consider that you need to compute an arccosine value of some cell:
+```
+sheet.iloc[i,j] = sheet.fn.raw(
+    # Value that should be used as the result (as a Cell instance):
+    sheet.fn.const(numpy.arccos(0.7)),
+    # Definition of words in each language:
+    {
+        'python_numpy': "numpy.arccos(0.7)",
+        'excel': "ACOS(0.7)"
+        # Potentialy some other languages, like 'native', etc.
+    }
+)
+```
+
 ### Offset function
 The offset function represents the possibility of reading the value
 that is shifted by some number rows left, and some number of columns
@@ -436,6 +463,10 @@ is the instance of the Cell class):
     Usage: `sheet.iloc[i,j] = ~OPERAND`.
     _Also available in the `fn` property of the `sheet` object.
     Usage: `sheet.iloc[i,j] = sheet.fn.neg(OPERAND)`_
+9. **Signum function**: returns the signum of the input value.
+    For example sign(-4.5) = -1, sign(5) = 1, sign(0) = 0.
+    Available in the `fn` property of the `sheet` object.
+    Usage: `sheet.iloc[i,j] = sheet.fn.sign(OPERAND)`
     
 All unary operators are defined in the `fn` property of the Spreadsheet
 object (together with brackets, that works exactly the same - see bellow).
@@ -608,7 +639,8 @@ sheet.to_excel(
         "name": "Name",
         "value": "Value",
         "description": "Description"
-    })
+    }),
+    values_only: bool = False
 )
 ```
 The only required argument is the path to the destination file (positional
@@ -628,6 +660,8 @@ to set them up (directly from the sheet).
 * `variables_sheet_header (Dict[str, str])`: Define the labels (header)
 for the sheet with variables (first row in the sheet). Dictionary should look
 like: `{"name": "Name", "value": "Value", "description": "Description"}`.
+* `values_only (bool)`: If true, only values (and not formulas) are
+exported.
 
 ##### Setting the format/style for Excel cells
 There is a possibility to set the style/format of each cell in the grid
@@ -907,6 +941,7 @@ Output of the JSON format
 It can be done using the interface:
 ```
 sheet.to_excel(*,
+    language: Optional[str] = None,
     spaces_replacement: str = ' ',
     top_right_corner_text: str = "Sheet",
     sep: str = ',',
@@ -917,6 +952,8 @@ sheet.to_excel(*,
 ```
 Parameters are (all optional and key-value only):
 
+* `language (Optional[str])`: If set-up, export the word in this
+language in each cell instead of values.
 * `spaces_replacement (str)`: All the spaces in the rows and columns
  descriptions (labels) are replaced with this string.
 * `top_right_corner_text (str)`: Text in the top right corner.
@@ -944,6 +981,7 @@ R_4,17,18,19,20
 It can be done using the interface:
 ```
 sheet.to_markdown(*,
+    language: Optional[str] = None,
     spaces_replacement: str = ' ',
     top_right_corner_text: str = "Sheet",
     na_rep: str = '',
@@ -952,6 +990,8 @@ sheet.to_markdown(*,
 ```
 Parameters are (all optional, all key-value only):
 
+* `language (Optional[str])`: If set-up, export the word in this
+language in each cell instead of values.
 * `spaces_replacement (str)`: All the spaces in the rows and columns
 descriptions (labels) are replaced with this string.
 * `top_right_corner_text (str)`: Text in the top right corner.

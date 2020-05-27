@@ -202,6 +202,10 @@ EXCEL = {
             "prefix": "SQRT(",
             "suffix": ")",
         },
+        "signum": {
+            "prefix": "SIGN(",
+            "suffix": ")",
+        },
         # LOGICAL OPERATIONS
         "equal-to": {
             "prefix": "",
@@ -474,6 +478,10 @@ NATIVE = {
             "prefix": "square root of ",
             "suffix": "",
         },
+        "signum": {
+            "prefix": "signum of ",
+            "suffix": "",
+        },
         # LOGICAL OPERATIONS
         "equal-to": {
             "prefix": "",
@@ -744,6 +752,10 @@ PYTHON_NUMPY = {
         },
         "sqrt": {
             "prefix": "np.sqrt(",
+            "suffix": ")",
+        },
+        "signum": {
+            "prefix": "np.sign(",
             "suffix": ")",
         },
         # LOGICAL OPERATIONS
@@ -1088,6 +1100,12 @@ GRAMMAR_PATTERN: dict = {
             "prefix": str,
             "suffix": str,
         },
+        # Signum function (-1 if value is < 0, 0 if val == 0, 1 if val > 0)
+        "signum": {
+            "prefix": str,
+            "suffix": str,
+        },
+
         # === LOGICAL OPERATIONS (returns true or false) ===
         # Equal to
         "equal-to": {

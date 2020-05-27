@@ -683,6 +683,24 @@ class Cell(object):
                     )
 
     @staticmethod
+    def raw(other: 'Cell', words: Dict[str, str], /) -> 'Cell':  # noqa: E225
+        """Add the raw statement and use the value of input cell.
+
+        Args:
+            other (Cell): Input cell that defines value and type of output.
+            words (Dict[str, str]): Word for each language (language is a key,
+                word is a value)
+
+        Returns:
+            Cell: Expression with defined word
+        """
+        return Cell(value=other.value,
+                    words=WordConstructor.raw(other, words),
+                    cell_indices=other.cell_indices,
+                    cell_type=CellType.computational
+                    )
+
+    @staticmethod
     def variable(other: 'Cell', /) -> 'Cell':  # noqa E225
         """The cell as a variable.
 
@@ -824,6 +842,22 @@ class Cell(object):
         """
         return Cell(value=np.sqrt(other.value),
                     words=WordConstructor.sqrt(other),
+                    cell_indices=other.cell_indices,
+                    cell_type=CellType.computational
+                    )
+
+    @staticmethod
+    def signum(other: 'Cell', /) -> 'Cell':  # noqa E225
+        """Signum function of the value in the cell.
+
+        Args:
+            other (Cell): Argument of the signum function.
+
+        Returns:
+            Cell: signum of the input numeric value
+        """
+        return Cell(value=np.sign(other.value),
+                    words=WordConstructor.signum(other),
                     cell_indices=other.cell_indices,
                     cell_type=CellType.computational
                     )

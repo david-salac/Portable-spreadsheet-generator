@@ -115,7 +115,7 @@ class Serialization(abc.ABC):
 
     def to_excel(self,
                  file_path: str,
-                 /, *,  # noqa E999
+                 /, *,  # noqa: E225, E999
                  sheet_name: str = "Results",
                  spaces_replacement: str = ' ',
                  label_row_format: dict = {'bold': True},
@@ -126,7 +126,8 @@ class Serialization(abc.ABC):
                          "name": "Name",
                          "value": "Value",
                          "description": "Description"
-                     })
+                     }),
+                 values_only: bool = False
                  ) -> None:
         """Export the values inside Spreadsheet instance to the
             Excel 2010 compatible .xslx file
@@ -145,6 +146,8 @@ class Serialization(abc.ABC):
                 to set them up (directly from the sheet).
             variables_sheet_header (Dict[str, str]): Define the labels (header)
                 for the sheet with variables (first row in the sheet).
+            values_only (bool): If true, only values (and not formulas) are
+                exported.
         """
         # Quick sanity check
         if ".xlsx" not in file_path[-5:]:
@@ -204,7 +207,8 @@ class Serialization(abc.ABC):
                         cell_format = workbook.add_format(cell.excel_format)
                     else:
                         cell_format = None
-                    if cell.cell_type == CellType.value_only:
+                    # Write actual data
+                    if values_only or (cell.cell_type == CellType.value_only):
                         # If the cell is a value only, use method 'write'
                         worksheet.write(row_idx + offset,
                                         col_idx + offset,
@@ -470,33 +474,84 @@ class Serialization(abc.ABC):
                 export += ",\n"
         return export + "]"
 
-    def to_2d_list(self) -> List[List[object]]:
+    def to_2d_list(self, *,
+                   language: Optional[str] = None,
+                   top_right_corner_text: str = "Sheet",
+                   skip_labels: bool = False,
+                   na_rep: Optional[object] = None,
+                   spaces_replacement: str = ' ',) -> List[List[object]]:
         """Export values 2 dimensional Python array.
 
+        Args:
+            language (Optional[str]): If set-up, export the word in this
+                language in each cell instead of values.
+            spaces_replacement (str): All the spaces in the rows and columns
+                descriptions (labels) are replaced with this string.
+            top_right_corner_text (str): Text in the top right corner.
+            na_rep (str): Replacement for the missing data (cells with value
+                equals to None).
+            skip_labels (bool): If true, first row and column with labels is
+                skipped
+
         Returns:
-            str: Python array.
+            List[List[object]]: Python array.
         """
         # Log warning if needed
         self.log_export_subset_warning_if_needed()
 
         export: list = []
-        for row_idx in range(self.shape[0]):
+        for row_idx in range(-1, self.shape[0]):
             row: list = []
-            for col_idx in range(self.shape[1]):
-                row.append(self._get_cell_at(row_idx, col_idx).value)
+            if row_idx == -1:
+                if skip_labels:
+                    continue
+                row.append(top_right_corner_text)
+                # Insert labels of columns:
+                for col_i in range(self.shape[1]):
+                    col = self.cell_indices.columns_labels[
+                        col_i + self.export_offset[1]
+                    ]
+                    value = col.replace(' ', spaces_replacement)
+                    row.append(value)
+            else:
+                if not skip_labels:
+                    # Insert labels of rows
+                    row.append(self.cell_indices.rows_labels[
+                                  row_idx + self.export_offset[0]
+                              ].replace(' ', spaces_replacement))
+                for col_idx in range(self.shape[1]):
+                    # Append actual values:
+                    cell_at_position = self._get_cell_at(row_idx, col_idx)
+
+                    if language is not None:
+                        # Get the word of cell on current position
+                        value_to_write = cell_at_position.parse[language]
+                    else:
+                        # Get the value of cell on current position
+                        value_to_write = cell_at_position.value
+                    if value_to_write is None:
+                        # Replacement for None
+                        value_to_write = na_rep
+                    row.append(value_to_write)
+
             export.append(row)
         return export
 
     def to_csv(self, *,
-               spaces_replacement: str = ' ',
+               language: Optional[str] = None,
                top_right_corner_text: str = "Sheet",
+               skip_labels: bool = False,
+               na_rep: Optional[object] = '',
+               spaces_replacement: str = ' ',
+
                sep: str = ',',
                line_terminator: str = '\n',
-               na_rep: str = '',
-               skip_labels: bool = False) -> str:
+               ) -> str:
         """Export values to the string in the CSV logic
 
         Args:
+            language (Optional[str]): If set-up, export the word in this
+                language in each cell instead of values.
             spaces_replacement (str): All the spaces in the rows and columns
                 descriptions (labels) are replaced with this string.
             top_right_corner_text (str): Text in the top right corner.
@@ -509,49 +564,33 @@ class Serialization(abc.ABC):
         Returns:
             str: CSV of the values
         """
-        # Log warning if needed
-        self.log_export_subset_warning_if_needed()
-
+        sheet_as_array = self.to_2d_list(
+            top_right_corner_text=top_right_corner_text, na_rep=na_rep,
+            skip_labels=skip_labels, spaces_replacement=spaces_replacement,
+            language=language
+        )
         export = ""
-        for row_idx in range(-1, self.shape[0]):
-            if row_idx == -1:
-                if skip_labels:
-                    continue
-                export += top_right_corner_text + sep
-                # Insert labels of columns:
-                for col_i in range(self.shape[1]):
-                    col = self.cell_indices.columns_labels[
-                        col_i + self.export_offset[1]
-                    ]
-                    export += col.replace(' ', spaces_replacement)
-                    if col_i < self.shape[1] - 1:
-                        export += sep
-            else:
-                if not skip_labels:
-                    # Insert labels of rows
-                    export += self.cell_indices.rows_labels[
-                                  row_idx + self.export_offset[0]
-                              ].replace(' ', spaces_replacement) + sep
-                # Insert actual values in the spreadsheet
-                for col_idx in range(self.shape[1]):
-                    value = self._get_cell_at(row_idx, col_idx).value
-                    if value is None:
-                        value = na_rep
-                    export += str(value)
-                    if col_idx < self.shape[1] - 1:
-                        export += sep
-            if row_idx < self.shape[0] - 1:
+        for row_idx in range(len(sheet_as_array)):
+            for col_idx in range(len(sheet_as_array[row_idx])):
+                export += str(sheet_as_array[row_idx][col_idx])
+                if col_idx < (len(sheet_as_array[row_idx]) - 1):
+                    export += sep
+            if row_idx < (len(sheet_as_array) - 1):
                 export += line_terminator
         return export
 
     def to_markdown(self, *,
-                    spaces_replacement: str = ' ',
+                    language: Optional[str] = None,
                     top_right_corner_text: str = "Sheet",
-                    na_rep: str = '',
-                    skip_labels: bool = False):
+                    skip_labels: bool = False,
+                    na_rep: Optional[object] = '',
+                    spaces_replacement: str = ' '
+                    ):
         """Export values to the string in the Markdown (MD) file logic
 
         Args:
+            language (Optional[str]): If set-up, export the word in this
+                language in each cell instead of values.
             spaces_replacement (str): All the spaces in the rows and columns
                 descriptions (labels) are replaced with this string.
             top_right_corner_text (str): Text in the top right corner.
@@ -562,58 +601,47 @@ class Serialization(abc.ABC):
         Returns:
             str: Markdown (MD) compatible table of the values
         """
-        # Log warning if needed
-        self.log_export_subset_warning_if_needed()
-
+        sheet_as_array = self.to_2d_list(
+            top_right_corner_text=top_right_corner_text, na_rep=na_rep,
+            skip_labels=skip_labels, spaces_replacement=spaces_replacement,
+            language=language
+        )
         export = ""
-        for row_idx in range(-2, self.shape[0]):
-            if row_idx == -2:
-                if skip_labels:
-                    export += "|"
-                    for col_i in range(self.shape[1]):
-                        export += "|"
-                    export += "|\n"
-                    continue
-                # Add the labels and top right corner text
-                export += "| " + top_right_corner_text + " |"
-                for col_i in range(self.shape[1]):
-                    # Insert column labels:
-                    col = self.cell_indices.columns_labels[
-                        col_i + self.export_offset[1]
-                    ]
-                    export += "*" + col.replace(' ', spaces_replacement) + "*"
-                    if col_i < self.shape[1] - 1:
-                        export += " | "
-                    elif col_i == self.shape[1] - 1:
-                        export += " |\n"
+        for row_idx in range(len(sheet_as_array)):
+            # Add values:
+            export += "| "
+            for col_idx in range(len(sheet_as_array[row_idx])):
+                if (row_idx == 0 or col_idx == 0) and not skip_labels:
+                    export += '*'
+                export += str(sheet_as_array[row_idx][col_idx])
+                if (row_idx == 0 or col_idx == 0) and not skip_labels:
+                    export += '*'
+                if col_idx < (len(sheet_as_array[row_idx]) - 1):
+                    export += " | "
+                else:
+                    export += " |"
+            export += "\n"
+            # Add |---| sequence after the first line
+            if row_idx == 0 and not skip_labels:
+                for col_idx in range(len(sheet_as_array[row_idx])):
+                    export += "|----"
+                    if col_idx == (len(sheet_as_array[row_idx]) - 1):
+                        export += '|'
+                export += "\n"
+        # Add first two lines if labels are skipped
+        if skip_labels:
+            # Add empty || separators for missing labels
+            first_line = "|"
+            for col_idx in range(len(sheet_as_array[0])):
+                first_line += "|"
+            first_line += "|\n"
+            # Add |---| sequence after the first line
+            for col_idx in range(len(sheet_as_array[0])):
+                first_line += "|----"
+                if col_idx == (len(sheet_as_array[0]) - 1):
+                    first_line += '|'
+            export = first_line + "\n" + export
 
-            elif row_idx == -1:
-                # Add the separator to start the table body:
-                export += "|----|"
-                for col_i in range(self.shape[1]):
-                    export += "----|"
-                    if col_i == self.shape[1] - 1:
-                        export += "\n"
-            else:
-                # Insert row labels
-                if not skip_labels:
-                    export += "| *"
-                    export += self.cell_indices.rows_labels[
-                                  row_idx + self.export_offset[0]
-                              ].replace(' ', spaces_replacement)
-                    export += "* "
-
-                export += "| "
-
-                for col_idx in range(self.shape[1]):
-                    value = self._get_cell_at(row_idx, col_idx).value
-                    if value is None:
-                        value = na_rep
-                    export += str(value)
-                    if col_idx < self.shape[1] - 1:
-                        export += " | "
-                    elif col_idx == self.shape[1] - 1:
-                        export += " |\n"
         return export
 
     def to_numpy(self) -> numpy.ndarray:
