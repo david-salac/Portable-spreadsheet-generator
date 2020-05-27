@@ -73,7 +73,7 @@ class TestSpreadsheetBasicFunctionality(unittest.TestCase):
             new_rows_help_text=new_rows_help_text,
             new_columns_help_text=new_columns_help_text
         )
-        old_sheet.expand_size(new_cell_idx)
+        old_sheet.expand_using_cell_indices(new_cell_idx)
         # Test the expanded sheet
         cell_indices: CellIndices = old_sheet.cell_indices
         self.assertTupleEqual(
