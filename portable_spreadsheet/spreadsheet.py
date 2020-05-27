@@ -328,8 +328,47 @@ class Spreadsheet(Serialization):
         cell_slice: CellSlice = self._get_slice(index_integer, index_label)
         cell_slice.set(value)
 
-    def expand_size(self, cell_indices: CellIndices) -> None:
-        """Resize the spreadsheet object to the greather size
+    def expand(self,
+               new_number_of_rows: int,
+               new_number_of_columns: int,
+               new_rows_columns: Optional[T_lg_col_row] = {},
+               /, *,  # noqa E225
+               new_rows_labels: List[str] = None,
+               new_columns_labels: List[str] = None,
+               new_rows_help_text: List[str] = None,
+               new_columns_help_text: List[str] = None
+               ):
+        """Expand the size of the table.
+
+        Args:
+            new_number_of_rows (int): Number of rows to be added.
+            new_number_of_columns (int): Number of columns to be added.
+            new_rows_columns (T_lg_col_row): List of all row names and column
+                names for each language to be added.
+            new_rows_labels (List[str]): List of masks (aliases) for row
+                names to be added.
+            new_columns_labels (List[str]): List of masks (aliases) for
+                column names to be added.
+            new_rows_help_text (List[str]): List of help texts for each row to
+                be added.
+            new_columns_help_text (List[str]): List of help texts for each
+                column to be added.
+        """
+        self.expand_using_cell_indices(
+            self.cell_indices.expand_size(
+                new_number_of_rows,
+                new_number_of_columns,
+                new_rows_columns,
+
+                new_rows_labels=new_rows_labels,
+                new_columns_labels=new_columns_labels,
+                new_rows_help_text=new_rows_help_text,
+                new_columns_help_text=new_columns_help_text
+            )
+        )
+
+    def expand_using_cell_indices(self, cell_indices: CellIndices) -> None:
+        """Resize the spreadsheet object to the greater size
 
         Args:
             cell_indices (CellIndices): The definition of the shape and columns

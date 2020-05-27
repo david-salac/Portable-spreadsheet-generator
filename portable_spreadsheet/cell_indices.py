@@ -257,20 +257,27 @@ class CellIndices(object):
         if new_rows_labels is not None:
             expanded.rows_labels.extend(new_rows_labels)
         else:
-            expanded.rows_labels = list(
-                range(expanded.number_of_rows + new_number_of_rows)
-            )
+            expanded.rows_labels = [
+                str(i)
+                for i in range(expanded.number_of_rows + new_number_of_rows)
+            ]
         if new_columns_labels is not None:
             expanded.columns_labels.extend(new_columns_labels)
         else:
-            expanded.columns_labels = list(
-                range(expanded.number_of_columns + new_number_of_columns)
-            )
+            expanded.columns_labels = [
+                str(i)
+                for i in range(
+                    expanded.number_of_columns + new_number_of_columns
+                )
+            ]
         # Or define auto generated aliases as an integer sequence from 0
         if new_columns_labels is None:
-            expanded.columns_labels = list(
-                range(expanded.number_of_columns + new_number_of_columns)
-            )
+            expanded.columns_labels = [
+                str(i)
+                for i in range(
+                    expanded.number_of_columns + new_number_of_columns
+                )
+            ]
         # assign the help texts
         if expanded.rows_help_text is not None and new_number_of_rows > 0:
             if new_rows_help_text is None:

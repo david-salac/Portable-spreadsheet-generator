@@ -178,17 +178,19 @@ exported (which can lead to data losses).
 
 #### How to change the size of the spreadsheet
 You can only expand the size of the spreadsheet (it's because of the
-built-in behaviour of languages). We, however, strongly recommend not to
-do so.
+built-in behaviour of language construction). We, however, strongly recommend
+not to do so. Simplified logic looks like:
 ```
-sheet.expand_size(
-    sheet.cell_indices.expand_size(
-        number_of_new_rows, number_of_new_columns, [new_rows_columns]
-    )
+# Append 7 rows and 8 columns to existing sheet:
+sheet.expand(
+    7, 8,  
+    {
+        "native": ([...], [...])  # Fill 8 new values for rows, columns here
+    }
 )
 ```
-Parameters of the `cell_indices.expand_size` method are of the same
-logic as the parameters of `Spreadsheet.create_new_sheet`.
+Parameters of the `Spreadsheet.expand` method are of the same
+logic and order as the parameters of `Spreadsheet.create_new_sheet`.
 
 ### Shape of the Spreadsheet object
 If you want to know what is the actual size of the spreadsheet, you can
