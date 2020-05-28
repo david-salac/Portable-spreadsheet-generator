@@ -12,26 +12,58 @@ from .cell_type import CellType
 from .cell_indices import CellIndices
 
 # ==== TYPES ====
-# Type for the output dictionary with the
-#   logic: 'columns'/'rows' -> col/row key -> 'rows'/'columns' -> row/col key
-#   -> (pseudo)language -> value
+# Type for the output dictionary with the logic:
+# table->data->rows/columns->Row/Col label->columns/rows/help_text->
+#   Column/Row label->cell keys (value, description, language alias)->value
 T_out_dict = Dict[
-    str,  # 'Rows'/'Columns'
-    Dict[
-        object,  # Rows/Column key
-        Union[
-            # For values:
+    str,  # 'table', 'variables', 'row-labels', 'column-labels'
+    Union[
+        # Cell values:
+        Dict[
+            str,  # 'data'
             Dict[
-                str,  # 'Columns'/'Rows' (in iversion order to above)
-                Union[
-                    Dict[object, Dict[str, Union[str, float]]],  # Values
-                    str  # For help text
-                     ]
-                ],
-            str  # For help text
+                str,  # 'rows' exclusive or 'columns'
+                Dict[
+                    str,  # Row/Column key (label)
+                    # For values:
+                    Dict[
+                        str,  # 'columns' xor 'rows' (or 'help_text')
+                        Union[
+                            Dict[
+                                str,  # Column/Row key (label)
+                                Dict[
+                                    str,  # Cell key ('value', 'description',)
+                                    Union[float, int, str]  # Cell values
+                                    ]
+                                ],
+                            str  # For help text
+                             ]
+                        ]
+                    ]
+                ]
+            ],
+        # Variables:
+        Dict[
+            str,  # 'variables'
+            Dict[
+                str,  # variable name
+                Dict[
+                    str,  # 'value' or 'description'
+                    Union[float, int, str]  # Variable value
+                    ]
+                ]
+            ],
+        # Labels of rows and columns
+        Dict[
+            str,  # 'row-labels' or 'column-labels'
+            str  # Row/Column label
+            ],
+        # Optional dictionary values appended by user
+        Optional[
+            dict
             ]
+        ],
     ]
-]
 # ===============
 
 
@@ -270,9 +302,10 @@ class Serialization(abc.ABC):
 
         Returns:
             dict:
-                Dictionary with keys: 1. column/row, 2. row/column, 3. language
-                or language pseudonym or 'value' keyword for values -> value as
-                a value or as a cell building string.
+                Output dictionary with the logic:
+                table->data->rows/columns->Row/Col label->
+                columns/rows/help_text->Column/Row label->
+                cell keys (value, description, language alias)->value
         """
         # Log warning if needed
         self.log_export_subset_warning_if_needed()
@@ -425,10 +458,11 @@ class Serialization(abc.ABC):
             append_dict (dict): Append this dictionary to output.
 
         Returns:
-            Dict[object, Dict[object, Dict[str, Union[str, float]]]]:
-                Dictionary with keys: 1. column/row, 2. row/column, 3. language
-                or language pseudonym or 'value' keyword for values -> value as
-                a value or as a cell building string.
+            dict:
+                Output dictionary with the logic:
+                table->data->rows/columns->Row/Col label->
+                columns/rows/help_text->Column/Row label->
+                cell keys (value, description, language alias)->value
         """
         class _NumPyEncoder(json.JSONEncoder):
             """Encodes the NumPy variables to export"""
@@ -769,3 +803,25 @@ class Serialization(abc.ABC):
             export += '</tr>'
         export += '</table>'
         return export
+
+    @property
+    def columns(self) -> List[str]:
+        """Return the labels of columns.
+
+        Returns:
+            List[str]: List of column labels
+        """
+        return self.cell_indices.columns_labels[
+            self.export_offset[1]:(self.export_offset[1] + self.shape[1])
+        ]
+
+    @property
+    def index(self) -> List[str]:
+        """Return the labels of rows.
+
+        Returns:
+            List[str]: List of row labels.
+        """
+        return self.cell_indices.rows_labels[
+            self.export_offset[0]:(self.export_offset[0] + self.shape[0])
+        ]

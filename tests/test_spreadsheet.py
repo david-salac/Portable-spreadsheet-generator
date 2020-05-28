@@ -40,6 +40,26 @@ class TestSpreadsheetBasicFunctionality(unittest.TestCase):
         )
         self.sheet_shape = (self.nr_row, self.nr_col)
 
+    def test_index_property(self):
+        """Test index property"""
+        computed = self.sheet.index
+        expected = self.rows_labels
+        self.assertListEqual(expected, computed)
+        # Slice
+        computed = self.sheet.iloc[3:, :].index
+        expected = self.rows_labels[3:]
+        self.assertListEqual(expected, computed)
+
+    def test_columns_property(self):
+        """Test columns property"""
+        computed = self.sheet.columns
+        expected = self.columns_labels
+        self.assertListEqual(expected, computed)
+        # Slice
+        computed = self.sheet.iloc[:, 3:].columns
+        expected = self.columns_labels[3:]
+        self.assertListEqual(expected, computed)
+
     def test_create_new_sheet(self):
         """Test the instance sheet"""
         self.assertTrue(isinstance(self.sheet, Spreadsheet))
