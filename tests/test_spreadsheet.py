@@ -43,22 +43,22 @@ class TestSpreadsheetBasicFunctionality(unittest.TestCase):
     def test_index_property(self):
         """Test index property"""
         computed = self.sheet.index
-        expected = self.rows_labels
-        self.assertListEqual(expected, computed)
+        expected = tuple(self.rows_labels)
+        self.assertTupleEqual(expected, computed)
         # Slice
         computed = self.sheet.iloc[3:, :].index
-        expected = self.rows_labels[3:]
-        self.assertListEqual(expected, computed)
+        expected = tuple(self.rows_labels[3:])
+        self.assertTupleEqual(expected, computed)
 
     def test_columns_property(self):
         """Test columns property"""
         computed = self.sheet.columns
-        expected = self.columns_labels
-        self.assertListEqual(expected, computed)
+        expected = tuple(self.columns_labels)
+        self.assertTupleEqual(expected, computed)
         # Slice
         computed = self.sheet.iloc[:, 3:].columns
-        expected = self.columns_labels[3:]
-        self.assertListEqual(expected, computed)
+        expected = tuple(self.columns_labels[3:])
+        self.assertTupleEqual(expected, computed)
 
     def test_create_new_sheet(self):
         """Test the instance sheet"""
@@ -238,7 +238,11 @@ class TestSpreadsheetSelection(unittest.TestCase):
         # Test the word created in cell
         a_cell: Cell = sheet.iloc[i_idx]
         self.assertEqual(a_cell.word.words['python_numpy'],
-                         f'values[{i_idx[0]},{i_idx[1]}]')
+                         'values[‹Ř›,‹Č›]')
+        self.assertListEqual(a_cell.constructing_words.row_indices['excel'],
+                             [11])
+        self.assertListEqual(a_cell.constructing_words.column_indices['excel'],
+                             [20])
         self.assertTrue(a_cell.anchored)
         self.assertEqual(a_cell.cell_type, CellType.value_only)
         self.assertTupleEqual(a_cell.coordinates, i_idx)
@@ -252,7 +256,11 @@ class TestSpreadsheetSelection(unittest.TestCase):
         # Test the word created in cell
         a_cell: Cell = sheet.iloc[i_idx]
         self.assertEqual(a_cell.word.words['python_numpy'],
-                         f'values[{i_idx[0]},{i_idx[1]}]')
+                         'values[‹Ř›,‹Č›]')
+        self.assertListEqual(
+            a_cell.constructing_words.row_indices['python_numpy'], [11])
+        self.assertListEqual(
+            a_cell.constructing_words.column_indices['python_numpy'], [20])
         self.assertTrue(a_cell.anchored)
         self.assertEqual(a_cell.cell_type, CellType.value_only)
         self.assertTupleEqual(a_cell.coordinates, i_idx)
@@ -302,9 +310,9 @@ class TestSpreadsheetSelection(unittest.TestCase):
         # Test slice method
         cell_slice: CellSlice = sheet.iloc[i_idx]
         u_max = cell_slice.max()
-        self.assertDictEqual(u_max.word.words,
+        self.assertDictEqual(u_max.parse,
                              {'python_numpy': 'np.max(values[0:11,0:20])',
-                              'excel': 'MAX(B2:U12)'})
+                              'excel': '=MAX(B2:U12)'})
         self.assertFalse(u_max.anchored)
         self.assertEqual(u_max.cell_type, CellType.computational)
         self.assertTupleEqual(u_max.coordinates, (None, None))

@@ -57,11 +57,11 @@ class CellIndices(object):
             for language in rows_columns.keys():
                 # Does the language include the last cell?
                 #   if yes, offset of size 1 has to be included.
-                offset = 0
+                offset = 1
                 if GRAMMARS[
                     language
                 ]['cells']['aggregation']['include_last_cell']:
-                    offset = 1
+                    offset = 0
                 rows, columns = rows_columns[language]
                 if len(rows) != number_of_rows + offset:
                     e_mess = "Number of rows is not the same for every" \
@@ -227,11 +227,11 @@ class CellIndices(object):
         for language, values in new_rows_columns.items():
             # Does the language include the last cell?
             #   if yes, offset of size 1 has to be included.
-            offset = 0
+            offset = 1
             if GRAMMARS[
                 language
             ]['cells']['aggregation']['include_last_cell']:
-                offset = 1
+                offset = 0
             rows, cols = values
             # Quick sanity check
             if language not in expanded.user_defined_languages:

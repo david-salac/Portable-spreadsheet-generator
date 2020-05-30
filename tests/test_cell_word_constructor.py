@@ -50,8 +50,8 @@ class TestCellBasicFunctionality(unittest.TestCase):
         # Anchored cell
         a_cell = Cell(3, 4, 7, cell_indices=self.cell_indices)
         # There is an offset 1 row/column for labels!
-        self.assertEqual(a_cell.word.words['excel'], 'F5')
-        self.assertEqual(a_cell.word.words['python_numpy'], 'values[3,4]')
+        self.assertEqual(a_cell.word.words['excel'], '‹Č›‹Ř›')
+        self.assertEqual(a_cell.word.words['python_numpy'], 'values[‹Ř›,‹Č›]')
         self.assertTrue(a_cell.anchored)
 
         # Un-anchored cell
@@ -158,7 +158,7 @@ class TestCellBasicFunctionality(unittest.TestCase):
         # Test generated words
         res_word = u_res.parse
         word_expected = {'excel': '=OFFSET(E3,7,E4)',
-                         'python_numpy': 'values[1+7,3+values[2,3]]'}
+                         'python_numpy': 'values[int(1+7),int(3+values[2,3])]'}
         self.assertDictEqual(word_expected, res_word)
         # Test generated values
         value_computed = u_res.value
@@ -478,8 +478,9 @@ class TestCellBinaryOperations(unittest.TestCase):
         excel_prefix = "CONCATENATE("
         excel_separator = ","
         excel_suffix = ")"
-        python_reference_prefix = ""
-        python_numpy_separator = "+"
+        python_numpy_prefix = "str("
+        python_numpy_separator = ")+str("
+        python_numpy_suffix = ")"
         # A) Anchored
         a_res_cell = self.a_operand_1.concatenate(self.a_operand_2)
         # Compare words
@@ -488,10 +489,11 @@ class TestCellBinaryOperations(unittest.TestCase):
                           self.coord_operand_1_excel + excel_separator +
                           self.coord_operand_2_excel + excel_suffix),
                          a_res_parsed['excel'])
-        self.assertEqual((python_reference_prefix +
+        self.assertEqual((python_numpy_prefix +
                           self.coord_operand_1_python +
                           python_numpy_separator +
-                          self.coord_operand_2_python),
+                          self.coord_operand_2_python +
+                          python_numpy_suffix),
                          a_res_parsed['python_numpy']
                          )
         # Compare results of anchored
@@ -512,10 +514,10 @@ class TestCellBinaryOperations(unittest.TestCase):
                           excel_suffix)
                          )
         self.assertEqual(u_res_parsed['python_numpy'],
-                         ('"' + python_reference_prefix +
+                         (python_numpy_prefix + '"' +
                           self.value_u_1 + '"' +
                           python_numpy_separator +
-                          '"' + self.value_u_2 + '"')
+                          '"' + self.value_u_2 + '"' + python_numpy_suffix)
                          )
         # Compare results of un-anchored
         self.assertAlmostEqual(u_res_cell.value,
@@ -537,15 +539,13 @@ class TestCellBinaryOperations(unittest.TestCase):
                           excel_suffix)
                          )
         self.assertEqual(u_res_parsed['python_numpy'],
-                         (python_reference_prefix +
-                          str_value +
-                          python_numpy_separator +
-                          '"' + self.value_u_2 + '"')
+                         'str("' + u_operand_1.value + '")+str("'
+                         + str(self.u_operand_2.value) + '")'
                          )
         # Compare results of un-anchored
+
         self.assertAlmostEqual(u_res_cell.value,
-                               u_operand_1.value +
-                               str(self.u_operand_2.value))
+                               u_operand_1.value + str(self.u_operand_2.value))
 
 
 class TestCellAggregationFunctionality(unittest.TestCase):
