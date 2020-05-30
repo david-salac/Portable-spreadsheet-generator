@@ -17,7 +17,7 @@ class Cell(object):
             means that it only stores constant value, computation means that
             it does some computations
         _value (Optional[float]): The actual value of the cell.
-        cell_indices (CellIndices): The indices of the columns and rows for
+        _cell_indices (CellIndices): The indices of the columns and rows for
             each used language.
         _constructing_words (WordConstructor): The words defining the cell in
             each language.
@@ -62,7 +62,7 @@ class Cell(object):
         self.column: Optional[int] = column
         self._value: Optional[float] = value
         self.cell_type: CellType = cell_type
-        self.cell_indices: cell_indices = cell_indices  # pass only reference
+        self._cell_indices: CellIndices = cell_indices  # pass only reference
         self.is_variable: bool = is_variable
         self.variable_name: Optional[str] = variable_name
         self._excel_format: dict = {}
@@ -75,6 +75,27 @@ class Cell(object):
                 WordConstructor.init_from_new_cell(self)
 
     # === CLASS METHODS and PROPERTIES: ===
+    @property
+    def cell_indices(self) -> CellIndices:
+        """Get the sheet indices.
+
+        Returns:
+            CellIndices: Indices of the sheet
+        """
+        return self._cell_indices
+
+    @cell_indices.setter
+    def cell_indices(self, cell_indices: CellIndices) -> CellIndices:
+        """Set the sheet indices.
+
+        Args:
+            cell_indices (CellIndices): Indices of the sheet
+        """
+        # Update cell indices on the Cell level
+        self._cell_indices: CellIndices = cell_indices
+        # Update cell indices in the word constructor
+        self._constructing_words.cell_indices = cell_indices
+
     @property
     def word(self) -> WordConstructor:
         """Return correct word. If the cell is anchored, returns just the

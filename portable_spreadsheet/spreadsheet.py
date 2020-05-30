@@ -192,7 +192,9 @@ class Spreadsheet(Serialization):
                 _x += self.shape[0]
             if _y < 0:
                 _y += self.shape[1]
-            return self._sheet[_x][_y]
+            if abs(_x - int(_x)) > 0.000_001 or abs(_y - int(_y)) > 0.000_001:
+                raise IndexError("Indices must be integers!")
+            return self._sheet[int(_x)][int(_y)]
 
     def _get_slice(self,
                    index_integer: Tuple[slice, slice],

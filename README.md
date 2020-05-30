@@ -192,6 +192,21 @@ sheet.expand(
 Parameters of the `Spreadsheet.expand` method are of the same
 logic and order as the parameters of `Spreadsheet.create_new_sheet`.
 
+### Column and row labels
+Labels are set once when a sheet is created (or expanded in size). If you
+want to read them as a tuple of labels, you can use the following properties:
+
+* `columns`: property that returns labels of columns as a tuple of strings.
+It can be called on both slices or directly on `Spreadsheet` class instances.
+* `index`: property that returns the labels of rows as a tuple of strings.
+It can be called on both slices or directly on `Spreadsheet` class instances.
+
+Example:
+```
+column_labels: Tuple[str] = sheet.columns  # Get the column labels
+row_labels: Tuple[str] = sheet.index  # Get the row labels
+```
+
 ### Shape of the Spreadsheet object
 If you want to know what is the actual size of the spreadsheet, you can
 use the property `shape` that behaves as in Pandas. It returns you the

@@ -1,6 +1,7 @@
 import copy
+from collections import defaultdict
 from numbers import Number
-from typing import Dict, Set, Tuple
+from typing import Dict, Set, Tuple, List, Optional
 
 from .grammars import GRAMMARS
 
@@ -20,6 +21,17 @@ class WordConstructor(object):
     Attributes:
         languages (Set[str]): What languages are used.
         words (Dict[str, str]): Mapping from language name to word.
+        cell_indices (CellIndices): Indices in all languages.
+        row_indices (Dict[str, List[int]]): Dictionary in logic language ->
+            row indices (as integer position) of anchored cell in body of
+            the word. Required for parsing of the words for each language.
+        column_indices (Dict[str, List[int]]): Dictionary in logic language ->
+            column indices (as integer position) of anchored cell in body of
+            the word. Required for parsing of the words for each language.
+        row_aggregation_interval (List[Tuple[int, int]]): Indices intervals of
+            aggregations in row indices space of anchored cells
+        column_aggregation_interval (List[Tuple[int, int]]): Indices intervals
+            of aggregations in column indices space of anchored cells
     """
 
     def __init__(self, *,
@@ -43,8 +55,143 @@ class WordConstructor(object):
         else:
             self.words: T_word = {key: "" for key in self.languages}
 
+        self.cell_indices: CellIndices = cell_indices
+        self.row_indices: Dict[str, List[int]] = defaultdict(list)
+        self.column_indices: Dict[str, List[int]] = defaultdict(list)
+        self.row_aggregation_interval: List[Tuple[int, int]] = []
+        self.column_aggregation_interval: List[Tuple[int, int]] = []
+
+    def append_indices(
+            self,
+            row_indices: List[int],
+            column_indices: List[int],
+            language: Optional[str]
+    ) -> None:
+        """Append the cell indices.
+
+        Args:
+            column_indices (List[int]): New column indices to be appended.
+            row_indices (List[int]): New row indices to be appended.
+            language (Optional[str]): Language to what indices are appended.
+                If None, append to all languages.
+        """
+        if language is not None:
+            self.row_indices[language].extend(row_indices)
+            self.column_indices[language].extend(column_indices)
+        else:
+            for language in self.languages:
+                self.row_indices[language].extend(row_indices)
+                self.column_indices[language].extend(column_indices)
+
+    def affect_aggregation(self,
+                           row_index: Optional[int] = None,
+                           column_index: Optional[int] = None) -> bool:
+        """Test if modification of some column or row (or both) index
+            affects aggregation formulas of this cell.
+
+        Args:
+            row_index (int): Probed index of the row (integer position).
+            column_index (int): Probed index of the column (integer position).
+
+        Returns:
+            bool: returns true if some aggregation is affected
+        """
+        if row_index is not None:
+            for indices_range in self.row_aggregation_interval:
+                if indices_range[0] <= row_index <= indices_range[1]:
+                    return True
+
+        if column_index is not None:
+            for indices_range in self.column_aggregation_interval:
+                if indices_range[0] <= column_index <= indices_range[1]:
+                    return True
+
+        return False
+
+    def affect_indices(self,
+                       row_index: Optional[int] = None,
+                       column_index: Optional[int] = None) -> bool:
+        """Test if modification of some column or row (or both) index
+            has any impact on the current cell.
+
+        Args:
+            row_index (int): Probed index of the row (integer position).
+            column_index (int): Probed index of the column (integer position).
+
+        Returns:
+            bool: returns true if some index is affected (causes incosistent
+                table)
+        """
+        if row_index is not None:
+            return row_index in self.row_indices
+
+        if column_index is not None:
+            return column_index in self.column_indices
+
+        return False
+
+    def delete(self,
+               row_index: Optional[int] = None,
+               column_index: Optional[int] = None) -> None:
+        """Delete row or (and) column on defined integer position.
+
+        Args:
+            row_index (int): Probed index of the row (integer position).
+            column_index (int): Probed index of the row (integer position).
+        """
+        # For simple indices
+        # Delete row
+        for i in range(len(self.row_indices)):
+            if self.row_indices[i] > row_index:
+                self.row_indices[i] -= 1
+        # Delete column
+        for i in range(len(self.column_indices)):
+            if self.row_indices[i] > row_index:
+                self.row_indices[i] -= 1
+
+        # For aggregation
+        # Delete row
+        if row_index is not None:
+            for i in len(self.row_aggregation_interval):
+                if self.row_aggregation_interval[i][0] > row_index:
+                    self.row_aggregation_interval[i] = (
+                        self.row_aggregation_interval[i][0] - 1,
+                        self.row_aggregation_interval[i][1] - 1
+                    )
+        # Delete column
+        if column_index is not None:
+            for i in len(self.column_aggregation_interval):
+                if self.column_aggregation_interval[i][0] > column_index:
+                    self.column_aggregation_interval[i] = (
+                        self.column_aggregation_interval[i][0] - 1,
+                        self.column_aggregation_interval[i][1] - 1
+                    )
+
+    def indices_for_languages(self) -> Dict[str, Tuple[List[str], List[str]]]:
+        """Get the indices string representation in each language.
+
+        Returns:
+            Dict[str, Tuple[List[str], List[str]]]: language -> (row indices,
+                column indices)
+        """
+        indices: Dict[str, Tuple[List[str], List[str]]] = {}
+
+        for language in self.languages:
+            indices_row: List[str] = []
+            indices_col: List[str] = []
+            for row_i in self.row_indices[language]:
+                indices_row.append(
+                    self.cell_indices.rows[language][row_i]
+                )
+
+            for col_i in self.column_indices[language]:
+                indices_col.append(self.cell_indices.columns[language][col_i])
+            indices[language] = (indices_row, indices_col)
+
+        return indices
+
     @staticmethod
-    def init_from_new_cell(cell, /) -> 'WordConstructor':  # noqa E999
+    def init_from_new_cell(cell, /) -> 'WordConstructor':  # noqa: E999, E225
         """Initialise the words when the new cell is created.
 
         Args:
@@ -55,10 +202,15 @@ class WordConstructor(object):
         """
         if cell.value is not None:
             # Value type cell
-            return WordConstructor.constant(cell)
+            new_cell = WordConstructor.constant(cell, new_cell=True)
         else:
             # Empty cell
-            return WordConstructor(cell_indices=cell.cell_indices)
+            new_cell = WordConstructor.empty(cell, new_cell=True)
+
+        # Initialise the position
+        if cell.anchored:
+            new_cell.append_indices([cell.row], [cell.column], language=None)
+        return new_cell
 
     @staticmethod
     def _binary_operation(first,
@@ -75,7 +227,7 @@ class WordConstructor(object):
             WordConstructor: Word constructed using binary operator and two
                 operands.
         """
-        instance = copy.deepcopy(first.word)
+        instance = WordConstructor(cell_indices=first.cell_indices)
         first_words = first.word.words
         second_word = second.word.words
         for language in instance.languages:
@@ -84,6 +236,18 @@ class WordConstructor(object):
             sp = GRAMMARS[language]['operations'][operation]['separator']
             instance.words[language] = pref + first_words[language] + sp \
                 + second_word[language] + suff
+
+            instance.append_indices(
+                first.constructing_words.row_indices[language],
+                first.constructing_words.column_indices[language],
+                language=language
+            )
+            instance.append_indices(
+                second.constructing_words.row_indices[language],
+                second.constructing_words.column_indices[language],
+                language=language
+            )
+
         return instance
 
     @staticmethod
@@ -333,7 +497,7 @@ class WordConstructor(object):
                             words[language] = pref + str(in_cell.value) + suff
                     return words
 
-        instance = copy.deepcopy(first.word)
+        instance = WordConstructor(cell_indices=first.cell_indices)
         first_words = _generate_word_string_concatenate(first)
         second_word = _generate_word_string_concatenate(second)
         for language in instance.languages:
@@ -342,6 +506,17 @@ class WordConstructor(object):
             sp = GRAMMARS[language]['operations']['concatenate']['separator']
             instance.words[language] = pref + first_words[language] + sp \
                 + second_word[language] + suff
+            # Append indices
+            instance.append_indices(
+                first.constructing_words.row_indices[language],
+                first.constructing_words.column_indices[language],
+                language=language
+            )
+            instance.append_indices(
+                second.constructing_words.row_indices[language],
+                second.constructing_words.column_indices[language],
+                language=language
+            )
         return instance
 
     @staticmethod
@@ -498,12 +673,20 @@ class WordConstructor(object):
             # Empty value
             return copy.deepcopy(WordConstructor.empty(cell).words)
         elif cell.cell_type == CellType.computational:
+            lang_idx = cell.constructing_words.indices_for_languages()
             # Computational type
-            words: T_word = copy.deepcopy(cell.constructing_words.words)
+            words: T_word = defaultdict(str)
             for language in cell.constructing_words.languages:
                 prefix = GRAMMARS[language]['cells']['operation']['prefix']
                 suffix = GRAMMARS[language]['cells']['operation']['suffix']
-                words[language] = prefix + words[language] + suffix
+                body = cell.constructing_words.words[language]
+                body = body.replace("‹Č›", '{}').format(
+                    *(lang_idx[language][1])
+                )
+                body = body.replace('‹Ř›', '{}').format(
+                    *(lang_idx[language][0])
+                )
+                words[language] = prefix + body + suffix
             return words
 
     @staticmethod
@@ -520,14 +703,19 @@ class WordConstructor(object):
         instance = WordConstructor(cell_indices=cell.cell_indices)
         for language in instance.languages:
             instance.words[language] = words[language]
+
+        # Create references to the columns/rows - skipped for raw statement
         return instance
 
     @staticmethod
-    def empty(cell, /) -> 'WordConstructor':  # noqa E225
+    def empty(cell, /, *,  # noqa: E225
+              new_cell: bool = False) -> 'WordConstructor':
         """Returns the empty string.
 
         Args:
             cell (Cell): Empty cell (without any value or computation)
+            new_cell (bool): If true, new constant cell is created, if
+                false, standard constant cell is returned.
 
         Returns:
             WordConstructor: Word with empty string.
@@ -536,6 +724,14 @@ class WordConstructor(object):
         for language in instance.languages:
             content = GRAMMARS[language]['cells']['empty']['content']
             instance.words[language] = content
+
+            if not new_cell:
+                # Technically deep copy indices
+                instance.append_indices(
+                    cell.constructing_words.row_indices[language],
+                    cell.constructing_words.column_indices[language],
+                    language=language
+                )
         return instance
 
     @staticmethod
@@ -554,21 +750,28 @@ class WordConstructor(object):
             separator = GRAMMARS[language]['cells']['reference']['separator']
             suffix = GRAMMARS[language]['cells']['reference']['suffix']
             row_first = GRAMMARS[language]['cells']['reference']['row_first']
-            # Parse the position to the text of the column and row
-            col_parsed = cell.cell_indices.columns[language][cell.column]
-            row_parsed = cell.cell_indices.rows[language][cell.row]
-            body = prefix + col_parsed + separator + row_parsed + suffix
+            body = prefix + '‹Č›' + separator + '‹Ř›' + suffix
             if row_first:
-                body = prefix + row_parsed + separator + col_parsed + suffix
+                body = prefix + '‹Ř›' + separator + '‹Č›' + suffix
             instance.words[language] = body
+
+            # Technically deep copy indices
+            instance.append_indices(
+                cell.constructing_words.row_indices[language],
+                cell.constructing_words.column_indices[language],
+                language=language
+            )
         return instance
 
     @staticmethod
-    def constant(cell, /) -> 'WordConstructor':  # noqa E225
+    def constant(cell, /, *,  # noqa: E225
+                 new_cell: bool = False) -> 'WordConstructor':
         """Return the value of the cell.
 
         Args:
             cell (Cell): The cell which value is considered.
+            new_cell (bool): If true, new constant cell is created, if
+                false, standard constant cell is returned.
 
         Returns:
             WordConstructor: Word with value.
@@ -578,6 +781,14 @@ class WordConstructor(object):
             prefix = GRAMMARS[language]['cells']['constant']['prefix']
             suffix = GRAMMARS[language]['cells']['constant']['suffix']
             instance.words[language] = prefix + str(cell.value) + suffix
+
+            if not new_cell:
+                # Technically deep copy indices
+                instance.append_indices(
+                    cell.constructing_words.row_indices[language],
+                    cell.constructing_words.column_indices[language],
+                    language=language
+                )
         return instance
 
     @staticmethod
@@ -605,6 +816,12 @@ class WordConstructor(object):
             instance.words[language] = (prefix + cell.variable_name
                                         + value_word + suffix)
 
+            # Technically deep copy indices
+            instance.append_indices(
+                cell.constructing_words.row_indices[language],
+                cell.constructing_words.column_indices[language],
+                language=language
+            )
         return instance
 
     @staticmethod
@@ -622,7 +839,7 @@ class WordConstructor(object):
         Returns:
             'WordConstructor': Word constructed by the operator.
         """
-        instance = copy.deepcopy(cell.word)
+        instance = WordConstructor(cell_indices=cell.cell_indices)
         for language in instance.languages:
             prefix = GRAMMARS[language]
             for path_item in prefix_path:
@@ -630,8 +847,15 @@ class WordConstructor(object):
             suffix = GRAMMARS[language]
             for path_item in suffix_path:
                 suffix = suffix[path_item]
-            body = instance.words[language]
+            body = cell.word.words[language]
             instance.words[language] = prefix + body + suffix
+
+            # Technically deep copy indices
+            instance.append_indices(
+                cell.constructing_words.row_indices[language],
+                cell.constructing_words.column_indices[language],
+                language=language
+            )
         return instance
 
     @staticmethod
@@ -845,19 +1069,41 @@ class WordConstructor(object):
             prefered_order = ('condition', 'consequent', 'alternative')
             words_in_prefered_order = (condition_word, consequent_word,
                                        alternative_word)
+            row_idx_in_prefered_order = (
+                condition.constructing_words.row_indices[language],
+                consequent.constructing_words.row_indices[language],
+                alternative.constructing_words.row_indices[language],
+            )
+            col_idx_in_prefered_order = (
+                condition.constructing_words.column_indices[language],
+                consequent.constructing_words.column_indices[language],
+                alternative.constructing_words.column_indices[language],
+            )
+
             words_in_correct_order = ["", "", ""]
+            row_idx_in_correct_order = [[], [], []]
+            col_idx_in_correct_order = [[], [], []]
             # Do the permutation and construct the word:
             for clausule_idx, clausule in enumerate(prefered_order):
+                # Words
                 clausule_permutated_idx = clausules_order.index(clausule)
                 words_in_correct_order[clausule_permutated_idx] = \
                     words_in_prefered_order[clausule_idx]
+                # Rows/column indices
+                row_idx_in_correct_order[clausule_permutated_idx] = \
+                    row_idx_in_prefered_order[clausule_idx]
+                col_idx_in_correct_order[clausule_permutated_idx] = \
+                    col_idx_in_prefered_order[clausule_idx]
 
             # Merge words into one word
             final_word = "".join(words_in_correct_order)
 
             instance.words[language] = conditional_prefix + final_word + \
                 conditional_suffix
-
+            for i in range(len(col_idx_in_correct_order)):
+                instance.append_indices(row_idx_in_correct_order[i],
+                                        col_idx_in_correct_order[i],
+                                        language=language)
         return instance
 
     @staticmethod
@@ -878,10 +1124,6 @@ class WordConstructor(object):
         """
         instance = WordConstructor(cell_indices=reference.cell_indices)
 
-        # For shorter access to rows and column indices:
-        index_row = reference.cell_indices.rows
-        index_col = reference.cell_indices.columns
-
         ref_row_skip = row_skip.word.words
         ref_col_skip = column_skip.word.words
 
@@ -894,7 +1136,7 @@ class WordConstructor(object):
             ref_row_suffix = GRAMMARS[language]['cells']['offset'][
                 'reference-cell-row']['suffix']
             ref_row_word = (ref_row_prefix +
-                            index_row[language][reference.row] +
+                            '‹Ř›' +
                             ref_row_suffix)
 
             ref_col_prefix = GRAMMARS[language]['cells']['offset'][
@@ -902,7 +1144,7 @@ class WordConstructor(object):
             ref_col_suffix = GRAMMARS[language]['cells']['offset'][
                 'reference-cell-column']['suffix']
             ref_col_word = (ref_col_prefix +
-                            index_col[language][reference.column] +
+                            '‹Č›' +
                             ref_col_suffix)
             # HERE USING REFERENCE
             skip_row_prefix = GRAMMARS[language]['cells']['offset'][
@@ -927,17 +1169,49 @@ class WordConstructor(object):
                               'skip-of-rows', 'skip-of-columns')
             words_in_prefered_order = (ref_row_word, ref_col_word,
                                        skip_row_word, skip_col_word)
+            row_idx_in_prefered_order = (
+                reference.constructing_words.row_indices[language],
+                reference.constructing_words.row_indices[language],
+                row_skip.constructing_words.row_indices[language],
+                column_skip.constructing_words.row_indices[language],
+            )
+            col_idx_in_prefered_order = (
+                reference.constructing_words.column_indices[language],
+                reference.constructing_words.column_indices[language],
+                row_skip.constructing_words.column_indices[language],
+                column_skip.constructing_words.column_indices[language],
+            )
+
             words_in_correct_order = ["", "", "", ""]
+            row_idx_in_correct_order = [[], [], [], []]
+            col_idx_in_correct_order = [[], [], [], []]
             # Do the permutation and construct the word:
             for clausule_idx, clausule in enumerate(prefered_order):
+                # Words
                 clausule_permutated_idx = clausules_order.index(clausule)
                 words_in_correct_order[clausule_permutated_idx] = \
                     words_in_prefered_order[clausule_idx]
+                # Rows/column indices
+                if clausule == 'reference-cell-row':
+                    row_idx_in_correct_order[clausule_permutated_idx] = \
+                        row_idx_in_prefered_order[clausule_idx]
+                elif clausule == 'reference-cell-column':
+                    col_idx_in_correct_order[clausule_permutated_idx] = \
+                        col_idx_in_prefered_order[clausule_idx]
+                else:
+                    row_idx_in_correct_order[clausule_permutated_idx] = \
+                        row_idx_in_prefered_order[clausule_idx]
+                    col_idx_in_correct_order[clausule_permutated_idx] = \
+                        col_idx_in_prefered_order[clausule_idx]
 
             # Merge words into one word
             final_word = "".join(words_in_correct_order)
 
             instance.words[language] = offset_prefix + final_word + \
                 offset_suffix
-
+            # Add row/column indices
+            for i in range(len(col_idx_in_correct_order)):
+                instance.append_indices(row_idx_in_correct_order[i],
+                                        col_idx_in_correct_order[i],
+                                        language=language)
         return instance

@@ -328,3 +328,140 @@ class TestSpreadsheetSelection(unittest.TestCase):
         self.assertAllClose2D(sheet.to_numpy(), np_sheet)
         # Test getter
         self.assertAllClose2D(sheet.iloc[i_idx].to_numpy(), np_sheet[i_idx])
+
+
+class TestNewLogic(unittest.TestCase):
+    def setUp(self) -> None:
+        """Set-up basic values and disable logging of NumPy."""
+        # Numpy warnings:
+        self.np_old_settings = np.seterr(all='ignore')
+
+        self.shape = (10, 15)
+        self.sheet: Spreadsheet = Spreadsheet.create_new_sheet(*self.shape)
+        self.values = 1000 * np.random.random(self.shape)
+        self.values[0, 0] = 2
+        self.sheet.iloc[:, :] = self.values
+
+    def tearDown(self) -> None:
+        """Enable logging of NumPy back."""
+        np.seterr(**self.np_old_settings)
+
+    def test_binary_operations(self):
+        """Test binary operations"""
+        cell_composed = self.sheet.iloc[3, 2] + \
+                        self.sheet.iloc[1, 4] * \
+                        self.sheet.fn.brackets(
+                            self.sheet.iloc[6, 7] /
+                            self.sheet.iloc[5, 3]
+                        ) - \
+                        self.sheet.iloc[4, 8] ** \
+                        self.sheet.iloc[0, 0] + \
+                        self.sheet.iloc[8, 9] % \
+                        self.sheet.iloc[2, 5] + \
+                        self.sheet.fn.const(13)
+
+        # Array values is used by evaluation function
+        values = self.values  # noqa
+        computed = cell_composed.value
+        expected_python_word = 'values[3,2]+values[1,4]*(values[6,7]/' \
+                               'values[5,3])-values[4,8]**values[0,0]+' \
+                               'values[8,9]%values[2,5]+13'
+        self.assertEqual(expected_python_word,
+                         cell_composed.parse['python_numpy'])
+        expected = eval(cell_composed.parse['python_numpy'])
+        self.assertAlmostEqual(computed, expected)
+
+    def test_unary_operations(self):
+        """Test unary operations"""
+        cell_composed = self.sheet.fn.exp(self.sheet.fn.const(9)) + \
+            self.sheet.fn.floor(
+                self.sheet.iloc[3, 2] +
+                self.sheet.iloc[1, 4] *
+                self.sheet.fn.brackets(
+                    self.sheet.iloc[6, 7] / self.sheet.iloc[5, 3]
+                ) **
+                self.sheet.fn.ln(self.sheet.iloc[0, 0])
+            ) + \
+            self.sheet.fn.ceil(self.sheet.iloc[2, 3]) - \
+            self.sheet.fn.floor(self.sheet.iloc[4, 8]) * \
+            self.sheet.fn.round(self.sheet.iloc[7, 9]) + \
+            self.sheet.fn.abs(self.sheet.iloc[6, 3]) - \
+            self.sheet.fn.sqrt(self.sheet.iloc[7, 4]) - \
+            self.sheet.fn.sign(self.sheet.iloc[6, 2])
+
+        # Array values is used by evaluation function
+        values = self.values  # noqa
+        computed = cell_composed.value
+        expected_python_word = 'np.exp(9)+np.floor(values[3,2]+values[1,4]*' \
+                               '(values[6,7]/values[5,3])**' \
+                               'np.log(values[0,0]))+np.ceil(values[2,3])' \
+                               '-np.floor(values[4,8])*' \
+                               'np.round(values[7,9])+np.abs(values[6,3])-' \
+                               'np.sqrt(values[7,4])-np.sign(values[6,2])'
+        self.assertEqual(expected_python_word,
+                         cell_composed.parse['python_numpy'])
+        expected = eval(cell_composed.parse['python_numpy'])
+        self.assertAlmostEqual(computed, expected)
+
+    def test_condition(self):
+        """Test conditional statement"""
+        cell_cond = self.sheet.fn.conditional(
+            self.sheet.fn.brackets(
+                self.sheet.iloc[1, 0] + self.sheet.iloc[3, 5] *
+                self.sheet.iloc[7, 5]
+            ) == self.sheet.fn.brackets(
+                self.sheet.iloc[2, 1] / self.sheet.iloc[7, 1] *
+                self.sheet.iloc[0, 5]
+            ),
+            self.sheet.iloc[1, 5] + self.sheet.iloc[7, 3],
+            self.sheet.fn.ln(self.sheet.iloc[0, 0]) *
+            self.sheet.fn.exp(self.sheet.iloc[0, 0]) + self.sheet.iloc[8, 4]
+        )
+
+        # Array values is used by evaluation function
+        values = self.values  # noqa
+        computed = cell_cond.value
+        expected_python_word = '((values[1,5]+values[7,3]) if ' \
+                               '((values[1,0]+values[3,5]*values[7,5])==' \
+                               '(values[2,1]/values[7,1]*values[0,5])) else ' \
+                               '(np.log(values[0,0])*np.exp(values[0,0])+' \
+                               'values[8,4]))'
+        self.assertEqual(expected_python_word,
+                         cell_cond.parse['python_numpy'])
+        expected = eval(cell_cond.parse['python_numpy'])
+        self.assertAlmostEqual(computed, expected)
+
+    def test_offset(self):
+        """Test offset statement"""
+        cell_offset = self.sheet.fn.offset(
+            self.sheet.iloc[3, 4],
+            self.sheet.iloc[0, 0] + self.sheet.fn.const(1),
+            self.sheet.fn.const(2) + self.sheet.iloc[0, 0]
+        )
+
+        # Array values is used by evaluation function
+        values = self.values  # noqa
+        computed = cell_offset.value
+        expected_python_word = 'values[int(3+values[0,0]+1),' \
+                               'int(4+2+values[0,0])]'
+        self.assertEqual(expected_python_word,
+                         cell_offset.parse['python_numpy'])
+        expected = eval(cell_offset.parse['python_numpy'])
+        self.assertAlmostEqual(computed, expected)
+
+    def test_concatenate(self):
+        """Test string concatenation"""
+        cell_concatenate = (self.sheet.iloc[3, 4] <<
+                            self.sheet.iloc[0, 0] <<
+                            self.sheet.fn.const(19) <<
+                            self.sheet.fn.const("hello"))
+
+        # Array values is used by evaluation function
+        values = self.values  # noqa
+        computed = cell_concatenate.value
+        expected_python_word = 'str(str(str(values[3,4])+str(values[0,0]' \
+                               '))+str("19"))+str("hello")'
+        self.assertEqual(expected_python_word,
+                         cell_concatenate.parse['python_numpy'])
+        expected = eval(cell_concatenate.parse['python_numpy'])
+        self.assertEqual(computed, expected)

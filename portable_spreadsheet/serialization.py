@@ -764,8 +764,8 @@ class Serialization(abc.ABC):
             else:
                 if not skip_labels:
                     # Insert labels of rows
-                    if (help_text :=  # noqa 203
-                    self.cell_indices.rows_help_text) is not None:
+                    if (help_text :=  # noqa: 231
+                            self.cell_indices.rows_help_text) is not None:
                         title_attr = ' title="{}"'.format(
                             help_text[row_idx + self.export_offset[1]]
                         )
@@ -805,23 +805,23 @@ class Serialization(abc.ABC):
         return export
 
     @property
-    def columns(self) -> List[str]:
+    def columns(self) -> Tuple[str]:
         """Return the labels of columns.
 
         Returns:
-            List[str]: List of column labels
+            Tuple[str]: List of column labels
         """
-        return self.cell_indices.columns_labels[
+        return tuple(self.cell_indices.columns_labels[
             self.export_offset[1]:(self.export_offset[1] + self.shape[1])
-        ]
+        ])
 
     @property
-    def index(self) -> List[str]:
+    def index(self) -> Tuple[str]:
         """Return the labels of rows.
 
         Returns:
-            List[str]: List of row labels.
+            Tuple[str]: List of row labels.
         """
-        return self.cell_indices.rows_labels[
+        return tuple(self.cell_indices.rows_labels[
             self.export_offset[0]:(self.export_offset[0] + self.shape[0])
-        ]
+        ])

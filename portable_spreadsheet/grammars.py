@@ -621,20 +621,20 @@ PYTHON_NUMPY = {
             "prefix": "values[",
             "suffix": "]",
             'reference-cell-column': {
-                "prefix": "",
+                "prefix": "int(",
                 "suffix": "+",
             },
             'reference-cell-row': {
-                "prefix": "",
+                "prefix": "int(",
                 "suffix": "+",
             },
             'skip-of-rows': {
                 "prefix": "",
-                "suffix": ",",
+                "suffix": "),",
             },
             'skip-of-columns': {
                 "prefix": "",
-                "suffix": "",
+                "suffix": ")",
             },
         }
     },
@@ -678,13 +678,13 @@ PYTHON_NUMPY = {
         },
         # Merge two strings
         'concatenate': {
-            "prefix": "",
-            "suffix": "",
-            "separator": "+",
+            "prefix": "str(",
+            "suffix": ")",
+            "separator": ")+str(",
             # Context of string
             "string-value": {
-                "prefix": '',
-                "suffix": '',
+                "prefix": '"',
+                "suffix": '"',
             },
             # Context of numbers
             "numeric-value": {

@@ -1,2 +1,2 @@
-numpy==1.18.4
-XlsxWriter==1.2.8
+numpy>=1.18.4
+XlsxWriter>=1.2.8
