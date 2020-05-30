@@ -331,6 +331,7 @@ class TestSpreadsheetSelection(unittest.TestCase):
 
 
 class TestNewLogic(unittest.TestCase):
+    """Bigger regression testing of new constructing."""
     def setUp(self) -> None:
         """Set-up basic values and disable logging of NumPy."""
         # Numpy warnings:
@@ -348,17 +349,18 @@ class TestNewLogic(unittest.TestCase):
 
     def test_binary_operations(self):
         """Test binary operations"""
-        cell_composed = self.sheet.iloc[3, 2] + \
-                        self.sheet.iloc[1, 4] * \
-                        self.sheet.fn.brackets(
-                            self.sheet.iloc[6, 7] /
-                            self.sheet.iloc[5, 3]
-                        ) - \
-                        self.sheet.iloc[4, 8] ** \
-                        self.sheet.iloc[0, 0] + \
-                        self.sheet.iloc[8, 9] % \
-                        self.sheet.iloc[2, 5] + \
-                        self.sheet.fn.const(13)
+        cell_composed = (
+                self.sheet.iloc[3, 2] +
+                self.sheet.iloc[1, 4] *
+                self.sheet.fn.brackets(
+                    self.sheet.iloc[6, 7] / self.sheet.iloc[5, 3]
+                ) -
+                self.sheet.iloc[4, 8] **
+                self.sheet.iloc[0, 0] +
+                self.sheet.iloc[8, 9] %
+                self.sheet.iloc[2, 5] +
+                self.sheet.fn.const(13)
+        )
 
         # Array values is used by evaluation function
         values = self.values  # noqa
@@ -464,4 +466,36 @@ class TestNewLogic(unittest.TestCase):
         self.assertEqual(expected_python_word,
                          cell_concatenate.parse['python_numpy'])
         expected = eval(cell_concatenate.parse['python_numpy'])
+        self.assertEqual(computed, expected)
+
+    def test_aggregation(self):
+        """Test aggregation functions"""
+        cell_aggregate = (
+            self.sheet.iloc[3, 4:5].sum() +
+            self.sheet.iloc[3:4, 6].average() +
+            self.sheet.iloc[4:5, 5:6].product() +
+            self.sheet.iloc[2:6, 3:8].stdev() +
+            self.sheet.iloc[:, 1].min() +
+            self.sheet.iloc[3, :].max() +
+            self.sheet.iloc[:, :].median() +
+            self.sheet.iloc[1, :].count() +
+            self.sheet.iloc[1, 3:].count() +
+            self.sheet.iloc[1:4, 3:].count()
+        )
+        # Array values is used by evaluation function
+        values = self.values  # noqa
+        computed = cell_aggregate.value
+        expected_python_word = 'np.sum(values[3:4,4:5])+np.mean(values[3:4,' \
+                               '6:7])+np.prod(values[4:5,5:6])+np.std(' \
+                               'values[2:6,3:8])+np.min(values[0:10,1:2])' \
+                               '+np.max(values[3:4,0:15])+np.median(' \
+                               'values[0:10,0:15])+((lambda var=values[' \
+                               '1:2,0:15]: var.shape[0] * var.shape[1])())' \
+                               '+((lambda var=values[1:2,3:15]: ' \
+                               'var.shape[0] * var.shape[1])())+' \
+                               '((lambda var=values[1:4,3:15]: ' \
+                               'var.shape[0] * var.shape[1])())'
+        self.assertEqual(expected_python_word,
+                         cell_aggregate.parse['python_numpy'])
+        expected = eval(cell_aggregate.parse['python_numpy'])
         self.assertEqual(computed, expected)

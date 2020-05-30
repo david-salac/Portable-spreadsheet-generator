@@ -41,27 +41,26 @@ EXCEL = {
         },
         # like A1:A50
         "aggregation": {
+            "order": ('start-column', 'start-row', 'end-column', 'end-row'),
             "prefix": "",
-            "separator": ":",
             "suffix": "",
-            "start_cell": {
+            'start-row': {
+                "prefix": "",
+                "suffix": ":",
+            },
+            'end-row': {
                 "prefix": "",
                 "suffix": "",
-                "separator": "",
-                "rows_only": False,
-                "cols_only": False,
-                "row_first": False,
             },
-            "end_cell": {
+            'start-column': {
                 "prefix": "",
                 "suffix": "",
-                "separator": "",
-                "rows_only": False,
-                "cols_only": False,
-                "row_first": False,
             },
-            # For example, Python exclude last cell when slicing
-            "include_last_cell": False
+            'end-column': {
+                "prefix": "",
+                "suffix": "",
+            },
+            "include_last_cell": True
         },
         "offset": {
             "order": ('reference-cell-column', 'reference-cell-row',
@@ -317,27 +316,26 @@ NATIVE = {
         },
         # like values from (1.1.2015, 25%) to (1.1.2015, 50%)
         "aggregation": {
-            "prefix": "values from ",
-            "separator": " and ",
+            "order": ('start-row', 'end-row', 'start-column', 'end-column'),
+            "prefix": "set of values on ",
             "suffix": "",
-            "start_cell": {
-                "prefix": "row ",
-                "suffix": "",
-                "separator": " to row ",
-                "rows_only": True,
-                "cols_only": False,
-                "row_first": True,
+            'start-row': {
+                "prefix": "row from (",
+                "suffix": " to ",
             },
-            "end_cell": {
-                "prefix": "from column ",
-                "suffix": "",
-                "separator": " to column ",
-                "rows_only": False,
-                "cols_only": True,
-                "row_first": True,
+            'end-row': {
+                "prefix": "",
+                "suffix": ") and ",
             },
-            # For example, Python exclude last cell when slicing
-            "include_last_cell": False
+            'start-column': {
+                "prefix": "column from (",
+                "suffix": " to ",
+            },
+            'end-column': {
+                "prefix": ")",
+                "suffix": "",
+            },
+            "include_last_cell": True
         },
         "offset": {
             "order": ('reference-cell-row', 'skip-of-rows',
@@ -593,27 +591,26 @@ PYTHON_NUMPY = {
         },
         # like values[1:2,3:7]
         "aggregation": {
+            "order": ('start-row', 'end-row', 'start-column', 'end-column'),
             "prefix": "values[",
-            "separator": ",",
             "suffix": "]",
-            "start_cell": {
+            'start-row': {
+                "prefix": "",
+                "suffix": ":",
+            },
+            'end-row': {
+                "prefix": "",
+                "suffix": ",",
+            },
+            'start-column': {
+                "prefix": "",
+                "suffix": ":",
+            },
+            'end-column': {
                 "prefix": "",
                 "suffix": "",
-                "separator": ":",
-                "rows_only": True,
-                "cols_only": False,
-                "row_first": True
             },
-            "end_cell": {
-                "prefix": "",
-                "suffix": "",
-                "separator": ":",
-                "rows_only": False,
-                "cols_only": True,
-                "row_first": True
-            },
-            # For example, Python exclude last cell when slicing
-            "include_last_cell": True
+            "include_last_cell": False
         },
         "offset": {
             "order": ('reference-cell-row', 'skip-of-rows',
@@ -902,35 +899,35 @@ GRAMMAR_PATTERN: dict = {
 
         # Aggregation of cells (e. g. C1:C5 in Excel)
         "aggregation": {
+            # Some ordered subset of ('start-row', 'end-row', 'start-column',
+            #   'end-column') defining in what order the aggregation is done.
+            "order": tuple,
+
+            # Prefix and suffix for the aggregation operation (selection)
             "prefix": str,
-            "separator": str,
             "suffix": str,
-            # Word defining the starting cell
-            "start_cell": {
+
+            # Word constructed around starting row in the language
+            'start-row': {
                 "prefix": str,
                 "suffix": str,
-                "separator": str,
-                # If True, cell contains only reference to rows (mutually
-                # exclusive with cols_only.
-                "rows_only": bool,
-                # If True, cell contains only reference to columns (mutually
-                # exclusive with rows_only.
-                "cols_only": bool,
-                "row_first": bool,
             },
-            # Word defining the last cell
-            "end_cell": {
+            # Word constructed around ending row in the language
+            'end-row': {
                 "prefix": str,
                 "suffix": str,
-                "separator": str,
-                # If True, cell contains only reference to rows (mutually
-                # exclusive with cols_only.
-                "rows_only": bool,
-                # If True, cell contains only reference to columns (mutually
-                # exclusive with rows_only.
-                "cols_only": bool,
-                "row_first": bool,
             },
+            # Word constructed around starting column in the language
+            'start-column': {
+                "prefix": str,
+                "suffix": str,
+            },
+            # Word constructed around ending column in the language
+            'end-column': {
+                "prefix": str,
+                "suffix": str,
+            },
+
             # For example, Python exclude last cell when slicing (it has a
             # close-left logic), but Excel does include it. If True the last
             # cell is included, if False, the last cell is the previous plus

@@ -520,101 +520,6 @@ class WordConstructor(object):
         return instance
 
     @staticmethod
-    def _aggregation_parse_cell(cell,
-                                start_idx: Tuple[int, int],
-                                end_idx: Tuple[int, int],
-                                language: str
-                                ) -> Tuple[str, str]:
-        """Generates the aggregation string for a concrete language (regardless
-            what aggregation method is selected).
-
-        Args:
-            cell (Cell): Any cell in the set (used for extracting indicies).
-            start_idx (Tuple[int, int]): Position of the slice start.
-            end_idx (Tuple[int, int]): Position of the slice end.
-            language (str): What language is used.
-
-        Returns:
-            Tuple[str, str]: Definition of starting, ending cell in language.
-        """
-        # Does the language include the last cell?
-        #   if yes, offset of size 1 has to be included.
-        offset = 0
-        if GRAMMARS[
-            language
-        ]['cells']['aggregation']['include_last_cell']:
-            offset = 1
-
-        start_idx_r = cell.cell_indices.rows[language][start_idx[0]]
-        start_idx_c = cell.cell_indices.columns[language][start_idx[1]]
-        end_idx_r = cell.cell_indices.rows[language][end_idx[0] + offset]
-        end_idx_c = cell.cell_indices.columns[language][end_idx[1] + offset]
-
-        pref_cell_start = GRAMMARS[language]['cells']['aggregation'][
-            'start_cell']['prefix']
-        separator_cell_start = GRAMMARS[language]['cells']['aggregation'][
-            'start_cell']['separator']
-        suffix_cell_start = GRAMMARS[language]['cells']['aggregation'][
-            'start_cell']['suffix']
-
-        if GRAMMARS[language]['cells']['aggregation']['start_cell'][
-            'row_first'
-        ]:
-            cell_start = (pref_cell_start + start_idx_r +
-                          separator_cell_start + start_idx_c +
-                          suffix_cell_start)
-        else:
-            cell_start = (pref_cell_start + start_idx_c +
-                          separator_cell_start + start_idx_r +
-                          suffix_cell_start)
-
-        if GRAMMARS[language]['cells']['aggregation']['start_cell'][
-            'rows_only'
-        ]:
-            cell_start = (pref_cell_start + start_idx_r +
-                          separator_cell_start + end_idx_r +
-                          suffix_cell_start)
-        elif GRAMMARS[language]['cells']['aggregation']['start_cell'][
-            'cols_only'
-        ]:
-            cell_start = (pref_cell_start + start_idx_c +
-                          separator_cell_start + end_idx_c +
-                          suffix_cell_start)
-        # ---------- ending cell -----
-        pref_cell_end = GRAMMARS[language]['cells']['aggregation'][
-            'end_cell']['prefix']
-        separator_cell_end = GRAMMARS[language]['cells']['aggregation'][
-            'end_cell']['separator']
-        suffix_cell_end = GRAMMARS[language]['cells']['aggregation'][
-            'end_cell']['suffix']
-
-        if GRAMMARS[language]['cells']['aggregation']['end_cell'][
-            'row_first'
-        ]:
-            cell_end = (pref_cell_end + end_idx_r +
-                        separator_cell_end + end_idx_c +
-                        suffix_cell_end)
-        else:
-            cell_end = (pref_cell_end + end_idx_c +
-                        separator_cell_end + end_idx_r +
-                        suffix_cell_end)
-
-        if GRAMMARS[language]['cells']['aggregation']['end_cell'][
-            'rows_only'
-        ]:
-            cell_end = (pref_cell_end + start_idx_r +
-                        separator_cell_end + end_idx_r +
-                        suffix_cell_end)
-        elif GRAMMARS[language]['cells']['aggregation']['end_cell'][
-            'cols_only'
-        ]:
-            cell_end = (pref_cell_end + start_idx_c +
-                        separator_cell_end + end_idx_c +
-                        suffix_cell_end)
-        # ----------------------------
-        return cell_start, cell_end
-
-    @staticmethod
     def aggregation(cell_start, cell_end,
                     grammar_method: str) -> 'WordConstructor':
         """General aggregation function.
@@ -631,18 +536,104 @@ class WordConstructor(object):
             raise ValueError("Both starting end ending cells has to be"
                              " anchored!")
 
-        start_idx = cell_start.coordinates
-        end_idx = cell_end.coordinates
-
         instance = WordConstructor(cell_indices=cell_start.cell_indices)
+
         for language in instance.languages:
+            # Prefix and suffix of aggregation operation
             prefix = GRAMMARS[language]['cells']['aggregation']['prefix']
-            separator = GRAMMARS[language]['cells']['aggregation']['separator']
             suffix = GRAMMARS[language]['cells']['aggregation']['suffix']
 
-            start, end = WordConstructor._aggregation_parse_cell(
-                cell_start, start_idx, end_idx, language
+            # Word for the starting row
+            start_row_prefix = GRAMMARS[language]['cells']['aggregation'][
+                'start-row']['prefix']
+            start_row_suffix = GRAMMARS[language]['cells']['aggregation'][
+                'start-row']['suffix']
+            start_row_word = (start_row_prefix + '‹Ř›' + start_row_suffix)
+
+            # Word for the ending row
+            end_row_prefix = GRAMMARS[language]['cells']['aggregation'][
+                'end-row']['prefix']
+            end_row_suffix = GRAMMARS[language]['cells']['aggregation'][
+                'end-row']['suffix']
+            end_row_word = (end_row_prefix + '‹Ř›' + end_row_suffix)
+
+            # Word for the starting column
+            start_column_prefix = GRAMMARS[language]['cells']['aggregation'][
+                'start-column']['prefix']
+            start_column_suffix = GRAMMARS[language]['cells']['aggregation'][
+                'start-column']['suffix']
+            start_column_word = (start_column_prefix +
+                                 '‹Č›' +
+                                 start_column_suffix)
+
+            # Word for the starting column
+            end_column_prefix = GRAMMARS[language]['cells']['aggregation'][
+                'end-column']['prefix']
+            end_column_suffix = GRAMMARS[language]['cells']['aggregation'][
+                'end-column']['suffix']
+            end_column_word = (end_column_prefix + '‹Č›' + end_column_suffix)
+
+            # Swap the words to desired sequence
+            clausules_order = GRAMMARS[language]['cells']['aggregation'][
+                'order'
+            ]
+            prefered_order = (
+                'start-row', 'end-row', 'start-column', 'end-column'
             )
+            words_in_prefered_order = (start_row_word,
+                                       end_row_word,
+                                       start_column_word,
+                                       end_column_word)
+
+            row_idx_in_prefered_order = (
+                cell_start.constructing_words.row_indices[language],
+                cell_end.constructing_words.row_indices[language],
+                cell_start.constructing_words.row_indices[language],
+                cell_end.constructing_words.row_indices[language],
+            )
+
+            col_idx_in_prefered_order = (
+                cell_start.constructing_words.column_indices[language],
+                cell_end.constructing_words.column_indices[language],
+                cell_start.constructing_words.column_indices[language],
+                cell_end.constructing_words.column_indices[language],
+            )
+
+            # Offset if ending cell is excluded
+            ending_offset = 1
+            if GRAMMARS[language]['cells']['aggregation']['include_last_cell']:
+                ending_offset = 0
+
+            words_in_correct_order = ["", "", "", ""]
+            row_idx_in_correct_order = [[], [], [], []]
+            col_idx_in_correct_order = [[], [], [], []]
+
+            # Do the permutation and construct the word:
+            for clausule_idx, clausule in enumerate(prefered_order):
+                # Words
+                clausule_permutated_idx = clausules_order.index(clausule)
+                words_in_correct_order[clausule_permutated_idx] = \
+                    words_in_prefered_order[clausule_idx]
+                # Rows/column indices
+                # 'start-row', 'end-row', 'start-column', 'end-column'
+                if clausule == 'start-row':
+                    row_idx_in_correct_order[clausule_permutated_idx] = \
+                        row_idx_in_prefered_order[clausule_idx]
+                if clausule == 'end-row':
+                    row_idx_in_correct_order[clausule_permutated_idx] = \
+                        [row_idx_in_prefered_order[clausule_idx][0] +
+                         ending_offset]
+                elif clausule == 'start-column':
+                    col_idx_in_correct_order[clausule_permutated_idx] = \
+                        col_idx_in_prefered_order[clausule_idx]
+                elif clausule == 'end-column':
+                    col_idx_in_correct_order[clausule_permutated_idx] = \
+                        [col_idx_in_prefered_order[clausule_idx][0] +
+                         ending_offset]
+
+            # Merge words into one word
+            final_word = "".join(words_in_correct_order)
+
             # Methods
             m_prefix = GRAMMARS[language]['operations'][grammar_method][
                 'prefix'
@@ -650,9 +641,15 @@ class WordConstructor(object):
             m_suffix = GRAMMARS[language]['operations'][grammar_method][
                 'suffix'
             ]
-
-            instance.words[language] = (m_prefix + prefix + start +
-                                        separator + end + suffix + m_suffix)
+            # Construct the word
+            instance.words[language] = (
+                    m_prefix + prefix + final_word + suffix + m_suffix
+            )
+            # Add row/column indices
+            for i in range(len(col_idx_in_correct_order)):
+                instance.append_indices(row_idx_in_correct_order[i],
+                                        col_idx_in_correct_order[i],
+                                        language=language)
         return instance
 
     @staticmethod
