@@ -369,6 +369,90 @@ class Spreadsheet(Serialization):
             )
         )
 
+    def delete_row(self, *,
+                   row_index: int = None,
+                   row_label: str = None) -> None:
+        """Delete the row on given position.
+
+        Args:
+            row_index (int): Integer position (indexed from 0).
+            row_label (str): Label (string).
+
+        Raises:
+            AttributeError: In the case that both type of indices are set.
+            IndexError: In the case that index is out of bounds.
+        """
+
+        if row_index is not None and row_label is not None:
+            raise AttributeError("Only one parameter 'row_index' or "
+                                 "'row_label' can be set.")
+        if row_label is not None:
+            # Find the integer position of the label between indices
+            row_index = self.index.index(row_label)
+
+        if row_index is not None:
+            if not(0 <= row_index < self.shape[0]):
+                raise IndexError("Index is out of bounds!")
+
+            for col_idx in self.shape[1]:
+                # Perform the delete operation
+                self.iloc[row_index, col_idx].delete(row_index=row_index,
+                                                     column_index=col_idx)
+
+
+    def delete_column(self, *,
+                      column_index: int = None,
+                      column_label: str = None) -> None:
+        pass
+
+    def insert_row_after(self, *,
+                         label: str = None,
+                         help_text: str = None,
+                         reference_index: int = None,
+                         reference_label: str = None) -> None:
+        if reference_index is not None and reference_label is not None:
+            raise IndexError("Only one value 'reference_index' or "
+                             "'reference_label' can be set!")
+        if reference_label is not None:
+            reference_index = self.index.index(reference_label)
+        self.insert_row_before(label=label,
+                               help_text=help_text,
+                               reference_index=reference_index-1)
+
+    def insert_row_before(self, *,
+                          label: str = None,
+                          help_text: str = None,
+                          reference_index: int = None,
+                          reference_label: str = None) -> None:
+        if reference_index is not None and reference_label is not None:
+            raise IndexError("Only one value 'reference_index' or "
+                             "'reference_label' can be set!")
+        pass
+
+    def insert_column_after(self, *,
+                            label: str = None,
+                            help_text: str = None,
+                            reference_index: int = None,
+                            reference_label: str = None) -> None:
+        if reference_index is not None and reference_label is not None:
+            raise IndexError("Only one value 'reference_index' or "
+                             "'reference_label' can be set!")
+        if reference_label is not None:
+            reference_index = self.columns.index(reference_label)
+        self.insert_column_before(label=label,
+                                  help_text=help_text,
+                                  reference_index=reference_index - 1)
+
+    def insert_column_before(self, *,
+                             label: str = None,
+                             help_text: str = None,
+                             reference_index: int = None,
+                             reference_label: str = None) -> None:
+        if reference_index is not None and reference_label is not None:
+            raise IndexError("Only one value 'reference_index' or "
+                             "'reference_label' can be set!")
+        pass
+
     def expand_using_cell_indices(self, cell_indices: CellIndices) -> None:
         """Resize the spreadsheet object to the greater size
 

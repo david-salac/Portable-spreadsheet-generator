@@ -223,6 +223,35 @@ class Cell(object):
                 and not isinstance(new_description, str)):
             raise ValueError("Cell description has to be a string value!")
         self._description = new_description
+
+    def re_evaluate(self, sheet, /) -> None:  # noqa: E225
+        """Re-evaluate (recompute) the value of the cell from the word.
+
+        Args:
+            sheet (Spreadsheet): Spreadsheet object.
+        """
+        values = sheet.iloc  # noqa
+        self.value = eval(self.constructing_words.words['python_numpy'])
+
+    def delete(self, *,
+               row_index: int = None,
+               column_index: int = None) -> bool:
+        """Perform deleting of the column and/or the row on a given index.
+
+        Args:
+            row_index (int): Index of the row to be deleted (or None if
+                none row is to be deleted)
+            column_index (int): Index of the column to be deleted (or None if
+                none column is to be deleted)
+
+        Returns:
+            bool: true if the table is consistent, false otherwise.
+        """
+        # First value tells if the cell is consistent, second if the
+        #   operation affects any cell
+        consistent, affects = \
+            self.constructing_words.delete(row_index, column_index)
+        return consistent
     # =====================================
 
     # === BINARY OPERATORS: ===

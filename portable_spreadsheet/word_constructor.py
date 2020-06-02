@@ -28,10 +28,6 @@ class WordConstructor(object):
         column_indices (Dict[str, List[int]]): Dictionary in logic language ->
             column indices (as integer position) of anchored cell in body of
             the word. Required for parsing of the words for each language.
-        row_aggregation_interval (List[Tuple[int, int]]): Indices intervals of
-            aggregations in row indices space of anchored cells
-        column_aggregation_interval (List[Tuple[int, int]]): Indices intervals
-            of aggregations in column indices space of anchored cells
     """
 
     def __init__(self, *,
@@ -58,8 +54,6 @@ class WordConstructor(object):
         self.cell_indices: CellIndices = cell_indices
         self.row_indices: Dict[str, List[int]] = defaultdict(list)
         self.column_indices: Dict[str, List[int]] = defaultdict(list)
-        self.row_aggregation_interval: List[Tuple[int, int]] = []
-        self.column_aggregation_interval: List[Tuple[int, int]] = []
 
     def append_indices(
             self,
@@ -83,32 +77,7 @@ class WordConstructor(object):
                 self.row_indices[language].extend(row_indices)
                 self.column_indices[language].extend(column_indices)
 
-    def affect_aggregation(self,
-                           row_index: Optional[int] = None,
-                           column_index: Optional[int] = None) -> bool:
-        """Test if modification of some column or row (or both) index
-            affects aggregation formulas of this cell.
-
-        Args:
-            row_index (int): Probed index of the row (integer position).
-            column_index (int): Probed index of the column (integer position).
-
-        Returns:
-            bool: returns true if some aggregation is affected
-        """
-        if row_index is not None:
-            for indices_range in self.row_aggregation_interval:
-                if indices_range[0] <= row_index <= indices_range[1]:
-                    return True
-
-        if column_index is not None:
-            for indices_range in self.column_aggregation_interval:
-                if indices_range[0] <= column_index <= indices_range[1]:
-                    return True
-
-        return False
-
-    def affect_indices(self,
+    def is_delete_safe(self,
                        row_index: Optional[int] = None,
                        column_index: Optional[int] = None) -> bool:
         """Test if modification of some column or row (or both) index
@@ -122,50 +91,82 @@ class WordConstructor(object):
             bool: returns true if some index is affected (causes incosistent
                 table)
         """
-        if row_index is not None:
-            return row_index in self.row_indices
+        for language in self.languages:
+            if row_index is not None:
+                if row_index in self.row_indices[language]:
+                    return False
 
-        if column_index is not None:
-            return column_index in self.column_indices
+            if column_index is not None:
+                if column_index in self.column_indices[language]:
+                    return False
+            # Set of indices is the same for all languages:
+            break
 
-        return False
+        return True
 
     def delete(self,
                row_index: Optional[int] = None,
-               column_index: Optional[int] = None) -> None:
+               column_index: Optional[int] = None) -> Tuple[bool, bool]:
         """Delete row or (and) column on defined integer position.
 
         Args:
-            row_index (int): Probed index of the row (integer position).
-            column_index (int): Probed index of the row (integer position).
-        """
-        # For simple indices
-        # Delete row
-        for i in range(len(self.row_indices)):
-            if self.row_indices[i] > row_index:
-                self.row_indices[i] -= 1
-        # Delete column
-        for i in range(len(self.column_indices)):
-            if self.row_indices[i] > row_index:
-                self.row_indices[i] -= 1
+            row_index (int): Index of the row (integer position).
+            column_index (int): Index of the column (integer position).
 
-        # For aggregation
-        # Delete row
-        if row_index is not None:
-            for i in len(self.row_aggregation_interval):
-                if self.row_aggregation_interval[i][0] > row_index:
-                    self.row_aggregation_interval[i] = (
-                        self.row_aggregation_interval[i][0] - 1,
-                        self.row_aggregation_interval[i][1] - 1
-                    )
-        # Delete column
-        if column_index is not None:
-            for i in len(self.column_aggregation_interval):
-                if self.column_aggregation_interval[i][0] > column_index:
-                    self.column_aggregation_interval[i] = (
-                        self.column_aggregation_interval[i][0] - 1,
-                        self.column_aggregation_interval[i][1] - 1
-                    )
+        Returns:
+            Tuple[bool, bool]:
+            A) If the value is true, all the cells are consistent after
+                the operation, if it is false, there are some inconsistencies.
+            B) If the value is true, cell is affected by the delete operation.
+        """
+        is_consistent = True
+        is_affected = False
+        # Iterate through all the languages and moves indices
+        for language in self.languages:
+            # Delete row
+            for i in range(row_index, len(self.row_indices)):
+                if self.row_indices[language][i] > row_index:
+                    self.row_indices[language][i] -= 1
+                    is_affected = True
+                elif self.row_indices[language][i] == row_index:
+                    is_consistent = False
+            # Delete column
+            for i in range(column_index, len(self.column_indices)):
+                if self.column_indices[language][i] > column_index:
+                    self.column_indices[language][i] -= 1
+                    is_affected = True
+                elif self.column_indices[language][i] == column_index:
+                    is_consistent = False
+
+        return is_consistent, is_affected
+
+    def insert(self,
+               row_index: Optional[int] = None,
+               column_index: Optional[int] = None) -> bool:
+        """Insert row or (and) column on defined integer position.
+
+        Args:
+            row_index (int): Index of the row (integer position).
+            column_index (int): Index of the column (integer position).
+
+        Returns:
+            bool: If the value is true, cell is affected by the operation.
+        """
+        is_affected = False
+        # Iterate through all the languages and moves indices
+        for language in self.languages:
+            # Insert row
+            for i in range(row_index, len(self.row_indices)):
+                if self.row_indices[language][i] >= row_index:
+                    self.row_indices[language][i] += 1
+                    is_affected = True
+
+            # Insert column
+            for i in range(column_index, len(self.column_indices)):
+                if self.column_indices[language][i] >= column_index:
+                    self.column_indices[language][i] += 1
+                    is_affected = True
+        return is_affected
 
     def indices_for_languages(self) -> Dict[str, Tuple[List[str], List[str]]]:
         """Get the indices string representation in each language.
@@ -650,6 +651,8 @@ class WordConstructor(object):
                 instance.append_indices(row_idx_in_correct_order[i],
                                         col_idx_in_correct_order[i],
                                         language=language)
+
+        # Return value
         return instance
 
     @staticmethod
