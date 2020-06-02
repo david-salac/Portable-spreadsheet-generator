@@ -56,10 +56,12 @@ class CellSlice(Serialization):
     def sum(self, skip_none_cell: bool = True) -> Cell:
         """Compute the sum of the aggregate.
 
-        Returns:
-            Cell: a new cell with the result.
+        Args:
             skip_none_cell (bool): If true, skips all the cells with None as
                 a value (and does not raise exception).
+
+        Returns:
+            Cell: a new cell with the result.
         """
         if skip_none_cell:
             cell_subset = [nn_cell for nn_cell in self.cell_subset
@@ -71,10 +73,12 @@ class CellSlice(Serialization):
     def product(self, skip_none_cell: bool = True) -> Cell:
         """Compute the product of the aggregate.
 
-        Returns:
-            Cell: a new cell with the result.
+        Args:
             skip_none_cell (bool): If true, skips all the cells with None as
                 a value (and does not raise exception).
+
+        Returns:
+            Cell: a new cell with the result.
         """
         if skip_none_cell:
             cell_subset = [nn_cell for nn_cell in self.cell_subset
@@ -86,10 +90,12 @@ class CellSlice(Serialization):
     def min(self, skip_none_cell: bool = True) -> Cell:
         """Find the minimum of the aggregate.
 
-        Returns:
-            Cell: a new cell with the result.
+        Args:
             skip_none_cell (bool): If true, skips all the cells with None as
                 a value (and does not raise exception).
+
+        Returns:
+            Cell: a new cell with the result.
         """
         if skip_none_cell:
             cell_subset = [nn_cell for nn_cell in self.cell_subset
@@ -101,10 +107,12 @@ class CellSlice(Serialization):
     def max(self, skip_none_cell: bool = True) -> Cell:
         """Find the maximum of the aggregate.
 
-        Returns:
-            Cell: a new cell with the result.
+        Args:
             skip_none_cell (bool): If true, skips all the cells with None as
                 a value (and does not raise exception).
+
+        Returns:
+            Cell: a new cell with the result.
         """
         if skip_none_cell:
             cell_subset = [nn_cell for nn_cell in self.cell_subset
@@ -116,10 +124,12 @@ class CellSlice(Serialization):
     def mean(self, skip_none_cell: bool = True) -> Cell:
         """Compute the mean-average of the aggregate.
 
-        Returns:
-            Cell: a new cell with the result.
+        Args:
             skip_none_cell (bool): If true, skips all the cells with None as
                 a value (and does not raise exception).
+
+        Returns:
+            Cell: a new cell with the result.
         """
         if skip_none_cell:
             cell_subset = [nn_cell for nn_cell in self.cell_subset
@@ -131,20 +141,24 @@ class CellSlice(Serialization):
     def average(self, skip_none_cell: bool = True) -> Cell:
         """Compute the mean-average of the aggregate.
 
-        Returns:
-            Cell: a new cell with the result.
+        Args:
             skip_none_cell (bool): If true, skips all the cells with None as
                 a value (and does not raise exception).
+
+        Returns:
+            Cell: a new cell with the result.
         """
         return self.mean(skip_none_cell=skip_none_cell)
 
     def stdev(self, skip_none_cell: bool = True) -> Cell:
         """Compute the standard deviation of the aggregate.
 
-        Returns:
-            Cell: a new cell with the result.
+        Args:
             skip_none_cell (bool): If true, skips all the cells with None as
                 a value (and does not raise exception).
+
+        Returns:
+            Cell: a new cell with the result.
         """
         if skip_none_cell:
             cell_subset = [nn_cell for nn_cell in self.cell_subset
@@ -156,10 +170,12 @@ class CellSlice(Serialization):
     def median(self, skip_none_cell: bool = True) -> Cell:
         """Compute the median of the aggregate.
 
-        Returns:
-            Cell: a new cell with the result.
+        Args:
             skip_none_cell (bool): If true, skips all the cells with None as
                 a value (and does not raise exception).
+
+        Returns:
+            Cell: a new cell with the result.
         """
         if skip_none_cell:
             cell_subset = [nn_cell for nn_cell in self.cell_subset
@@ -170,6 +186,23 @@ class CellSlice(Serialization):
 
     def count(self, skip_none_cell: bool = True) -> Cell:
         """Compute the number of items in the aggregate.
+
+        Args:
+            skip_none_cell (bool): If true, skips all the cells with None as
+                a value (and does not raise exception).
+
+        Returns:
+            Cell: a new cell with the result.
+        """
+        if skip_none_cell:
+            cell_subset = [nn_cell for nn_cell in self.cell_subset
+                           if nn_cell.value is not None]
+        else:
+            cell_subset = self.cell_subset
+        return Cell.count(self.start_cell, self.end_cell, cell_subset)
+
+    def irr(self, skip_none_cell: bool = True) -> Cell:
+        """Compute the Internal Rate of Return (IRR) of items in the aggregate.
 
         Returns:
             Cell: a new cell with the result.

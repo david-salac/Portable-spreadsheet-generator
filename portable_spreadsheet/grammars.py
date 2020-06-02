@@ -173,6 +173,10 @@ EXCEL = {
             "prefix": "COUNT(",
             "suffix": ")",
         },
+        "irr": {
+            "prefix": "IRR(",
+            "suffix": ")",
+        },
         # BASIC OPERATIONS
         "exponential": {
             "prefix": "EXP(",
@@ -447,6 +451,10 @@ NATIVE = {
         },
         "count": {
             "prefix": " number of items in the slice ",
+            "suffix": "",
+        },
+        "irr": {
+            "prefix": " Internal Rate of Return of ",
             "suffix": "",
         },
         # BASIC OPERATIONS
@@ -724,6 +732,10 @@ PYTHON_NUMPY = {
         "count": {
             "prefix": "((lambda var=",
             "suffix": ": var.shape[0] * var.shape[1])())",
+        },
+        "irr": {
+            "prefix": "npf.irr(",
+            "suffix": ")",
         },
         # BASIC OPERATIONS
         "exponential": {
@@ -1060,6 +1072,11 @@ GRAMMAR_PATTERN: dict = {
         },
         # Number of aggregated cells.
         "count": {
+            "prefix": str,
+            "suffix": str,
+        },
+        # Internal Rate of Return (IRR) of aggregated cells.
+        "irr": {
             "prefix": str,
             "suffix": str,
         },
