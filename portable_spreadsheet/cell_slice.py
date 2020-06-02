@@ -214,7 +214,7 @@ class CellSlice(Serialization):
                            if nn_cell.value is not None]
         else:
             cell_subset = self.cell_subset
-        return Cell.count(self.start_cell, self.end_cell, cell_subset)
+        return Cell.irr(self.start_cell, self.end_cell, cell_subset)
 
     @property
     def excel_format(self):
