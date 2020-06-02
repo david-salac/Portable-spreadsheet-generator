@@ -41,9 +41,9 @@ class CellIndices(object):
                 names.
             rows_help_text (List[str]): List of help texts for each row.
             columns_help_text (List[str]): List of help texts for each column.
-            excel_append_row_labels (bool): If True, one row is added
+            excel_append_row_labels (bool): If True, one column is added
                 on the beginning of the sheet as a offset for labels.
-            excel_append_column_labels (bool): If True, one column is added
+            excel_append_column_labels (bool): If True, one row is added
                 on the beginning of the sheet as a offset for labels.
             warning_logger (Optional[Callable[[str], None]]): Function that
                 logs the warnings (or None if skipped).
