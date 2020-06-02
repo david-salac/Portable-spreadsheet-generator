@@ -24,7 +24,8 @@ class CellIndices(object):
                  columns_labels: List[str] = None,
                  rows_help_text: List[str] = None,
                  columns_help_text: List[str] = None,
-                 excel_append_labels: bool = True,
+                 excel_append_row_labels: bool = True,
+                 excel_append_column_labels: bool = True,
                  warning_logger: Optional[Callable[[str], None]] = None
                  ):
         """Create cell indices object.
@@ -40,7 +41,9 @@ class CellIndices(object):
                 names.
             rows_help_text (List[str]): List of help texts for each row.
             columns_help_text (List[str]): List of help texts for each column.
-            excel_append_labels (bool): If True, one row and column is added
+            excel_append_row_labels (bool): If True, one row is added
+                on the beginning of the sheet as a offset for labels.
+            excel_append_column_labels (bool): If True, one column is added
                 on the beginning of the sheet as a offset for labels.
             warning_logger (Optional[Callable[[str], None]]): Function that
                 logs the warnings (or None if skipped).
@@ -96,19 +99,25 @@ class CellIndices(object):
         # -------------------
         self.number_of_rows: int = number_of_rows
         self.number_of_columns: int = number_of_columns
-        self.excel_append_labels: bool = excel_append_labels
+        self.excel_append_row_labels: bool = excel_append_row_labels
+        self.excel_append_column_labels: bool = excel_append_column_labels
         self.rows: T_lg_ar = {}
         self.columns: T_lg_ar = {}
         # Append the system languages
         for language, generator in cell_indices_generators.items():
             if language not in system_languages:
                 continue
-            offset = 0
-            if self.excel_append_labels and language == "excel":
-                offset = 1
+            offset_row = 0
+            offset_column = 0
+            if self.excel_append_row_labels and language == "excel":
+                offset_column = 1
+            if self.excel_append_column_labels and language == "excel":
+                offset_row = 1
+
             rows, cols = generator(self.number_of_rows,
                                    self.number_of_columns,
-                                   offset)
+                                   offset_row,
+                                   offset_column)
             self.rows[language] = rows
             self.columns[language] = cols
         # Append the not-system languages and user defined languages
@@ -214,15 +223,18 @@ class CellIndices(object):
         for language, generator in cell_indices_generators.items():
             if language not in system_languages:
                 continue
-            offset = 0
-            if expanded.excel_append_labels and language == "excel":
-                offset = 1
+            offset_row = 0
+            offset_column = 0
+            if expanded.excel_append_row_labels and language == "excel":
+                offset_column = 1
+            if expanded.excel_append_column_labels and language == "excel":
+                offset_row = 1
             rows, cols = generator(expanded.number_of_rows +
-                                   new_number_of_rows + offset,
+                                   new_number_of_rows + offset_row,
                                    expanded.number_of_columns +
-                                   new_number_of_columns + offset)
-            expanded.rows[language] = rows[offset:]
-            expanded.columns[language] = cols[offset:]
+                                   new_number_of_columns + offset_column)
+            expanded.rows[language] = rows[offset_row:]
+            expanded.columns[language] = cols[offset_column:]
         # Append rows to user defined languages
         for language, values in new_rows_columns.items():
             # Does the language include the last cell?

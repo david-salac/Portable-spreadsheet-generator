@@ -230,9 +230,12 @@ class Serialization(abc.ABC):
                 if cell.value is not None:
                     # Offset here is either 0 or 1, indicates if we writes
                     # row/column labels to the first row and column.
-                    offset = 0
-                    if self.cell_indices.excel_append_labels:
-                        offset = 1
+                    offset_row = 0
+                    offset_col = 0
+                    if self.cell_indices.excel_append_row_labels:
+                        offset_col = 1
+                    if self.cell_indices.excel_append_column_labels:
+                        offset_row = 1
                     # Excel format/style for the cell:
                     if len(cell.excel_format) > 0:
                         # Register the format
@@ -242,31 +245,32 @@ class Serialization(abc.ABC):
                     # Write actual data
                     if values_only or (cell.cell_type == CellType.value_only):
                         # If the cell is a value only, use method 'write'
-                        worksheet.write(row_idx + offset,
-                                        col_idx + offset,
+                        worksheet.write(row_idx + offset_row,
+                                        col_idx + offset_col,
                                         cell.value,
                                         cell_format)
                     else:
                         # If the cell is a formula, use method 'write_formula'
-                        worksheet.write_formula(row_idx + offset,
-                                                col_idx + offset,
+                        worksheet.write_formula(row_idx + offset_row,
+                                                col_idx + offset_col,
                                                 cell.parse['excel'],
                                                 value=cell.value,
                                                 cell_format=cell_format)
         # Add the labels for rows and columns
-        if self.cell_indices.excel_append_labels:
+        if self.cell_indices.excel_append_column_labels:
             # Add labels of column
             for col_idx in range(self.shape[1]):
                 worksheet.write(0,
-                                col_idx + 1,
+                                col_idx + int(self.cell_indices.excel_append_row_labels),
                                 self.cell_indices.columns_labels[
                                     # Reflect the export offset
                                     col_idx + self.export_offset[1]
                                 ].replace(' ', spaces_replacement),
                                 col_label_format)
+        if self.cell_indices.excel_append_row_labels:
             # Add labels for rows
             for row_idx in range(self.shape[0]):
-                worksheet.write(row_idx + 1,
+                worksheet.write(row_idx + int(self.cell_indices.excel_append_column_labels),
                                 0,
                                 self.cell_indices.rows_labels[
                                     # Reflect the export offset
