@@ -204,10 +204,12 @@ class CellSlice(Serialization):
     def irr(self, skip_none_cell: bool = True) -> Cell:
         """Compute the Internal Rate of Return (IRR) of items in the aggregate.
 
-        Returns:
-            Cell: a new cell with the result.
+        Args:
             skip_none_cell (bool): If true, skips all the cells with None as
                 a value (and does not raise exception).
+
+        Returns:
+            Cell: a new cell with the result.
         """
         if skip_none_cell:
             cell_subset = [nn_cell for nn_cell in self.cell_subset

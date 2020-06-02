@@ -261,7 +261,9 @@ class Serialization(abc.ABC):
             # Add labels of column
             for col_idx in range(self.shape[1]):
                 worksheet.write(0,
-                                col_idx + int(self.cell_indices.excel_append_row_labels),
+                                col_idx + int(
+                                    self.cell_indices.excel_append_row_labels
+                                ),
                                 self.cell_indices.columns_labels[
                                     # Reflect the export offset
                                     col_idx + self.export_offset[1]
@@ -270,7 +272,9 @@ class Serialization(abc.ABC):
         if self.cell_indices.excel_append_row_labels:
             # Add labels for rows
             for row_idx in range(self.shape[0]):
-                worksheet.write(row_idx + int(self.cell_indices.excel_append_column_labels),
+                worksheet.write(row_idx + int(
+                    self.cell_indices.excel_append_column_labels
+                ),
                                 0,
                                 self.cell_indices.rows_labels[
                                     # Reflect the export offset
@@ -768,8 +772,8 @@ class Serialization(abc.ABC):
             else:
                 if not skip_labels:
                     # Insert labels of rows
-                    if (help_text :=  # noqa 203
-                    self.cell_indices.rows_help_text) is not None:
+                    if (help_text :=  # noqa: 203
+                            self.cell_indices.rows_help_text) is not None:
                         title_attr = ' title="{}"'.format(
                             help_text[row_idx + self.export_offset[1]]
                         )
