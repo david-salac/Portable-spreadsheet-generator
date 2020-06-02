@@ -2,6 +2,7 @@ import unittest
 
 from typing import Callable, Collection
 
+import numpy_financial as npf
 import numpy as np
 
 from portable_spreadsheet.cell import Cell
@@ -570,6 +571,7 @@ class TestCellAggregationFunctionality(unittest.TestCase):
                          for i in range(1, 3 + 1)
                          for j in range(2, 5 + 1)
                          ]
+        self.cell_set[0]._value = -100
         self.cell_values = [self.cell_set[i].value
                             for i in range(self.slice_cardinality)]
 
@@ -662,6 +664,11 @@ class TestCellAggregationFunctionality(unittest.TestCase):
                                        "COUNT(", ")",
                                        "((lambda var=",
                                        ": var.shape[0] * var.shape[1])())")
+
+    def test_irr(self):
+        """Test the Internal Rate of Return (IRR)"""
+        self._check_aggregate_function(Cell.irr, npf.irr, "IRR(", ")",
+                                       "npf.irr(", ")")
 
 
 class TestCellUnaryFunctionality(unittest.TestCase):

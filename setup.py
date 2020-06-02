@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="portable-spreadsheet",
-    version="0.1.6",
+    version="0.1.7",
     author="David Salac",
     author_email="info@davidsalac.eu",
     description="Simple spreadsheet that keeps tracks of each operation in "
@@ -19,7 +19,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/david-salac/Portable-spreadsheet-generator",
     packages=setuptools.find_packages(),
-    install_requires=['numpy', 'XlsxWriter'],
+    install_requires=['numpy', 'numpy-financial', 'XlsxWriter'],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",

@@ -167,9 +167,11 @@ for column names.
 3. `rows_help_text (List[str])`: _(optional)_ List of help texts for each row.
 4. `columns_help_text (List[str])`: _(optional)_ List of help texts for each
 column.
-5. `excel_append_labels (bool)`: _(optional)_ If True, one row and
-column is added on the beginning of the sheet as an offset for labels.
-6. `warning_logger (Callable[[str], None]])`: Function that logs the warnings
+5. `excel_append_row_labels (bool)`: _(optional)_ If True, one column is added
+on the beginning of the sheet as a offset for labels.
+6. `excel_append_column_labels (bool)`: _(optional)_ If True, one row is
+added on the beginning of the sheet as a offset for labels.
+7. `warning_logger (Callable[[str], None]])`: Function that logs the warnings
 (or `None` if logging should be skipped).
 
 First two are the most important because they define labels for the columns
@@ -321,10 +323,14 @@ slice.
     For example: MEDIAN(7, 8, 9) = 8.
     Available as the function `median` called on the slice object.
     Usage: `sheet.iloc[i,j] = sheet.iloc[p:q,x:y].median()`
-7. **Count**: return the number of the cells in the slice. 
+8. **Count**: return the number of the cells in the slice. 
     For example: COUNT(7, 8, 9) = 3.
     Available as the function `count` called on the slice object.
     Usage: `sheet.iloc[i,j] = sheet.iloc[p:q,x:y].count()`
+9. **IRR**: return the Internal Rate of Return (IRR) of the cells in the slice. 
+    For example: IRR(-100, 0, 0, 74) = -0.0955.
+    Available as the function `irr` called on the slice object.
+    Usage: `sheet.iloc[i,j] = sheet.iloc[p:q,x:y].irr()`
 
 Aggregate functions always return the cell with the result.
 

@@ -34,7 +34,8 @@ class TestSerialization(unittest.TestCase):
             columns_labels=self.columns_labels,
             rows_help_text=self.rows_help_text,
             columns_help_text=self.columns_help_text,
-            excel_append_labels=True,
+            excel_append_row_labels=True,
+            excel_append_column_labels=True,
             warning_logger=lambda message: self.warnings.append(message)
         )
         self.sheet_shape = (self.nr_row, self.nr_col)
@@ -154,7 +155,8 @@ class TestSerializationToArrays(unittest.TestCase):
             columns_labels=self.columns_labels,
             rows_help_text=self.rows_help_text,
             columns_help_text=self.columns_help_text,
-            excel_append_labels=True,
+            excel_append_row_labels=True,
+            excel_append_column_labels=True,
             warning_logger=lambda message: self.warnings.append(message)
         )
         self.sheet_shape = (self.nr_row, self.nr_col)
@@ -197,7 +199,7 @@ class TestSerializationToArrays(unittest.TestCase):
         )
         # Check the language export
         sheet = copy.deepcopy(self.sheet)
-        sheet.iloc[0, 0] = sheet.iloc[0,1] * sheet.iloc[1,0]
+        sheet.iloc[0, 0] = sheet.iloc[0, 1] * sheet.iloc[1, 0]
         computed_2d_list = sheet.to_2d_list(skip_labels=True,
                                             language='excel')
         # Regression test

@@ -73,7 +73,8 @@ class Spreadsheet(Serialization):
             columns_labels: List[str] = None,
             rows_help_text: List[str] = None,
             columns_help_text: List[str] = None,
-            excel_append_labels: bool = True,
+            excel_append_row_labels: bool = True,
+            excel_append_column_labels: bool = True,
             warning_logger: Optional[Callable[[str], None]] = None
     ) -> 'Spreadsheet':
         """Direct way of creating instance.
@@ -89,22 +90,28 @@ class Spreadsheet(Serialization):
                 names.
             rows_help_text (List[str]): List of help texts for each row.
             columns_help_text (List[str]): List of help texts for each column.
-            excel_append_labels (bool): If True, one row and column is added
-                on the beginning of the sheet as an offset for labels.
+            excel_append_row_labels (bool): If True, one column is added
+                on the beginning of the sheet as a offset for labels.
+            excel_append_column_labels (bool): If True, one row is added
+                on the beginning of the sheet as a offset for labels.
             warning_logger (Optional[Callable[[str], None]]): Function that
                 logs the warnings (or None if skipped).
 
         Returns:
             Spreadsheet: New instance of spreadsheet.
         """
-        class_index = CellIndices(number_of_rows, number_of_columns,
-                                  rows_columns,
-                                  rows_labels=rows_labels,
-                                  columns_labels=columns_labels,
-                                  rows_help_text=rows_help_text,
-                                  columns_help_text=columns_help_text,
-                                  excel_append_labels=excel_append_labels,
-                                  warning_logger=warning_logger)
+        class_index = CellIndices(
+            number_of_rows,
+            number_of_columns,
+            rows_columns,
+            rows_labels=rows_labels,
+            columns_labels=columns_labels,
+            rows_help_text=rows_help_text,
+            columns_help_text=columns_help_text,
+            excel_append_row_labels=excel_append_row_labels,
+            excel_append_column_labels=excel_append_column_labels,
+            warning_logger=warning_logger
+        )
         return Spreadsheet(class_index, warning_logger)
 
     def _initialise_array(self) -> T_sheet:
