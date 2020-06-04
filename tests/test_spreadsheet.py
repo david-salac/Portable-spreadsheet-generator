@@ -35,7 +35,8 @@ class TestSpreadsheetBasicFunctionality(unittest.TestCase):
             columns_labels=self.columns_labels,
             rows_help_text=self.rows_help_text,
             columns_help_text=self.columns_help_text,
-            excel_append_labels=True,
+            excel_append_row_labels=True,
+            excel_append_column_labels=True,
             warning_logger=lambda message: self.warnings.append(message)
         )
         self.sheet_shape = (self.nr_row, self.nr_col)
@@ -121,7 +122,7 @@ class TestSpreadsheetBasicFunctionality(unittest.TestCase):
         )
         self.assertListEqual(
             cell_indices.columns['excel'],
-            excel_generator(1, self.nr_col + expand_col, 1)[1]
+            excel_generator(1, self.nr_col + expand_col, 1, 1)[1]
         )
         # Check variables of cell index
         self.assertListEqual(cell_indices.rows_labels,
@@ -149,8 +150,8 @@ class TestSpreadsheetBasicFunctionality(unittest.TestCase):
         self.assertListEqual(cell_indices.columns['python_numpy'],
                              [str(i) for i in range(0, self.nr_col + 1)])
         self.assertListEqual(cell_indices.columns['excel'],
-                             excel_generator(1, self.nr_col, 1)[1])
-        self.assertListEqual(excel_generator(1, 5, 1)[1],
+                             excel_generator(1, self.nr_col, 1, 1)[1])
+        self.assertListEqual(excel_generator(1, 5, 1, 1)[1],
                              ["B", "C", "D", "E", "F"])
         # Check variables of cell index
         self.assertListEqual(cell_indices.rows_labels, self.rows_labels)

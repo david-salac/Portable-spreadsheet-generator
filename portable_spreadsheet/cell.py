@@ -1,6 +1,7 @@
 from typing import Dict, Optional, Iterable, Tuple, Callable
 
 import numpy as np
+import numpy_financial as npf
 
 from .word_constructor import WordConstructor
 from .cell_type import CellType
@@ -675,6 +676,22 @@ class Cell(object):
         """
         return Cell._aggregate_fun(cell_start, cell_end, subset,
                                    'count', len)
+
+    @staticmethod
+    def irr(cell_start: 'Cell', cell_end: 'Cell',
+            subset: Iterable['Cell']) -> 'Cell':
+        """Compute the Internal Rate of Return (IRR) of items in slice.
+
+        Args:
+            cell_start (Cell): Starting cell of the slice (left top).
+            cell_end: (Cell'): Ending cell of the slice (bottom right).
+            subset (Iterable['Cell']): List of all cells in the subset.
+
+        Returns:
+            Cell: return the Internal Rate of Return (IRR) of slice.
+        """
+        return Cell._aggregate_fun(cell_start, cell_end, subset,
+                                   'irr', npf.irr)
 
     @staticmethod
     def _aggregate_fun(
