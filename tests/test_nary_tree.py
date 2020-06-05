@@ -92,3 +92,23 @@ class TestNaryTree(unittest.TestCase):
         self.assertTupleEqual(path, ((1, 0), (0, 0)))
         self.assertEqual(len(tree[1, 0]), 0)
         self.assertEqual(len(tree[0, 1]), 2)
+
+    def test_delete_row_and_column(self):
+        """Test deleting of the whole row and column in the tree."""
+        # Delete row
+        tree = copy.deepcopy(self.tree)
+        # Delete arbitrary row
+        tree.delete_row(1)
+        self.assertEqual(len(tree), 1)
+        self.assertEqual(tree[0, 1].coordinates, (0, 1))
+        self.assertEqual(len(tree[0, 1]), 2)
+        self.assertEqual(len(tree[0, 1][6, 8]), 0)
+        self.assertEqual(len(tree[0, 1][8, 10]), 0)
+
+        # Delete column
+        tree = copy.deepcopy(self.tree)
+        # Delete arbitrary column
+        tree.delete_column(1)
+        self.assertEqual(len(tree), 1)
+        self.assertEqual(tree[1, 0].coordinates, (1, 0))
+        self.assertEqual(len(tree[1, 0]), 0)

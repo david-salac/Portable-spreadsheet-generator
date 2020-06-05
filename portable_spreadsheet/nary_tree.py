@@ -62,10 +62,12 @@ class NaryTree(object):
 
         # True if anything in the branch is deleted (or node itself is deleted)
         cell_mod = (tree_root.index_row == index_row and
-                    tree_root.index_col == index_col)
+                    tree_root.index_col == index_col) or \
+                   (delete_col and tree_root.index_col == index_col) or \
+                   (delete_col and tree_root.index_col == index_col)
 
         # Delete leaf from children
-        leaf_to_delete = None
+        nodes_to_delete = []
         # Probe all children of the current node
         for child in tree_root.children:
             # Recursive step
@@ -81,15 +83,18 @@ class NaryTree(object):
                     child_mod.append(child_series)
 
             # Ask to delete cell from the tree
-            if child.index_col == index_col and child.index_row == index_row:
-                leaf_to_delete = child
+            if (child.index_col == index_col and
+                    child.index_row == index_row) or \
+                    (delete_col and child.index_col == index_col) or \
+                    (delete_row and child.index_row == index_row):
+                nodes_to_delete += [child]
 
             # Append to the list
             list_of_children += child_mod
 
         # Delete leaf from the tree
-        if leaf_to_delete is not None:
-            tree_root.children.discard(leaf_to_delete)
+        for node_to_delete in nodes_to_delete:
+            tree_root.children.discard(node_to_delete)
 
         # Move indices if deleted index is set and greater than current one
         indices_move = [int(delete_row and tree_root.index_row > index_row),
@@ -106,8 +111,8 @@ class NaryTree(object):
             index_row: int,
             index_col: int,
             *,
-            delete_row: bool = False,
-            delete_col: bool = False
+            _delete_row: bool = False,
+            _delete_col: bool = False
     ) -> Tuple[Tuple[int, int]]:
         """Delete row or column and return the list of cell indices
             be updated sorted from lower (leaves) priority -> upper (root)
@@ -116,8 +121,8 @@ class NaryTree(object):
         Args:
             index_row (int): Cell's integer position of deleted row.
             index_col (int): Cell's integer position of deleted column.
-            delete_row (bool): True if the user wants to delete row.
-            delete_col (bool): True if the user wants to delete column.
+            _delete_row (bool): True if the whole row is deleted.
+            _delete_col (bool): True if the whole column is deleted.
 
         Returns:
             Tuple[Tuple[int, int]]: Tuple of tuples with indices of
@@ -126,7 +131,7 @@ class NaryTree(object):
         # Return all the indices of cells that has to be updated and skip
         #   the index of the cell that is being deleted
         return tuple([cell_i[2] for cell_i in self._delete_recursion(
-            self, index_row, index_col, delete_row, delete_col
+            self, index_row, index_col, _delete_row, _delete_col
         )
                       if cell_i[2] != (index_row, index_col)
                       ])
@@ -143,6 +148,24 @@ class NaryTree(object):
         if not isinstance(child, NaryTree):
             raise ValueError("The argument 'child' must be of NaryTree type!")
         self.children.add(copy.deepcopy(child))
+
+    def delete_row(self, row_index: int) -> None:
+        """Delete whole row.
+
+        Args:
+            row_index (int): Position (integer indexed from zero) of row.
+        """
+        # 2 ^ 30 is the arbitrary big constant (sheet cannot have 2^30 cells)
+        self.delete(row_index, 2 ** 30, _delete_row=True)
+
+    def delete_column(self, column_index: int) -> None:
+        """Delete whole column.
+
+        Args:
+            column_index (int): Position (integer indexed from zero) of column.
+        """
+        # 2 ^ 30 is the arbitrary big constant (sheet cannot have 2^30 cells)
+        self.delete(2 ** 30, column_index, _delete_col=True)
 
     # ======================= OVERLOADED OPERATORS ============================
     def __len__(self) -> int:
