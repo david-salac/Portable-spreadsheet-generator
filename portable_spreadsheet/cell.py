@@ -6,6 +6,7 @@ import numpy_financial as npf
 from .word_constructor import WordConstructor
 from .cell_type import CellType
 from .cell_indices import CellIndices
+from .nary_tree import NaryTree
 
 
 class Cell(object):
@@ -27,6 +28,9 @@ class Cell(object):
         _excel_format (dict): Dictionary defining the Excel format style
             for the cell.
         _description (Optional[str]): Optional description of the cell.
+        _operations_tree (NaryTree): n-ary tree describing relations of the
+            cell with other cells. Created, perforce, for implementing deleting
+            cells and rows/columns.
     """
     def __init__(self,
                  row: Optional[int] = None,
@@ -38,6 +42,7 @@ class Cell(object):
                  words: Optional[WordConstructor] = None,
                  is_variable: bool = False,
                  variable_name: Optional[str] = None,
+                 operations_tree: Optional[NaryTree] = None
                  ):
         """Create single cell.
 
@@ -54,6 +59,9 @@ class Cell(object):
                 in each language. Do not use this argument directly.
             is_variable (bool): If True, cell is considered to be a variable.
             variable_name (Optional[str]): The name of variable.
+            operations_tree (NaryTree): n-ary tree describing relations of the
+                cell with other cells. Created, perforce, for implementing
+                deleting cells and rows/columns.
         """
         if row is not None and column is None \
                 or row is None and column is not None:
@@ -68,6 +76,11 @@ class Cell(object):
         self.variable_name: Optional[str] = variable_name
         self._excel_format: dict = {}
         self._description: Optional[str] = None
+
+        if operations_tree is None:
+            self._operations_tree: NaryTree = NaryTree(row, column)
+        else:
+            self._operations_tree: NaryTree = operations_tree
 
         if words is not None:
             self._constructing_words: WordConstructor = words
@@ -140,8 +153,11 @@ class Cell(object):
         Args:
             coordinates (Tuple[int, int]): New coordinates index (row, column)
         """
+        # Update coordinates of the Cell
         self.row = coordinates[0]
         self.column = coordinates[1]
+        # Update coordinates of the tree
+        self._operations_tree.coordinates = coordinates
 
     @property
     def value(self) -> float:
@@ -253,9 +269,45 @@ class Cell(object):
         consistent, affects = \
             self.constructing_words.delete(row_index, column_index)
         return consistent
+
+    @property
+    def operations_tree(self) -> NaryTree:
+        """Return the cell tree describing relations between operations.
+
+        Returns:
+            NaryTree: cell tree describing relations between operations.
+        """
+        return self._operations_tree
     # =====================================
 
     # === BINARY OPERATORS: ===
+    def _binary_operation(self,
+                          other: 'Cell',
+                          python_operation: Callable[[object], object],
+                          word_constructor_method: Callable[['Cell', 'Cell'],
+                                                            WordConstructor]
+                          ) -> 'Cell':
+        """Generic binary operation.
+
+        Args:
+            other (Cell): Another operand besides of cell for the binary
+                operation.
+            python_operation (Callable[[object], object]): Function in Python
+                that does required operation (typically some lambda expression)
+            word_constructor_method (Callable[['Cell', 'Cell'],
+                WordConstructor]): Method in WordConstructor class that creates
+                words for given operation.
+
+        Returns:
+            Cell: Computational type of Cell class with result.
+        """
+        return Cell(value=python_operation(self.value, other.value),
+                    words=word_constructor_method(self, other),
+                    cell_indices=other.cell_indices,
+                    cell_type=CellType.computational,
+                    operations_tree=NaryTree.construct(self, other)
+                    )
+
     def add(self, other: 'Cell', /) -> 'Cell':  # noqa: E225
         """Add two values.
 
@@ -265,11 +317,9 @@ class Cell(object):
         Returns:
             Cell: self + other
         """
-        return Cell(value=self.value + other.value,
-                    words=WordConstructor.add(self, other),
-                    cell_indices=other.cell_indices,
-                    cell_type=CellType.computational
-                    )
+        return self._binary_operation(other,
+                                      lambda a, b: a + b,
+                                      WordConstructor.add)
 
     def subtract(self, other: 'Cell', /) -> 'Cell':  # noqa: E225
         """Subtract two values.
@@ -280,11 +330,9 @@ class Cell(object):
         Returns:
             Cell: self - other
         """
-        return Cell(value=self.value - other.value,
-                    words=WordConstructor.subtract(self, other),
-                    cell_indices=other.cell_indices,
-                    cell_type=CellType.computational
-                    )
+        return self._binary_operation(other,
+                                      lambda a, b: a - b,
+                                      WordConstructor.subtract)
 
     def multiply(self, other: 'Cell', /) -> 'Cell':  # noqa: E225
         """Multiply two values.
@@ -295,11 +343,9 @@ class Cell(object):
         Returns:
             Cell: self * other
         """
-        return Cell(value=self.value * other.value,
-                    words=WordConstructor.multiply(self, other),
-                    cell_indices=other.cell_indices,
-                    cell_type=CellType.computational
-                    )
+        return self._binary_operation(other,
+                                      lambda a, b: a * b,
+                                      WordConstructor.multiply)
 
     def divide(self, other: 'Cell', /) -> 'Cell':  # noqa: E225
         """Divide two values.
@@ -310,11 +356,9 @@ class Cell(object):
         Returns:
             Cell: self / other
         """
-        return Cell(value=self.value / other.value,
-                    words=WordConstructor.divide(self, other),
-                    cell_indices=other.cell_indices,
-                    cell_type=CellType.computational
-                    )
+        return self._binary_operation(other,
+                                      lambda a, b: a / b,
+                                      WordConstructor.divide)
 
     def modulo(self, other: 'Cell', /) -> 'Cell':  # noqa: E225
         """Modulo of two values.
@@ -325,11 +369,9 @@ class Cell(object):
         Returns:
             Cell: self / other
         """
-        return Cell(value=self.value % other.value,
-                    words=WordConstructor.modulo(self, other),
-                    cell_indices=other.cell_indices,
-                    cell_type=CellType.computational
-                    )
+        return self._binary_operation(other,
+                                      lambda a, b: a % b,
+                                      WordConstructor.modulo)
 
     def power(self, other: 'Cell', /) -> 'Cell':  # noqa: E225
         """Self power to other.
@@ -340,11 +382,9 @@ class Cell(object):
         Returns:
             Cell: self ** other
         """
-        return Cell(value=self.value ** other.value,
-                    words=WordConstructor.power(self, other),
-                    cell_indices=other.cell_indices,
-                    cell_type=CellType.computational
-                    )
+        return self._binary_operation(other,
+                                      lambda a, b: a ** b,
+                                      WordConstructor.power)
 
     def equalTo(self, other: 'Cell', /) -> 'Cell':  # noqa: E225
         """Boolean equal operator.
@@ -355,11 +395,9 @@ class Cell(object):
         Returns:
             Cell: self equal to other
         """
-        return Cell(value=self.value == other.value,
-                    words=WordConstructor.equalTo(self, other),
-                    cell_indices=other.cell_indices,
-                    cell_type=CellType.computational
-                    )
+        return self._binary_operation(other,
+                                      lambda a, b: a == b,
+                                      WordConstructor.equalTo)
 
     def notEqualTo(self, other: 'Cell', /) -> 'Cell':  # noqa: E225
         """Boolean not equal operator.
@@ -370,11 +408,9 @@ class Cell(object):
         Returns:
             Cell: self not equal to other
         """
-        return Cell(value=self.value != other.value,
-                    words=WordConstructor.notEqualTo(self, other),
-                    cell_indices=other.cell_indices,
-                    cell_type=CellType.computational
-                    )
+        return self._binary_operation(other,
+                                      lambda a, b: a != b,
+                                      WordConstructor.notEqualTo)
 
     def greaterThan(self, other: 'Cell', /) -> 'Cell':  # noqa: E225
         """Boolean greater than operator.
@@ -385,11 +421,9 @@ class Cell(object):
         Returns:
             Cell: self greater than other
         """
-        return Cell(value=self.value > other.value,
-                    words=WordConstructor.greaterThan(self, other),
-                    cell_indices=other.cell_indices,
-                    cell_type=CellType.computational
-                    )
+        return self._binary_operation(other,
+                                      lambda a, b: a > b,
+                                      WordConstructor.greaterThan)
 
     def greaterThanOrEqualTo(self, other: 'Cell', /) -> 'Cell':  # noqa: E225
         """Boolean greater than or equal to operator.
@@ -400,11 +434,9 @@ class Cell(object):
         Returns:
             Cell: self greater than or equal to other
         """
-        return Cell(value=self.value >= other.value,
-                    words=WordConstructor.greaterThanOrEqualTo(self, other),
-                    cell_indices=other.cell_indices,
-                    cell_type=CellType.computational
-                    )
+        return self._binary_operation(other,
+                                      lambda a, b: a >= b,
+                                      WordConstructor.greaterThanOrEqualTo)
 
     def lessThan(self, other: 'Cell', /) -> 'Cell':  # noqa: E225
         """Boolean less than operator.
@@ -415,11 +447,9 @@ class Cell(object):
         Returns:
             Cell: self less than other
         """
-        return Cell(value=self.value < other.value,
-                    words=WordConstructor.lessThan(self, other),
-                    cell_indices=other.cell_indices,
-                    cell_type=CellType.computational
-                    )
+        return self._binary_operation(other,
+                                      lambda a, b: a < b,
+                                      WordConstructor.lessThan)
 
     def lessThanOrEqualTo(self, other: 'Cell', /) -> 'Cell':  # noqa: E225
         """Boolean less than or equal to operator.
@@ -430,11 +460,9 @@ class Cell(object):
         Returns:
             Cell: self less than or equal to other
         """
-        return Cell(value=self.value <= other.value,
-                    words=WordConstructor.lessThanOrEqualTo(self, other),
-                    cell_indices=other.cell_indices,
-                    cell_type=CellType.computational
-                    )
+        return self._binary_operation(other,
+                                      lambda a, b: a <= b,
+                                      WordConstructor.lessThanOrEqualTo)
 
     def logicalConjunction(self, other: 'Cell', /) -> 'Cell':  # noqa: E225
         """Logical conjunction operator.
@@ -445,11 +473,9 @@ class Cell(object):
         Returns:
             Cell: self and other
         """
-        return Cell(value=self.value and other.value,
-                    words=WordConstructor.logicalConjunction(self, other),
-                    cell_indices=other.cell_indices,
-                    cell_type=CellType.computational
-                    )
+        return self._binary_operation(other,
+                                      lambda a, b: a and b,
+                                      WordConstructor.logicalConjunction)
 
     def logicalDisjunction(self, other: 'Cell', /) -> 'Cell':  # noqa: E225
         """Logical disjunction operator.
@@ -460,11 +486,9 @@ class Cell(object):
         Returns:
             Cell: self or other
         """
-        return Cell(value=self.value or other.value,
-                    words=WordConstructor.logicalDisjunction(self, other),
-                    cell_indices=other.cell_indices,
-                    cell_type=CellType.computational
-                    )
+        return self._binary_operation(other,
+                                      lambda a, b: a or b,
+                                      WordConstructor.logicalDisjunction)
 
     def concatenate(self, other: 'Cell', /) -> 'Cell':  # noqa: E225
         """Concatenate two values as strings.
@@ -475,11 +499,9 @@ class Cell(object):
         Returns:
             Cell: self concatenate with other
         """
-        return Cell(value=str(self.value) + str(other.value),
-                    words=WordConstructor.concatenate(self, other),
-                    cell_indices=other.cell_indices,
-                    cell_type=CellType.computational
-                    )
+        return self._binary_operation(other,
+                                      lambda a, b: str(a) + str(b),
+                                      WordConstructor.concatenate)
     # =========================
 
     # ==== OPERATOR OVERLOADING ====
@@ -725,11 +747,37 @@ class Cell(object):
                         cell_start, cell_end, grammar_method
                     ),
                     cell_indices=cell_start.cell_indices,
-                    cell_type=CellType.computational
+                    cell_type=CellType.computational,
+                    operations_tree=NaryTree.construct(*subset)
                     )
     # ===========================
 
     # === UNARY OPERATORS: ===
+    @staticmethod
+    def _unary_operation(other: 'Cell',
+                         python_operation: Callable[[object], object],
+                         word_constructor_method: Callable[['Cell'],
+                                                           WordConstructor]
+                         ) -> 'Cell':
+        """General unary operation
+
+        Args:
+            other (Cell): Cell for the unary operation.
+            python_operation (Callable[[object], object]): Function
+                that computes result in pure Python (typically lambda).
+            word_constructor_method (Callable[['Cell'], WordConstructor]):
+                Method of the WordConstructor class that construct the word.
+
+        Returns:
+            Cell: Result after applying the unary operation.
+        """
+        return Cell(value=python_operation(other.value),
+                    words=word_constructor_method(other),
+                    cell_indices=other.cell_indices,
+                    cell_type=CellType.computational,
+                    operations_tree=NaryTree.construct(other)
+                    )
+
     @staticmethod
     def reference(other: 'Cell', /) -> 'Cell':  # noqa E225
         """Create a reference to some anchored cell.
@@ -743,29 +791,9 @@ class Cell(object):
         if not other.anchored:
             raise ValueError("The referenced cell has to be anchored.")
 
-        return Cell(value=other.value,
-                    words=WordConstructor.reference(other),
-                    cell_indices=other.cell_indices,
-                    cell_type=CellType.computational
-                    )
-
-    @staticmethod
-    def raw(other: 'Cell', words: Dict[str, str], /) -> 'Cell':  # noqa: E225
-        """Add the raw statement and use the value of input cell.
-
-        Args:
-            other (Cell): Input cell that defines value and type of output.
-            words (Dict[str, str]): Word for each language (language is a key,
-                word is a value)
-
-        Returns:
-            Cell: Expression with defined word
-        """
-        return Cell(value=other.value,
-                    words=WordConstructor.raw(other, words),
-                    cell_indices=other.cell_indices,
-                    cell_type=CellType.computational
-                    )
+        return Cell._unary_operation(other,
+                                     lambda x: x,
+                                     WordConstructor.reference)
 
     @staticmethod
     def variable(other: 'Cell', /) -> 'Cell':  # noqa E225
@@ -779,11 +807,10 @@ class Cell(object):
         """
         if not other.is_variable:
             raise ValueError("Only the variable type cell is accepted!")
-        return Cell(value=other.value,
-                    words=WordConstructor.variable(other),
-                    cell_indices=other.cell_indices,
-                    cell_type=CellType.computational
-                    )
+
+        return Cell._unary_operation(other,
+                                     lambda x: x,
+                                     WordConstructor.variable)
 
     @staticmethod
     def brackets(other: 'Cell', /) -> 'Cell':  # noqa E225
@@ -795,11 +822,9 @@ class Cell(object):
         Returns:
             Cell: Expression in brackets
         """
-        return Cell(value=other.value,
-                    words=WordConstructor.brackets(other),
-                    cell_indices=other.cell_indices,
-                    cell_type=CellType.computational
-                    )
+        return Cell._unary_operation(other,
+                                     lambda x: x,
+                                     WordConstructor.brackets)
 
     @staticmethod
     def logarithm(other: 'Cell', /) -> 'Cell':  # noqa E225
@@ -811,11 +836,9 @@ class Cell(object):
         Returns:
             Cell: logarithm of the value
         """
-        return Cell(value=np.log(other.value),
-                    words=WordConstructor.logarithm(other),
-                    cell_indices=other.cell_indices,
-                    cell_type=CellType.computational
-                    )
+        return Cell._unary_operation(other,
+                                     lambda x: np.log(x),
+                                     WordConstructor.logarithm)
 
     @staticmethod
     def exponential(other: 'Cell', /) -> 'Cell':  # noqa E225
@@ -827,11 +850,9 @@ class Cell(object):
         Returns:
             Cell: exponential of the value
         """
-        return Cell(value=np.exp(other.value),
-                    words=WordConstructor.exponential(other),
-                    cell_indices=other.cell_indices,
-                    cell_type=CellType.computational
-                    )
+        return Cell._unary_operation(other,
+                                     lambda x: np.exp(x),
+                                     WordConstructor.exponential)
 
     @staticmethod
     def ceil(other: 'Cell', /) -> 'Cell':  # noqa E225
@@ -843,11 +864,9 @@ class Cell(object):
         Returns:
             Cell: ceiling function value of the input
         """
-        return Cell(value=np.ceil(other.value),
-                    words=WordConstructor.ceil(other),
-                    cell_indices=other.cell_indices,
-                    cell_type=CellType.computational
-                    )
+        return Cell._unary_operation(other,
+                                     lambda x: np.ceil(x),
+                                     WordConstructor.ceil)
 
     @staticmethod
     def floor(other: 'Cell', /) -> 'Cell':  # noqa E225
@@ -859,11 +878,9 @@ class Cell(object):
         Returns:
             Cell: floor function value of the input
         """
-        return Cell(value=np.floor(other.value),
-                    words=WordConstructor.floor(other),
-                    cell_indices=other.cell_indices,
-                    cell_type=CellType.computational
-                    )
+        return Cell._unary_operation(other,
+                                     lambda x: np.floor(x),
+                                     WordConstructor.floor)
 
     @staticmethod
     def round(other: 'Cell', /) -> 'Cell':  # noqa E225
@@ -875,11 +892,9 @@ class Cell(object):
         Returns:
             Cell: round of the input numeric value
         """
-        return Cell(value=np.round(other.value),
-                    words=WordConstructor.round(other),
-                    cell_indices=other.cell_indices,
-                    cell_type=CellType.computational
-                    )
+        return Cell._unary_operation(other,
+                                     lambda x: np.round(x),
+                                     WordConstructor.round)
 
     @staticmethod
     def abs(other: 'Cell', /) -> 'Cell':  # noqa E225
@@ -891,11 +906,9 @@ class Cell(object):
         Returns:
             Cell: absolute value of the input numeric value
         """
-        return Cell(value=np.abs(other.value),
-                    words=WordConstructor.abs(other),
-                    cell_indices=other.cell_indices,
-                    cell_type=CellType.computational
-                    )
+        return Cell._unary_operation(other,
+                                     lambda x: np.abs(x),
+                                     WordConstructor.abs)
 
     @staticmethod
     def sqrt(other: 'Cell', /) -> 'Cell':  # noqa E225
@@ -907,11 +920,9 @@ class Cell(object):
         Returns:
             Cell: square root of the input numeric value
         """
-        return Cell(value=np.sqrt(other.value),
-                    words=WordConstructor.sqrt(other),
-                    cell_indices=other.cell_indices,
-                    cell_type=CellType.computational
-                    )
+        return Cell._unary_operation(other,
+                                     lambda x: np.sqrt(x),
+                                     WordConstructor.sqrt)
 
     @staticmethod
     def signum(other: 'Cell', /) -> 'Cell':  # noqa E225
@@ -923,11 +934,9 @@ class Cell(object):
         Returns:
             Cell: signum of the input numeric value
         """
-        return Cell(value=np.sign(other.value),
-                    words=WordConstructor.signum(other),
-                    cell_indices=other.cell_indices,
-                    cell_type=CellType.computational
-                    )
+        return Cell._unary_operation(other,
+                                     lambda x: np.sign(x),
+                                     WordConstructor.signum)
 
     @staticmethod
     def logicalNegation(other: 'Cell', /) -> 'Cell':  # noqa E225
@@ -939,11 +948,9 @@ class Cell(object):
         Returns:
             Cell: logical negation the input value
         """
-        return Cell(value=not other.value,
-                    words=WordConstructor.logicalNegation(other),
-                    cell_indices=other.cell_indices,
-                    cell_type=CellType.computational
-                    )
+        return Cell._unary_operation(other,
+                                     lambda x: not (x),
+                                     WordConstructor.logicalNegation)
     # ========================
 
     # === Conditional (if-then-else statement) ===
@@ -973,7 +980,9 @@ class Cell(object):
                         condition, consequent, alternative
                     ),
                     cell_indices=condition.cell_indices,
-                    cell_type=CellType.computational
+                    cell_type=CellType.computational,
+                    operations_tree=NaryTree.construct(consequent,
+                                                       condition, alternative)
                     )
     # ============================================
 
@@ -1009,6 +1018,29 @@ class Cell(object):
                         reference, row_skip, column_skip
                     ),
                     cell_indices=reference.cell_indices,
-                    cell_type=CellType.computational
+                    cell_type=CellType.computational,
+                    operations_tree=NaryTree.construct(reference, row_skip,
+                                                       column_skip, target)
                     )
     # ==============
+
+    # ==== RAW STATEMENT ====
+    @staticmethod
+    def raw(other: 'Cell', words: Dict[str, str], /) -> 'Cell':  # noqa: E225
+        """Add the raw statement and use the value of input cell.
+
+        Args:
+            other (Cell): Input cell that defines value and type of output.
+            words (Dict[str, str]): Word for each language (language is a key,
+                word is a value)
+
+        Returns:
+            Cell: Expression with defined word
+        """
+        return Cell(value=other.value,
+                    words=WordConstructor.raw(other, words),
+                    cell_indices=other.cell_indices,
+                    cell_type=CellType.computational,
+                    operations_tree=NaryTree.construct(other)
+                    )
+    # =======================

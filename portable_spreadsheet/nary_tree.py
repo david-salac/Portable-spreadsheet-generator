@@ -1,5 +1,5 @@
 import copy
-from typing import Set, Tuple, List
+from typing import Set, Tuple, List, Optional
 
 
 class NaryTree(object):
@@ -7,20 +7,25 @@ class NaryTree(object):
 
     Attributes:
         children (Set[NaryTree]): Children (sub-nodes) of the current node.
-        index_row (int): Row index of the node.
-        index_col (int): Column index of the node.
+        index_row (Optional[int]): Row index of the node or None for
+            the computational nodes.
+        index_col (Optional[int]): Column index of the node or None for
+            the computational nodes.
     """
 
-    def __init__(self, index_row: int, index_col: int):
+    def __init__(self,
+                 index_row: Optional[int] = None,
+                 index_col: Optional[int] = None):
         """Initialize the new node.
 
         Args:
-            index_row (int): Row index of the node.
-            index_col (int): Column index of the node.
+            index_row (Optional[int]): Row index of the node or None for
+                the computational nodes.
+            index_col (Optional[int]): Column index of the node or None for
+                the computational nodes.
         """
         self.children: Set[NaryTree] = set([])
-        self.index_row: int = index_row
-        self.index_col: int = index_col
+        self.coordinates = (index_row, index_col)
 
     @property
     def coordinates(self) -> Tuple[int, int]:
@@ -30,6 +35,24 @@ class NaryTree(object):
             Tuple[int, int]: 1) row index, 2) column index
         """
         return self.index_row, self.index_col
+
+    @coordinates.setter
+    def coordinates(self, new_coordinates: Tuple[int, int]) -> None:
+        """Set the coordinates of the cell.
+
+        Args:
+            new_coordinates (Tuple[int, int]): 1) row index, 2) column index
+        """
+        set_coordinates = None
+        if new_coordinates[0] is None and new_coordinates[1] is None:
+            set_coordinates = (-1, -1)
+        elif (new_coordinates[0] is not None and new_coordinates[0] >= 0
+              and new_coordinates[1] is not None and new_coordinates[1] >= 0):
+            set_coordinates = new_coordinates
+        if set_coordinates is None:
+            raise ValueError("Both coordinates has to be either none "
+                             "or non-negative integers.")
+        self.index_row, self.index_col = set_coordinates
 
     def _delete_recursion(
             self,
@@ -287,3 +310,18 @@ class NaryTree(object):
                 return child
         raise KeyError("Index is not in the list!")
     # =========================================================================
+
+    @staticmethod
+    def construct(*cells) -> 'NaryTree':
+        """Factory for constructing a tree from cells as operators.
+
+        Args:
+            *cells (List[Cell]): List of cells that figures as operands.
+
+        Returns:
+            NaryTree: Construction of the tree for given operands.
+        """
+        tree = NaryTree()
+        for cell in cells:
+            tree << cell.operations_tree
+        return tree

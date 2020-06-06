@@ -82,7 +82,7 @@ class TestNaryTree(unittest.TestCase):
         self.assertEqual(len(tree[1, 0]), 1)
         self.assertEqual(len(tree[1, 0][3, 2]), 3)
         self.assertSetEqual(
-            set([ch.coordinates for ch in tree[1, 0][3, 2].children]),
+            {ch.coordinates for ch in tree[1, 0][3, 2].children},
             {(8, 2), (10, 2), (7, 2)}
         )
 
