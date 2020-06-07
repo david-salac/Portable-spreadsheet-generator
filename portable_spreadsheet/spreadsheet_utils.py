@@ -1,4 +1,4 @@
-from typing import Dict, Union, Optional
+from typing import Dict, Union, Optional, Tuple
 import re
 import copy
 from numbers import Number
@@ -27,7 +27,7 @@ class _Location(object):
         Args:
             spreadsheet (Spreadsheet): Reference to spreadsheet instance.
             by_integer (bool): If True, indices are computed using integer
-            value, if False, labels (aliases, typically string) are used.
+                value, if False, labels (aliases, typically string) are used.
         """
         self.spreadsheet = spreadsheet
         self.by_integer: str = by_integer
@@ -41,15 +41,11 @@ class _Location(object):
         """
         has_slice = isinstance(index[0], slice) or isinstance(index[1], slice)
         if not has_slice:
-            if self.by_integer:
-                self.spreadsheet._set_item(val, index, None)
-            else:
-                self.spreadsheet._set_item(val, None, index)
+            index_p = self._parse_indices(index, has_slice)
+            return self.spreadsheet._set_item(val, index_p)
         else:
-            if self.by_integer:
-                return self.spreadsheet._set_slice(val, index, None)
-            else:
-                return self.spreadsheet._set_slice(val, None, index)
+            index_p = self._parse_indices(index, has_slice)
+            return self.spreadsheet._set_slice(val, index_p)
 
     def __getitem__(self, index):
         """Get the item from the slice or single value.
@@ -59,15 +55,171 @@ class _Location(object):
         """
         has_slice = isinstance(index[0], slice) or isinstance(index[1], slice)
         if not has_slice:
-            if self.by_integer:
-                return self.spreadsheet._get_item(index, None)
-            else:
-                return self.spreadsheet._get_item(None, index)
+            index_p = self._parse_indices(index, has_slice)
+            return self.spreadsheet._get_item(index_p)
         else:
-            if self.by_integer:
-                return self.spreadsheet._get_slice(index, None)
+            index_p = self._parse_indices(index, has_slice)
+            return self.spreadsheet._get_slice(index_p)
+
+    def __delitem__(self, index):
+        """Safely delete a single cell or the slice of cells inside the
+            spreadsheet.
+
+        Args:
+            index: standard tuple of indices or tuple of slices.
+        """
+        has_slice = isinstance(index[0], slice) or isinstance(index[1], slice)
+        if not has_slice:
+            index_p = self._parse_indices(index, has_slice)
+            return self.spreadsheet._delete_single_cell(index_p)
+        else:
+            index_p = self._parse_indices(index, has_slice)
+            return self.spreadsheet._delete_cell_slice(index_p)
+
+    def _parse_indices(
+            self, index: tuple, has_slice: bool
+    ) -> Union[Tuple[int, int, int, int, int, int], Tuple[int, int]]:
+        """Parse the indices of the sheet (for both positional/integer indexing
+            and labels indexing).
+
+        Args:
+            index (tuple): Index of cell/cells expressed using integer or
+                label as indices
+            has_slice (bool): If true, return slices
+
+        Returns:
+
+            Union[Tuple[int, int, int, int, int, int], Tuple[int, int]]:
+                Position of the slice or cell by rows/columns,
+                tuples contains (start, end, step) OR just (row, column).
+        """
+        if len(index) != 2:
+            raise IndexError("Index has to be either slice or position of "
+                             "cell/cells but always has dimension TWO.")
+
+        if not self.by_integer:
+            if isinstance(index[0], slice):
+                # If the first index is slice
+                _x_start = 0
+                if index[0].start:
+                    _x_start = self.spreadsheet.cell_indices.rows_labels.index(
+                        index[0].start)
+                _x_end = self.spreadsheet.shape[0]
+                if index[0].stop:
+                    _x_end = self.spreadsheet.cell_indices.rows_labels.index(
+                        index[0].stop)
+                _x_step = 1
+                if index[0].step:
+                    _x_step = int(index[0].step)
             else:
-                return self.spreadsheet._get_slice(None, index)
+                # If the first index is scalar
+                _x_start = self.spreadsheet.cell_indices.rows_labels.index(
+                    index[0])
+                _x_end = _x_start + 1
+                _x_step = 1
+
+            if isinstance(index[1], slice):
+                # If the second index is slice
+                _y_start = 0
+                if index[1].start:
+                    _y_start = \
+                        self.spreadsheet.cell_indices.columns_labels.index(
+                            index[1].start)
+                _y_end = self.spreadsheet.shape[1]
+                if index[1].stop:
+                    _y_end = \
+                        self.spreadsheet.cell_indices.columns_labels.index(
+                            index[1].stop)
+                _y_step = 1
+                if index[1].step:
+                    _y_step = int(index[1].step)
+            else:
+                # If the first index is scalar
+                _y_start = self.spreadsheet.cell_indices.columns_labels.index(
+                    index[1])
+                _y_end = _y_start + 1
+                _y_step = 1
+
+        if self.by_integer:
+            if isinstance(index[0], slice):
+                # If the first index is slice
+                _x_start = 0
+                if index[0].start:
+                    _x_start = int(index[0].start)
+                    # Negative index starts from end
+                    if _x_start < 0:
+                        _x_start = self.spreadsheet.shape[0] + _x_start
+                _x_end = self.spreadsheet.shape[0]
+                if index[0].stop:
+                    _x_end = int(index[0].stop)
+                    # Negative index starts from end
+                    if _x_end < 0:
+                        _x_end = self.spreadsheet.shape[0] + _x_end
+                _x_step = 1
+                if index[0].step:
+                    _x_step = int(index[0].step)
+            else:
+                # If the first index is scalar
+                _x_start = index[0]
+                # Negative index starts from end
+                if _x_start < 0:
+                    _x_start = self.spreadsheet.shape[0] + _x_start
+                _x_end = _x_start + 1
+                _x_step = 1
+
+            if isinstance(index[1], slice):
+                # If the second index is slice
+                _y_start = 0
+                if index[1].start:
+                    _y_start = int(index[1].start)
+                    # Negative index starts from end
+                    if _y_start < 0:
+                        _y_start = self.spreadsheet.shape[1] + _y_start
+                _y_end = self.spreadsheet.shape[1]
+                if index[1].stop:
+                    _y_end = int(index[1].stop)
+                    # Negative index starts from end
+                    if _y_end < 0:
+                        _y_end = self.spreadsheet.shape[1] + _y_end
+                _y_step = 1
+                if index[1].step:
+                    _y_step = int(index[1].step)
+            else:
+                # If the first index is scalar
+                _y_start = index[1]
+                # Negative index starts from end
+                if _y_start < 0:
+                    _y_start = self.spreadsheet.shape[1] + _y_start
+                _y_end = _y_start + 1
+                _y_step = 1
+
+        # Sanity check for selected indices
+        # All indices has to be integers
+        diff_sum = (abs(_x_start - int(_x_start)) +
+                    abs(_x_step - int(_x_step)) +
+                    abs(_x_end - int(_x_end)) +
+                    abs(_y_start - int(_y_start)) +
+                    abs(_y_step - int(_y_step)) +
+                    abs(_y_end - int(_y_end)))
+        if _x_start < 0 or \
+                _y_start < 0 or \
+                _x_step < 0 or \
+                _y_step < 0 or \
+                _x_end > self.spreadsheet.shape[0] or \
+                _y_end > self.spreadsheet.shape[1] or \
+                _x_start > _x_end or \
+                _y_start > _y_end or \
+                _x_step > _x_end or \
+                _y_step > _y_end or \
+                diff_sum > 0.00001:
+            raise IndexError("Index is out of bound!")
+
+        # Return slices
+        if has_slice:
+            return int(_x_start), int(_x_end), int(_x_step), int(_y_start), \
+                   int(_y_end), int(_y_step)
+        # Return cell index
+        return int(_x_start), int(_y_start)
 
 
 class _Functionality(object):

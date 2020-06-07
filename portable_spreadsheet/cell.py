@@ -175,7 +175,9 @@ class Cell(object):
         Returns:
             str: String representation of inner value.
         """
-        return str(self.parse)
+        ret_dict = self.parse
+        ret_dict['value'] = self.value
+        return str(ret_dict)
 
     @property
     def constructing_words(self) -> WordConstructor:
@@ -246,29 +248,27 @@ class Cell(object):
 
         Args:
             sheet (Spreadsheet): Spreadsheet object.
+        TODO:
+            use different logic
         """
         values = sheet.iloc  # noqa
-        self.value = eval(self.constructing_words.words['python_numpy'])
+        words = self.parse
+        print(words)
+        self.value = eval(words['python_numpy'])
 
-    def delete(self, *,
-               row_index: int = None,
-               column_index: int = None) -> bool:
-        """Perform deleting of the column and/or the row on a given index.
+    def update_after_cell_delete(self, *,
+                                 row_index: int,
+                                 column_index: int) -> Tuple[Tuple[int, int]]:
+        """Perform deleting of the cell on given row/column position.
 
         Args:
-            row_index (int): Index of the row to be deleted (or None if
-                none row is to be deleted)
-            column_index (int): Index of the column to be deleted (or None if
-                none column is to be deleted)
+            row_index (int): Index of the cell's row to be deleted.
+            column_index (int): Index of the cell's column to be deleted.
 
         Returns:
-            bool: true if the table is consistent, false otherwise.
+            Tuple[Tuple[int, int]]: Indices of the cells that must be updated.
         """
-        # First value tells if the cell is consistent, second if the
-        #   operation affects any cell
-        consistent, affects = \
-            self.constructing_words.delete(row_index, column_index)
-        return consistent
+        return self._operations_tree.delete(row_index, column_index)
 
     @property
     def operations_tree(self) -> NaryTree:

@@ -131,184 +131,63 @@ class Spreadsheet(Serialization):
 
     def _set_item(self,
                   value: T_cell_val,
-                  index_integer: Tuple[int, int] = None,
-                  index_label: Tuple[object, object] = None) -> None:
+                  index_integer: Tuple[int, int]) -> None:
         """Set the spreadsheet cell on the desired index to the new value.
 
         Args:
             value (T_cell_val): New value to be inserted.
-            index_integer (Tuple[int, int]): Return the value on the integer
-                index (row, column) inside spreadsheet (indexed from 0).
-            index_label (Tuple[str, str]): Return the value on the index
-                (row label, column label) inside spreadsheet.
+            index_integer (Tuple[int, int]): integer index (row, column)
+                inside spreadsheet (indexed from 0).
         """
-        if index_integer is not None and index_label is not None:
-            raise ValueError("Only one of parameters 'index_integer' and"
-                             "'index_label' has to be set!")
-        if index_label is not None:
-            _x = self.cell_indices.rows_labels.index(index_label[0])
-            _y = self.cell_indices.columns_labels.index(index_label[1])
-            index_integer = (_x, _y)
-        if index_integer is not None:
-            _x = index_integer[0]
-            _y = index_integer[1]
-            # If negative, take n-th item from the end
-            if _x < 0:
-                _x += self.shape[0]
-            if _y < 0:
-                _y += self.shape[1]
-            if isinstance(value, Cell):
-                if value.anchored:
-                    _value = Cell.reference(value)
-                else:
-                    # Create a deep copy
-                    _value = copy.deepcopy(value)
-                    # Anchor it:
-                    _value.coordinates = (_x, _y)
+        _x, _y = index_integer
+        if abs(_x - int(_x)) > 0.000_001 or abs(_y - int(_y)) > 0.000_001:
+            raise IndexError("Indices must be integers!")
+        # Set values
+        if isinstance(value, Cell):
+            if value.anchored:
+                _value = Cell.reference(value)
             else:
-                _value = Cell(_x, _y,
-                              value=value, cell_indices=self.cell_indices)
-            self._sheet[_x][_y] = _value
+                # Create a deep copy
+                _value = copy.deepcopy(value)
+                # Anchor it:
+                _value.coordinates = (_x, _y)
+        else:
+            _value = Cell(_x, _y,
+                          value=value, cell_indices=self.cell_indices)
+        self._sheet[_x][_y] = _value
 
     def _get_item(self,
-                  index_integer: Tuple[int, int] = None,
-                  index_label: Tuple[object, object] = None) -> Cell:
+                  index_integer: Tuple[int, int]) -> Cell:
         """Get the cell on the particular index.
 
         Args:
-            index_integer (Tuple[int, int]): Return the value on the integer
-                index (row, column) inside spreadsheet (indexed from 0).
-            index_label (Tuple[str, str]): Return the value on the index
-                (row label, column label) inside spreadsheet.
+            index_integer (Tuple[int, int]): integer index (row, column)
+                inside spreadsheet (indexed from 0).
 
         Returns:
             Cell: The Cell on the desired index.
         """
-        if index_integer is not None and index_label is not None:
-            raise ValueError("Only one of parameters 'index_integer' and"
-                             "'index_label' has to be set!")
-        if index_label is not None:
-            _x = self.cell_indices.rows_labels.index(index_label[0])
-            _y = self.cell_indices.columns_labels.index(index_label[1])
-            index_integer = (_x, _y)
-        if index_integer is not None:
-            _x = index_integer[0]
-            _y = index_integer[1]
-            # If negative, take n-th item from the end
-            if _x < 0:
-                _x += self.shape[0]
-            if _y < 0:
-                _y += self.shape[1]
-            if abs(_x - int(_x)) > 0.000_001 or abs(_y - int(_y)) > 0.000_001:
-                raise IndexError("Indices must be integers!")
-            return self._sheet[int(_x)][int(_y)]
+        _x, _y = index_integer
+        if abs(_x - int(_x)) > 0.000_001 or abs(_y - int(_y)) > 0.000_001:
+            raise IndexError("Indices must be integers!")
+        return self._sheet[int(_x)][int(_y)]
 
-    def _get_slice(self,
-                   index_integer: Tuple[slice, slice],
-                   index_label: Tuple[slice, slice]) -> CellSlice:
+    def _get_slice(
+            self,
+            index_integer: Tuple[int, int, int, int, int, int]) -> CellSlice:
         """Get the values in the slice.
 
         Args:
-            index_integer (Tuple[int, int]): The position of the slice in the
-                spreadsheet. Mutually exclusive with parameter index_label
-            index_label (Tuple[object, object]): The position of the slice
-                in the spreadsheet. Mutually exclusive with parameter
-                index_integer (only one can be set to not None).
+            index_integer (Tuple[int, int, int, int, int, int]):
+                Position of the slice inside array. Indices are 1) row start,
+                2) row end (exclusive), 3) row step, 4) column start,
+                5) column end (exclusive), 6) column step
+
         Returns:
             CellSlice: Slice of the cells (aggregate).
         """
-        if index_integer is not None and index_label is not None:
-            raise ValueError("Only one of parameters 'index_integer' and"
-                             "'index_label' has to be set!")
-
-        if index_label is not None:
-            if isinstance(index_label[0], slice):
-                # If the first index is slice
-                _x_start = 0
-                if index_label[0].start:
-                    _x_start = self.cell_indices.rows_labels.index(
-                        index_label[0].start)
-                _x_end = self.shape[0]
-                if index_label[0].stop:
-                    _x_end = self.cell_indices.rows_labels.index(
-                        index_label[0].stop)
-                _x_step = 1
-                if index_label[0].step:
-                    _x_step = int(index_label[0].step)
-            else:
-                # If the first index is scalar
-                _x_start = self.cell_indices.rows_labels.index(
-                    index_label[0])
-                _x_end = _x_start + 1
-                _x_step = 1
-
-            if isinstance(index_label[1], slice):
-                # If the second index is slice
-                _y_start = 0
-                if index_label[1].start:
-                    _y_start = self.cell_indices.columns_labels.index(
-                        index_label[1].start)
-                _y_end = self.shape[1]
-                if index_label[1].stop:
-                    _y_end = self.cell_indices.columns_labels.index(
-                        index_label[1].stop)
-                _y_step = 1
-                if index_label[1].step:
-                    _y_step = int(index_label[1].step)
-            else:
-                # If the first index is scalar
-                _y_start = self.cell_indices.columns_labels.index(
-                    index_label[1])
-                _y_end = _y_start + 1
-                _y_step = 1
-
-        if index_integer is not None:
-            if isinstance(index_integer[0], slice):
-                # If the first index is slice
-                _x_start = 0
-                if index_integer[0].start:
-                    _x_start = int(index_integer[0].start)
-                    # Negative index starts from end
-                    if _x_start < 0:
-                        _x_start = self.shape[0] + _x_start
-                _x_end = self.shape[0]
-                if index_integer[0].stop:
-                    _x_end = int(index_integer[0].stop)
-                    # Negative index starts from end
-                    if _x_end < 0:
-                        _x_end = self.shape[0] + _x_end
-                _x_step = 1
-                if index_integer[0].step:
-                    _x_step = int(index_integer[0].step)
-            else:
-                # If the first index is scalar
-                _x_start = index_integer[0]
-                _x_end = _x_start + 1
-                _x_step = 1
-
-            if isinstance(index_integer[1], slice):
-                # If the second index is slice
-                _y_start = 0
-                if index_integer[1].start:
-                    _y_start = int(index_integer[1].start)
-                    # Negative index starts from end
-                    if _y_start < 0:
-                        _y_start = self.shape[1] + _y_start
-                _y_end = self.shape[1]
-                if index_integer[1].stop:
-                    _y_end = int(index_integer[1].stop)
-                    # Negative index starts from end
-                    if _y_end < 0:
-                        _y_end = self.shape[1] + _y_end
-                _y_step = 1
-                if index_integer[1].step:
-                    _y_step = int(index_integer[1].step)
-            else:
-                # If the first index is scalar
-                _y_start = index_integer[1]
-                _y_end = _y_start + 1
-                _y_step = 1
-
+        # Receive indices
+        _x_start, _x_end, _x_step, _y_start, _y_end, _y_step = index_integer
         # Create the CellSlice object
         cell_subset = []
         for x in range(_x_start, _x_end, _x_step):
@@ -320,21 +199,20 @@ class Spreadsheet(Serialization):
                                           self)
         return cell_slice
 
-    def _set_slice(self,
-                   value: T_cell_val,
-                   index_integer: Tuple[int, int],
-                   index_label: Tuple[object, object]) -> None:
+    def _set_slice(
+            self,
+            value: T_cell_val,
+            index_integer: Tuple[int, int, int, int, int, int]) -> None:
         """Set the value of each cell in the slice
 
         Args:
             value (T_cell_val): New value to be set.
-            index_integer (Tuple[int, int]): The position of the slice in the
-                spreadsheet. Mutually exclusive with parameter index_label
-            index_label (Tuple[object, object]): The position of the slice
-                in the spreadsheet. Mutually exclusive with parameter
-                index_integer (only one can be set to not None).
+            index_integer (Tuple[int, int, int, int, int, int]):
+                Position of the slice inside array. Indices are 1) row start,
+                2) row end (exclusive), 3) row step, 4) column start,
+                5) column end (exclusive), 6) column step
         """
-        cell_slice: CellSlice = self._get_slice(index_integer, index_label)
+        cell_slice: CellSlice = self._get_slice(index_integer)
         cell_slice.set(value)
 
     def expand(self,
@@ -409,13 +287,15 @@ class Spreadsheet(Serialization):
     def delete_column(self, *,
                       column_index: int = None,
                       column_label: str = None) -> None:
-        pass
+        """TODO"""
+        pass  # TODO
 
     def insert_row_after(self, *,
                          label: str = None,
                          help_text: str = None,
                          reference_index: int = None,
                          reference_label: str = None) -> None:
+        """TODO"""
         if reference_index is not None and reference_label is not None:
             raise IndexError("Only one value 'reference_index' or "
                              "'reference_label' can be set!")
@@ -430,16 +310,18 @@ class Spreadsheet(Serialization):
                           help_text: str = None,
                           reference_index: int = None,
                           reference_label: str = None) -> None:
+        """TODO"""
         if reference_index is not None and reference_label is not None:
             raise IndexError("Only one value 'reference_index' or "
                              "'reference_label' can be set!")
-        pass
+        pass  # TODO
 
     def insert_column_after(self, *,
                             label: str = None,
                             help_text: str = None,
                             reference_index: int = None,
                             reference_label: str = None) -> None:
+        """TODO"""
         if reference_index is not None and reference_label is not None:
             raise IndexError("Only one value 'reference_index' or "
                              "'reference_label' can be set!")
@@ -454,10 +336,50 @@ class Spreadsheet(Serialization):
                              help_text: str = None,
                              reference_index: int = None,
                              reference_label: str = None) -> None:
+        """TODO"""
         if reference_index is not None and reference_label is not None:
             raise IndexError("Only one value 'reference_index' or "
                              "'reference_label' can be set!")
-        pass
+        pass  # TODO
+
+    def _delete_single_cell(self, integer_position: Tuple[int, int]) -> None:
+        """Safely delete single cell
+
+        Args:
+            integer_position (Tuple[int, int]): Position of the cell in the
+                sheet grid (indexed from 0). First is row, second column.
+        TODO:
+            check if it works
+        """
+        # Delete value in the cell
+        self.iloc[integer_position] = Cell(*integer_position,
+                                           cell_indices=self.cell_indices)
+        # Delete reference to the cell in all other cells
+        for row in range(self.shape[0]):
+            for col in range(self.shape[1]):
+                if (row, col) == integer_position:
+                    continue
+                set_to_update = \
+                    self.iloc[row, col].update_after_cell_delete(
+                        row_index=integer_position[0],
+                        column_index=integer_position[1]
+                    )
+                # Update all cells:
+                for index_to_update in set_to_update:
+                    self.iloc[index_to_update].re_evaluate(self)
+
+    def _delete_cell_slice(
+            self,
+            index_integer: Tuple[int, int, int, int, int, int]) -> None:
+        """Safely delete cell slice
+
+        Args:
+            index_integer (Tuple[int, int, int, int, int, int]):
+                Position of the slice inside array. Indices are 1) row start,
+                2) row end (exclusive), 3) row step, 4) column start,
+                5) column end (exclusive), 6) column step
+        """
+        print(f"DELETE {index_integer}")
 
     def expand_using_cell_indices(self, cell_indices: CellIndices) -> None:
         """Resize the spreadsheet object to the greater size

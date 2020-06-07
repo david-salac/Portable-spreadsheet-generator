@@ -156,7 +156,8 @@ class NaryTree(object):
         return tuple([cell_i[2] for cell_i in self._delete_recursion(
             self, index_row, index_col, _delete_row, _delete_col
         )
-                      if cell_i[2] != (index_row, index_col)
+                      if cell_i[2] != (index_row, index_col)  # Skip self
+                      and cell_i[2] != (-1, -1)  # Skip computational cells
                       ])
 
     def _add_children(self, child: 'NaryTree') -> None:
