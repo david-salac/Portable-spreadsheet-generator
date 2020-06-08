@@ -431,7 +431,7 @@ class Serialization(abc.ABC):
                     # Replace cell description to NaN replacement
                     cell_description = nan_replacement
                     # If the cell description should be equal to some language
-                    if descr_lang := use_language_for_description:
+                    if descr_lang := use_language_for_description:  # noqa
                         cell_description = parsed_cell[descr_lang]
                 # If it is an empty string, use None value instead
                 if cell_description == "":
@@ -446,16 +446,16 @@ class Serialization(abc.ABC):
                 y_values[y_start_key][y[idx_y]] = pseudolang_and_val
                 if y_helptext is not None:
                     # Add the help text for the row/column
-                    if (ht := y_helptext[idx_y]) is None \
-                            or len(y_helptext[idx_y]) == 0:
+                    if (ht := y_helptext[idx_y]) is None or len(  # noqa
+                            y_helptext[idx_y]) == 0:
                         # If it is not set or is empty string, use NaN value
                         ht = nan_replacement
                     y_values[y_start_key][y[idx_y]][y_helptext_descriptor] = ht
             values[x_start_key][x[idx_x]] = y_values
             if x_helptext is not None:
                 # Add the help text for the column/row
-                if (ht := x_helptext[idx_x]) is None \
-                        or len(x_helptext[idx_x]) == 0:
+                if (ht := x_helptext[idx_x]) is None or len(  # noqa
+                        x_helptext[idx_x]) == 0:
                     # If it is not set or is empty string, use NaN value
                     ht = nan_replacement
                 values[x_start_key][x[idx_x]][x_helptext_descriptor] = ht

@@ -747,8 +747,8 @@ PYTHON_NUMPY = {
             "suffix": ")",
         },
         "match-negative-before-positive": {
-            "prefix": "(np.argmin(",
-            "suffix": "<0)-1)",
+            "prefix": "np.argmin(",
+            "suffix": "<0)",
         },
         # BASIC OPERATIONS
         "exponential": {

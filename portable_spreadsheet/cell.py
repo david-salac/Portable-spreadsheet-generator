@@ -660,7 +660,7 @@ class Cell(object):
         """
         return Cell._aggregate_fun(cell_start, cell_end, subset,
                                    'match-negative-before-positive',
-                                   lambda x: (np.argmin(x) - 1)
+                                   lambda x: np.argmin(np.array(x) < 0)
                                    )
 
     @staticmethod
