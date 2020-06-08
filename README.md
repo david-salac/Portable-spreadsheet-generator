@@ -332,6 +332,15 @@ slice.
     For example: IRR(-100, 0, 0, 74) = -0.0955.
     Available as the function `irr` called on the slice object.
     Usage: `sheet.iloc[i,j] = sheet.iloc[p:q,x:y].irr()`
+10. **Match negative before positive**: return the position of the last
+    negative number in a series of negative numbers in the row or column
+    series.
+    For example:
+    MNBP(-100, -90, -80, 5, -500) = 3 _(equals to position of the number -80)_.
+    Available as the function `match_negative_before_positive` called on the
+    slice object.
+    Usage:
+    `sheet.iloc[i,j] = sheet.iloc[p:q,x:y].match_negative_before_positive()`
 
 Aggregate functions always return the cell with the result.
 
