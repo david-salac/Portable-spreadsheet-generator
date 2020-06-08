@@ -115,6 +115,7 @@ average_of_slice <<= 55.6  # Some assigned value
 ```
 However, it is strongly recommended to use standard assigning through
 the Spreadsheet object described below.
+
 #### Functionality of the CellSlice class
 Cell slice is mainly related to the aggregating functions described in
 the subsection _Aggregate functions_ bellow.
@@ -331,6 +332,15 @@ slice.
     For example: IRR(-100, 0, 0, 74) = -0.0955.
     Available as the function `irr` called on the slice object.
     Usage: `sheet.iloc[i,j] = sheet.iloc[p:q,x:y].irr()`
+10. **Match negative before positive**: return the position of the last
+    negative number in a series of negative numbers in the row or column
+    series.
+    For example:
+    MNBP(-100, -90, -80, 5, -500) = 3 _(equals to position of the number -80)_.
+    Available as the function `match_negative_before_positive` called on the
+    slice object.
+    Usage:
+    `sheet.iloc[i,j] = sheet.iloc[p:q,x:y].match_negative_before_positive()`
 
 Aggregate functions always return the cell with the result.
 
@@ -691,7 +701,9 @@ library relies.
 #### Exporting to the dictionary (and JSON)
 It can be done using the interface:
 ```
-sheet.to_dictionary(languages: List[str] = None, /, *, 
+sheet.to_dictionary(languages: List[str] = None,
+                    use_language_for_description: Optional[str] = None, 
+                    /, *, 
                     by_row: bool = True,
                     languages_pseudonyms: List[str] = None,
                     spaces_replacement: str = ' ',
@@ -703,6 +715,9 @@ sheet.to_dictionary(languages: List[str] = None, /, *,
 
 _Positional only:_
 * `languages (List[str])`: List of languages that should be exported.
+* `use_language_for_description (Optional[str])`: If set-up (using the language
+name), description field is set to be either the description value 
+(if defined) or the value of this language. 
 
 _Key-value only:_
 * `by_row (bool)`: If True, rows are the first indices and columns are the
@@ -715,6 +730,7 @@ descriptions (labels) are replaced with this string.
 skipped, default value is false (NaN values are included).
 * `nan_replacement (object)`: Replacement for the `None` (NaN) value
 * `append_dict (dict)`: Append this dictionary to output.
+* `generate_schema (bool)`: If true, returns the JSON schema.
 
 **The return value is:** 
 
@@ -744,7 +760,7 @@ Output of the JSON format
                      "native":"1",
                      "value":1,
                      "description":"DescFor0,0",
-                     "help_text":"HT_C_0"
+                     "column_description":"HT_C_0"
                   },
                   "NL_C_1":{
                      "excel":"2",
@@ -752,7 +768,7 @@ Output of the JSON format
                      "native":"2",
                      "value":2,
                      "description":"DescFor0,1",
-                     "help_text":"HT_C_1"
+                     "column_description":"HT_C_1"
                   },
                   "NL_C_2":{
                      "excel":"3",
@@ -760,7 +776,7 @@ Output of the JSON format
                      "native":"3",
                      "value":3,
                      "description":"DescFor0,2",
-                     "help_text":"HT_C_2"
+                     "column_description":"HT_C_2"
                   },
                   "NL_C_3":{
                      "excel":"4",
@@ -768,10 +784,10 @@ Output of the JSON format
                      "native":"4",
                      "value":4,
                      "description":"DescFor0,3",
-                     "help_text":"HT_C_3"
+                     "column_description":"HT_C_3"
                   }
                },
-               "help_text":"HT_R_0"
+               "row_description":"HT_R_0"
             },
             "R_1":{
                "columns":{
@@ -781,7 +797,7 @@ Output of the JSON format
                      "native":"5",
                      "value":5,
                      "description":"DescFor1,0",
-                     "help_text":"HT_C_0"
+                     "column_description":"HT_C_0"
                   },
                   "NL_C_1":{
                      "excel":"6",
@@ -789,7 +805,7 @@ Output of the JSON format
                      "native":"6",
                      "value":6,
                      "description":"DescFor1,1",
-                     "help_text":"HT_C_1"
+                     "column_description":"HT_C_1"
                   },
                   "NL_C_2":{
                      "excel":"7",
@@ -797,7 +813,7 @@ Output of the JSON format
                      "native":"7",
                      "value":7,
                      "description":"DescFor1,2",
-                     "help_text":"HT_C_2"
+                     "column_description":"HT_C_2"
                   },
                   "NL_C_3":{
                      "excel":"8",
@@ -805,10 +821,10 @@ Output of the JSON format
                      "native":"8",
                      "value":8,
                      "description":"DescFor1,3",
-                     "help_text":"HT_C_3"
+                     "column_description":"HT_C_3"
                   }
                },
-               "help_text":"HT_R_1"
+               "row_description":"HT_R_1"
             },
             "R_2":{
                "columns":{
@@ -818,7 +834,7 @@ Output of the JSON format
                      "native":"9",
                      "value":9,
                      "description":"DescFor2,0",
-                     "help_text":"HT_C_0"
+                     "column_description":"HT_C_0"
                   },
                   "NL_C_1":{
                      "excel":"10",
@@ -826,7 +842,7 @@ Output of the JSON format
                      "native":"10",
                      "value":10,
                      "description":"DescFor2,1",
-                     "help_text":"HT_C_1"
+                     "column_description":"HT_C_1"
                   },
                   "NL_C_2":{
                      "excel":"11",
@@ -834,7 +850,7 @@ Output of the JSON format
                      "native":"11",
                      "value":11,
                      "description":"DescFor2,2",
-                     "help_text":"HT_C_2"
+                     "column_description":"HT_C_2"
                   },
                   "NL_C_3":{
                      "excel":"12",
@@ -842,10 +858,10 @@ Output of the JSON format
                      "native":"12",
                      "value":12,
                      "description":"DescFor2,3",
-                     "help_text":"HT_C_3"
+                     "column_description":"HT_C_3"
                   }
                },
-               "help_text":"HT_R_2"
+               "row_description":"HT_R_2"
             },
             "R_3":{
                "columns":{
@@ -855,7 +871,7 @@ Output of the JSON format
                      "native":"13",
                      "value":13,
                      "description":"DescFor3,0",
-                     "help_text":"HT_C_0"
+                     "column_description":"HT_C_0"
                   },
                   "NL_C_1":{
                      "excel":"14",
@@ -863,7 +879,7 @@ Output of the JSON format
                      "native":"14",
                      "value":14,
                      "description":"DescFor3,1",
-                     "help_text":"HT_C_1"
+                     "column_description":"HT_C_1"
                   },
                   "NL_C_2":{
                      "excel":"15",
@@ -871,7 +887,7 @@ Output of the JSON format
                      "native":"15",
                      "value":15,
                      "description":"DescFor3,2",
-                     "help_text":"HT_C_2"
+                     "column_description":"HT_C_2"
                   },
                   "NL_C_3":{
                      "excel":"16",
@@ -879,10 +895,10 @@ Output of the JSON format
                      "native":"16",
                      "value":16,
                      "description":"DescFor3,3",
-                     "help_text":"HT_C_3"
+                     "column_description":"HT_C_3"
                   }
                },
-               "help_text":"HT_R_3"
+               "row_description":"HT_R_3"
             },
             "R_4":{
                "columns":{
@@ -892,7 +908,7 @@ Output of the JSON format
                      "native":"17",
                      "value":17,
                      "description":"DescFor4,0",
-                     "help_text":"HT_C_0"
+                     "column_description":"HT_C_0"
                   },
                   "NL_C_1":{
                      "excel":"18",
@@ -900,7 +916,7 @@ Output of the JSON format
                      "native":"18",
                      "value":18,
                      "description":"DescFor4,1",
-                     "help_text":"HT_C_1"
+                     "column_description":"HT_C_1"
                   },
                   "NL_C_2":{
                      "excel":"19",
@@ -908,7 +924,7 @@ Output of the JSON format
                      "native":"19",
                      "value":19,
                      "description":"DescFor4,2",
-                     "help_text":"HT_C_2"
+                     "column_description":"HT_C_2"
                   },
                   "NL_C_3":{
                      "excel":"20",
@@ -916,10 +932,10 @@ Output of the JSON format
                      "native":"20",
                      "value":20,
                      "description":"DescFor4,3",
-                     "help_text":"HT_C_3"
+                     "column_description":"HT_C_3"
                   }
                },
-               "help_text":"HT_R_4"
+               "row_description":"HT_R_4"
             }
          }
       },
