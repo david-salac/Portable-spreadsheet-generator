@@ -1093,6 +1093,12 @@ GRAMMAR_PATTERN: dict = {
             "prefix": str,
             "suffix": str,
         },
+        # Match the position of the last negative number before first
+        #   negative number in a sequence (works only for single row/column).
+        "match-negative-before-positive": {
+            "prefix": str,
+            "suffix": str,
+        },
 
         # === BASIC UNARY OPERATIONS (that takes only one operand) ===
         # Exponential (natural) of the argument

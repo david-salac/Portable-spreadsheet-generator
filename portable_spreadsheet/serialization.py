@@ -307,9 +307,10 @@ class Serialization(abc.ABC):
         Args:
             languages (List[str]): List of languages that should be exported.
                 If it has value None, all the languages are exported.
-            use_language_for_description (Optional[str]): If set-up (by
+            use_language_for_description (Optional[str]): If set-up (using
                 the language name), description field is set to be either
-                description value (if defined) or the value of this language.
+                the description value (if defined) or the value of this
+                language.
             by_row (bool): If True, rows are the first indices and columns
                 are the second in the order. If False it is vice-versa.
             languages_pseudonyms (List[str]): Rename languages to the strings
@@ -319,8 +320,7 @@ class Serialization(abc.ABC):
             skip_nan_cell (bool): If True, None (NaN) values are skipped.
             nan_replacement (object): Replacement for the None (NaN) value
             append_dict (dict): Append this dictionary to output.
-            generate_schema (bool): If true, returns the JSON schema for
-                given set-up.
+            generate_schema (bool): If true, returns the JSON schema.
 
         Returns:
             dict:
@@ -498,9 +498,10 @@ class Serialization(abc.ABC):
         Args:
             languages (List[str]): List of languages that should be exported.
                 If it has value None, all the languages are exported.
-            use_language_for_description (Optional[str]): If set-up (by
+            use_language_for_description (Optional[str]): If set-up (using
                 the language name), description field is set to be either
-                description value (if defined) or the value of this language.
+                the description value (if defined) or the value of this
+                language.
             by_row (bool): If True, rows are the first indices and columns
                 are the second in the order. If False it is vice-versa.
             languages_pseudonyms (List[str]): Rename languages to the strings
@@ -510,8 +511,7 @@ class Serialization(abc.ABC):
             skip_nan_cell (bool): If True, None (NaN) values are skipped.
             nan_replacement (object): Replacement for the None (NaN) value
             append_dict (dict): Append this dictionary to output.
-            generate_schema (bool): If true, returns the JSON schema for
-                given set-up.
+            generate_schema (bool): If true, returns the JSON schema.
 
         Returns:
             dict:
