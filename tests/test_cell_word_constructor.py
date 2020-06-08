@@ -675,7 +675,7 @@ class TestCellAggregationFunctionality(unittest.TestCase):
             series that is located just before the first non-negative number.
         """
         self._check_aggregate_function(Cell.match_negative_before_positive,
-                                       lambda x: (np.argmin(np.array(x)<0)),
+                                       lambda x: (np.argmin(np.array(x) < 0)),
                                        "MATCH(0,", ")",
                                        "np.argmin(", "<0)")
 
