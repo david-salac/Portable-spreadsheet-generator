@@ -548,6 +548,7 @@ class Serialization(abc.ABC):
         false = False
         schema = {
             "$id": "http://portable-spreadsheet.com/spreadsheet.v2.schema.json",  # noqa
+            # noqa
             "$schema": "http://json-schema.org/draft-07/schema#",
             "title": "Portable Spreadsheet JSON output schema",
             "description": "JSON schema of the Portable Spreadsheet output",
@@ -557,10 +558,10 @@ class Serialization(abc.ABC):
             "properties": {
                 "table": {
                     "type": "object",
-                    "required": ["variables", "row-labels", "column-labels", "data"],  # noqa
+                    "required": ["variables", "row-labels", "column-labels",
+                                 "data"],  # noqa
                     "properties": {
                         "row-labels": {
-                            "$id": "#labels",
                             "minProperties": 0,
                             "propertyNames": {
                                 "pattern": "^[0-9]*$"
@@ -573,7 +574,16 @@ class Serialization(abc.ABC):
                             "additionalProperties": false
                         },
                         "column-labels": {
-                            "$ref": "#labels"
+                            "minProperties": 0,
+                            "propertyNames": {
+                                "pattern": "^[0-9]*$"
+                            },
+                            "patternProperties": {
+                                "^[0-9]*$": {
+                                    "type": "string"
+                                }
+                            },
+                            "additionalProperties": false
                         },
                         "variables": {
                             "minProperties": 0,
@@ -581,18 +591,23 @@ class Serialization(abc.ABC):
                                 "type": "string"
                             },
                             "patternProperties": {
-                                "^*$": {
+                                "^.*$": {
                                     "type": "object",
                                     "properties": {
                                         "value": {
-                                            "$id": "#strNumNull",
                                             "anyOf": [
                                                 {"type": "string"},
                                                 {"type": "number"},
                                                 {"type": "null"}
                                             ]
                                         },
-                                        "description": {"$ref": "#strNumNull"}
+                                        "description": {
+                                            "anyOf": [
+                                                {"type": "string"},
+                                                {"type": "number"},
+                                                {"type": "null"}
+                                            ]
+                                        }
                                     },
                                     "required": ["value", "description"],
                                     "additionalProperties": false
@@ -603,55 +618,77 @@ class Serialization(abc.ABC):
                         "data": {
                             "type": "object",
                             "minProperties": 1,
-                            "maxProperties": 1,
-                            "properties": {
-                                "^[rows,columns]$": {
+                            "maxProperties": 2,
+                            "additionalProperties": false,
+                            "patternProperties": {
+                                r"rows|columns": {
                                     "type": "object",
                                     "minProperties": 0,
                                     "propertyNames": {
                                         "type": "string"
                                     },
                                     "patternProperties": {
-                                        "^*$": {
+                                        "^.*$": {
                                             "type": "object",
-                                            "properties": {
-                                                "^[rows,columns]$": {
+                                            "patternProperties": {
+                                                r"rows|columns": {
                                                     "type": "object",
                                                     "minProperties": 0,
                                                     "propertyNames": {
                                                         "type": "string"
                                                     },
                                                     "patternProperties": {
-                                                        "^*$": {
+                                                        "^.*$": {
                                                             "type": "object",
-
-
                                                             "minProperties": 2,
                                                             "propertyNames": {
-                                                                "type": "string"  # noqa
-                                                            },
-                                                            "properties": {
-                                                                "value": {"$ref": "#strNumNull"},  # noqa
-                                                                "description": {  # noqa
-                                                                    "$ref": "#strNumNull"  # noqa
-                                                                },
-                                                                "^[row_description,column_description]$": {  # noqa
-                                                                    "$ref": "#strNumNull"  # noqa
-                                                                }
+                                                                "type": "string" # noqa
                                                             },
                                                             "patternProperties": {  # noqa
-                                                                "^*$": {
-                                                                    "$ref": "#strNumNull"  # noqa
-                                                                }
+                                                                "value": {
+                                                                    "anyOf": [
+                                                                        {"type": "string"},  # noqa
+                                                                        {"type": "number"},  # noqa
+                                                                        {"type": "null"}  # noqa
+                                                                    ]
+                                                                },
+                                                                "description": {  # noqa
+                                                                    "anyOf": [
+                                                                        {"type": "string"},  # noqa
+                                                                        {"type": "number"},  # noqa
+                                                                        {"type": "null"}  # noqa
+                                                                    ]
+                                                                },
+                                                                r"row_description|column_description": {  # noqa
+                                                                    "anyOf": [
+                                                                        {"type": "string"},  # noqa
+                                                                        {"type": "number"},  # noqa
+                                                                        {"type": "null"}  # noqa
+                                                                    ]
+                                                                },
+                                                                "^.*$": {
+                                                                    "anyOf": [
+                                                                        {"type": "string"},  # noqa
+                                                                        {"type": "number"},  # noqa
+                                                                        {"type": "null"}  # noqa
+                                                                    ]
+                                                                },
                                                             },
-                                                            "required": ["value", "description"]  # noqa
+                                                            "required": ['value', 'description'],  # noqa
+                                                            "additionalProperties": false  # noqa
                                                         }
                                                     }
                                                 },
-                                                "^[row_description,column_description]$": {"type": "string"}  # noqa
+                                                r"row_description|column_description": {  # noqa
+                                                    "anyOf": [
+                                                            {"type": "string"},
+                                                            {"type": "number"},
+                                                            {"type": "null"}
+                                                        ]
+                                                    }
                                             },
                                             "minProperties": 1,
-                                            "maxProperties": 1,
+                                            "maxProperties": 2,
                                             "additionalProperties": false
                                         }
                                     },
@@ -659,7 +696,6 @@ class Serialization(abc.ABC):
                                 }
                             }
                         }
-
                     },
                     "additionalProperties": false
                 }
