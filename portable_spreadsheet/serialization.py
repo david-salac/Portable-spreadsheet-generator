@@ -284,12 +284,6 @@ class Serialization(abc.ABC):
         # Store results
         workbook.close()
 
-    def generate_schema(self) -> dict:
-        """Generate JSON schema for the JSON (dictionary) outputs.
-        """
-
-        pass
-
     def to_dictionary(self,
                       languages: List[str] = None,
                       use_language_for_description: Optional[str] = None,
@@ -330,7 +324,7 @@ class Serialization(abc.ABC):
                 cell keys (value, description, language alias)->value
         """
         if generate_schema:
-            return self._generate_json_schema()
+            return self.generate_json_schema()
 
         # Log warning if needed
         self.log_export_subset_warning_if_needed()
@@ -545,11 +539,11 @@ class Serialization(abc.ABC):
         )
 
     @staticmethod
-    def _generate_json_schema() -> dict:
+    def generate_json_schema() -> dict:
         """Generate JSON schema.
 
         Returns:
-            dict: JSON schema
+            dict: JSON schema for the Portable Spreadsheet JSON table output.
         """
         false = False
         schema = {
