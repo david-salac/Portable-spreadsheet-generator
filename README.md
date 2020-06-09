@@ -745,6 +745,9 @@ same interface. The return value is the string.
 The reason why this method is separate is because of some values inserted
 from NumPy arrays cannot be serialized using native serializer.
 
+To get JSON schema you can use either `generate_schema (bool)` parameter or
+directly use static method `generate_json_schema` of the `Spreadsheet` class.
+
 ##### Output example
 Output of the JSON format
 ```
