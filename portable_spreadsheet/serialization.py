@@ -553,13 +553,12 @@ class Serialization(abc.ABC):
         """
         false = False
         schema = {
-            "$id": "http://portable-spreadsheet.com/spreadsheet.v1.schema.json",  # noqa
+            "$id": "http://portable-spreadsheet.com/spreadsheet.v2.schema.json",  # noqa
             "$schema": "http://json-schema.org/draft-07/schema#",
             "title": "Portable Spreadsheet JSON output schema",
             "description": "JSON schema of the Portable Spreadsheet output",
 
             "required": ["table"],
-            "type": "object",
 
             "properties": {
                 "table": {
@@ -609,7 +608,8 @@ class Serialization(abc.ABC):
                         },
                         "data": {
                             "type": "object",
-                            "required": ["rows"],
+                            "minProperties": 1,
+                            "maxProperties": 1,
                             "properties": {
                                 "^[rows,columns]$": {
                                     "type": "object",
@@ -656,7 +656,8 @@ class Serialization(abc.ABC):
                                                 },
                                                 "^[row_description,column_description]$": {"type": "string"}  # noqa
                                             },
-                                            "required": ["columns"],
+                                            "minProperties": 1,
+                                            "maxProperties": 1,
                                             "additionalProperties": false
                                         }
                                     },
