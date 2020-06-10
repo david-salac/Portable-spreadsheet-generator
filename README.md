@@ -267,6 +267,12 @@ sheet.var['VARIABLE_NAME'] = some_value
 ```
 Getting/setting the variables values should be done preferably by this logic.
 
+For defining Excel format/style of the variable value, use the attribute
+`excel_format` of the `var` property in the following logic:
+```
+sheet.var.excel_format['VARIABLE_NAME'] = {'num_format': '#,##0'} 
+```
+
 #### Example
 Following example multiply some cell with value of
 PI constant stored as a variable `pi`:
@@ -943,7 +949,6 @@ Output of the JSON format
          }
       },
       "variables":{
-
       },
       "row-labels":[
          "R_0",
