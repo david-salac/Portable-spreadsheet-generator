@@ -203,6 +203,7 @@ class Serialization(abc.ABC):
             for name, value in self._get_variables().variables_dict.items():
                 workbook.define_name(name, str(value['value']))
         else:
+            # Add variable
             variables_sheet = workbook.add_worksheet(name=variables_sheet_name)
             # Insert header (labels)
             variables_sheet.write(0, 0, variables_sheet_header['name'],
@@ -213,9 +214,17 @@ class Serialization(abc.ABC):
                                   col_label_format)
             row_idx = 1
             for var_n, var_v in self._get_variables().variables_dict.items():
+                # Format the variable style
+                try:
+                    style_var = self._get_variables().excel_format[var_n]
+                    variable_style = workbook.add_format(style_var)
+                except KeyError:
+                    variable_style = None
                 # Insert variables to the sheet
                 variables_sheet.write(row_idx, 0, var_n)
-                variables_sheet.write(row_idx, 1, var_v['value'])
+                variables_sheet.write(
+                    row_idx, 1, var_v['value'], variable_style
+                )
                 variables_sheet.write(row_idx, 2, var_v['description'])
                 # Register variable
                 workbook.define_name(

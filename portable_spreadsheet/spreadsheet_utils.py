@@ -293,6 +293,8 @@ class _SheetVariables(object):
         _variables (Dict[str, object]): Dictionary with variables, key is the
             name of the variable and value is the actual value assigned to the
             variable.
+        _excel_format (Dict[str, dict]): Style/format for showing values of
+            selected variables.
         spreadsheet (Spreadsheet): Reference to spreadsheet instance.
     """
     def __init__(self, spreadsheet):
@@ -301,7 +303,19 @@ class _SheetVariables(object):
             spreadsheet (Spreadsheet): Reference to spreadsheet instance.
         """
         self._variables: Dict[str, Dict[str, object]] = {}
+        self._excel_format: Dict[str, dict] = {}
         self.spreadsheet = spreadsheet
+
+    @property
+    def excel_format(self):
+        """Return the dictionary defining Excel format for the XlsxWriter.
+
+        Read the documentation: https://xlsxwriter.readthedocs.io/format.html
+
+        Returns:
+            Dict[str, dict]: Dictionary defining Excel format for XlsxWriter.
+        """
+        return self._excel_format
 
     def set_variable(self,
                      name: str,

@@ -67,12 +67,12 @@ class CellIndices(object):
                     offset = 1
                 rows, columns = rows_columns[language]
                 if len(rows) != number_of_rows + offset:
-                    e_mess = "Number of rows is not the same for every" \
+                    e_mess = "Number of rows is not the same for every " \
                              "language! Or you have not included offset " \
                              "caused by excluding the last value of the slice!"
                     raise ValueError(e_mess)
                 if len(columns) != number_of_columns + offset:
-                    e_mess = "Number of columns is not the same for every" \
+                    e_mess = "Number of columns is not the same for every " \
                              "language! Or you have not included offset " \
                              "caused by excluding the last value of the slice!"
                     raise ValueError(e_mess)
@@ -81,20 +81,20 @@ class CellIndices(object):
         # check the columns and rows aliases sizes
         if (rows_labels is not None
                 and len(rows_labels) != number_of_rows):
-            raise ValueError("Number of rows aliases has to be the same"
+            raise ValueError("Number of rows aliases has to be the same "
                              "as number of rows!")
         if (columns_labels is not None
                 and len(columns_labels) != number_of_columns):
-            raise ValueError("Number of columns aliases has to be the same"
+            raise ValueError("Number of columns aliases has to be the same "
                              "as number of columns!")
         # check the help texts sizes
         if (rows_help_text is not None
                 and len(rows_help_text) != number_of_rows):
-            raise ValueError("Number of rows help texts has to be the same"
+            raise ValueError("Number of rows help texts has to be the same "
                              "as number of rows!")
         if (columns_help_text is not None
                 and len(columns_help_text) != number_of_columns):
-            raise ValueError("Number of columns help texts has to be the same"
+            raise ValueError("Number of columns help texts has to be the same "
                              "as number of columns!")
         # -------------------
         self.number_of_rows: int = number_of_rows
@@ -203,20 +203,20 @@ class CellIndices(object):
         # check the columns and rows aliases sizes
         if (new_rows_labels is not None
                 and len(new_rows_labels) != new_number_of_rows):
-            raise ValueError("Number of rows aliases has to be the same"
+            raise ValueError("Number of rows aliases has to be the same "
                              "as number of rows!")
         if (new_columns_labels is not None
                 and len(new_columns_labels) != new_number_of_columns):
-            raise ValueError("Number of columns aliases has to be the same"
+            raise ValueError("Number of columns aliases has to be the same "
                              "as number of columns!")
         # check the help texts sizes
         if (new_rows_help_text is not None
                 and len(new_rows_help_text) != new_number_of_rows):
-            raise ValueError("Number of rows help texts has to be the same"
+            raise ValueError("Number of rows help texts has to be the same "
                              "as number of rows!")
         if (new_columns_help_text is not None
                 and len(new_columns_help_text) != new_number_of_columns):
-            raise ValueError("Number of columns help texts has to be the same"
+            raise ValueError("Number of columns help texts has to be the same "
                              "as number of columns!")
         # -------------------
         # Append the system languages
@@ -251,11 +251,11 @@ class CellIndices(object):
                                  "ones!")
             if len(rows) != new_number_of_rows + offset:
                 raise ValueError("Number of rows has to be the same "
-                                 "as number of rows to be added! Plus the"
+                                 "as number of rows to be added! Plus the "
                                  "offset for the ending row.")
             if len(cols) != new_number_of_columns + offset:
                 raise ValueError("Number of columns has to be the same "
-                                 "as number of columns to be added! Plus the"
+                                 "as number of columns to be added! Plus the "
                                  "offset for the ending row.")
             # ------------------
             if offset == 1:
