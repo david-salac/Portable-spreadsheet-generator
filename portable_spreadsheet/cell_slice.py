@@ -218,6 +218,27 @@ class CellSlice(Serialization):
             cell_subset = self.cell_subset
         return Cell.irr(self.start_cell, self.end_cell, cell_subset)
 
+    def match_negative_before_positive(self,
+                                       skip_none_cell: bool = True) -> Cell:
+        """Find the position of the last negative number in the series that
+            is located just before the first non-negative number.
+
+        Args:
+            skip_none_cell (bool): If true, skips all the cells with None as
+                a value (and does not raise exception).
+
+        Returns:
+            Cell: Return the position of the negative number in a series that
+                is located just before the first positive number (or zero).
+        """
+        if skip_none_cell:
+            cell_subset = [nn_cell for nn_cell in self.cell_subset
+                           if nn_cell.value is not None]
+        else:
+            cell_subset = self.cell_subset
+        return Cell.match_negative_before_positive(self.start_cell,
+                                                   self.end_cell, cell_subset)
+
     @property
     def excel_format(self):
         """Should not be accessible for slides."""

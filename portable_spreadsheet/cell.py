@@ -716,6 +716,26 @@ class Cell(object):
                                    'irr', npf.irr)
 
     @staticmethod
+    def match_negative_before_positive(cell_start: 'Cell', cell_end: 'Cell',
+                                       subset: Iterable['Cell']) -> 'Cell':
+        """Find the position of the last negative number in the series that
+            is located just before the first non-negative number.
+
+        Args:
+            cell_start (Cell): Starting cell of the slice (left top).
+            cell_end: (Cell'): Ending cell of the slice (bottom right).
+            subset (Iterable['Cell']): List of all cells in the subset.
+
+        Returns:
+            Cell: Return the position of the negative number in a series that
+                is located just before the first positive number (or zero).
+        """
+        return Cell._aggregate_fun(cell_start, cell_end, subset,
+                                   'match-negative-before-positive',
+                                   lambda x: np.argmin(np.array(x) < 0)
+                                   )
+
+    @staticmethod
     def _aggregate_fun(
             cell_start: 'Cell',
             cell_end: 'Cell',

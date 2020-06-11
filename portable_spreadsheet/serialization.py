@@ -203,6 +203,7 @@ class Serialization(abc.ABC):
             for name, value in self._get_variables().variables_dict.items():
                 workbook.define_name(name, str(value['value']))
         else:
+            # Add variable
             variables_sheet = workbook.add_worksheet(name=variables_sheet_name)
             # Insert header (labels)
             variables_sheet.write(0, 0, variables_sheet_header['name'],
@@ -213,9 +214,17 @@ class Serialization(abc.ABC):
                                   col_label_format)
             row_idx = 1
             for var_n, var_v in self._get_variables().variables_dict.items():
+                # Format the variable style
+                try:
+                    style_var = self._get_variables().excel_format[var_n]
+                    variable_style = workbook.add_format(style_var)
+                except KeyError:
+                    variable_style = None
                 # Insert variables to the sheet
                 variables_sheet.write(row_idx, 0, var_n)
-                variables_sheet.write(row_idx, 1, var_v['value'])
+                variables_sheet.write(
+                    row_idx, 1, var_v['value'], variable_style
+                )
                 variables_sheet.write(row_idx, 2, var_v['description'])
                 # Register variable
                 workbook.define_name(
@@ -286,18 +295,25 @@ class Serialization(abc.ABC):
 
     def to_dictionary(self,
                       languages: List[str] = None,
+                      use_language_for_description: Optional[str] = None,
                       /, *,  # noqa E999
                       by_row: bool = True,
                       languages_pseudonyms: List[str] = None,
                       spaces_replacement: str = ' ',
                       skip_nan_cell: bool = False,
                       nan_replacement: object = None,
-                      append_dict: dict = {}) -> T_out_dict:
+                      append_dict: dict = {},
+                      generate_schema: bool = False
+                      ) -> T_out_dict:
         """Export this spreadsheet to the dictionary.
 
         Args:
             languages (List[str]): List of languages that should be exported.
                 If it has value None, all the languages are exported.
+            use_language_for_description (Optional[str]): If set-up (using
+                the language name), description field is set to be either
+                the description value (if defined) or the value of this
+                language.
             by_row (bool): If True, rows are the first indices and columns
                 are the second in the order. If False it is vice-versa.
             languages_pseudonyms (List[str]): Rename languages to the strings
@@ -307,6 +323,7 @@ class Serialization(abc.ABC):
             skip_nan_cell (bool): If True, None (NaN) values are skipped.
             nan_replacement (object): Replacement for the None (NaN) value
             append_dict (dict): Append this dictionary to output.
+            generate_schema (bool): If true, returns the JSON schema.
 
         Returns:
             dict:
@@ -315,6 +332,9 @@ class Serialization(abc.ABC):
                 columns/rows/help_text->Column/Row label->
                 cell keys (value, description, language alias)->value
         """
+        if generate_schema:
+            return self.generate_json_schema()
+
         # Log warning if needed
         self.log_export_subset_warning_if_needed()
 
@@ -343,6 +363,7 @@ class Serialization(abc.ABC):
                           ]
              ]
         if (x_helptext := self.cell_indices.columns_help_text) is not None:  # noqa E203
+            x_helptext_descriptor = "column_description"
             # Reflects the column offset for export
             x_helptext = x_helptext[self.export_offset[1]:self.shape[1]]
         x_start_key = 'columns'
@@ -355,6 +376,7 @@ class Serialization(abc.ABC):
                           ]
              ]
         if (y_helptext := self.cell_indices.rows_help_text) is not None:  # noqa E203
+            y_helptext_descriptor = "row_description"
             # Reflects the row offset for export
             y_helptext = y_helptext[self.export_offset[0]:self.shape[0]]
         y_start_key = 'rows'
@@ -369,6 +391,7 @@ class Serialization(abc.ABC):
                           ]
                  ]
             if (x_helptext := self.cell_indices.rows_help_text) is not None:  # noqa E203
+                x_helptext_descriptor = "row_description"
                 # Reflects the row offset for export
                 x_helptext = x_helptext[self.export_offset[0]:self.shape[0]]
             x_start_key = 'rows'
@@ -380,6 +403,7 @@ class Serialization(abc.ABC):
                           self.export_offset[1]:self.shape[1]
                           ]]
             if (y_helptext := self.cell_indices.columns_help_text) is not None:  # noqa E203
+                y_helptext_descriptor = "column_description"
                 # Reflects the column offset for export
                 y_helptext = y_helptext[self.export_offset[1]:self.shape[1]]
             y_start_key = 'columns'
@@ -403,21 +427,41 @@ class Serialization(abc.ABC):
                     cell_value = nan_replacement
                 # Receive values from cell (either integer or building text)
                 parsed_cell = cell.parse
+                # Following dict is the dict that is exported as a cell
                 pseudolang_and_val = {}
+                cell_description: str = cell.description
+                if cell_description is None:
+                    # Replace cell description to NaN replacement
+                    cell_description = nan_replacement
+                    # If the cell description should be equal to some language
+                    if descr_lang := use_language_for_description:  # noqa
+                        cell_description = parsed_cell[descr_lang]
+                # If it is an empty string, use None value instead
+                if cell_description == "":
+                    cell_description = nan_replacement
+                # Add description in all languages wanted (by aliases)
                 for i, language in enumerate(languages):
                     pseudolang_and_val[languages_used[i]] = \
                         parsed_cell[language]
                 # Append the value:
                 pseudolang_and_val['value'] = cell_value
-                pseudolang_and_val['description'] = cell.description
+                pseudolang_and_val['description'] = cell_description
                 y_values[y_start_key][y[idx_y]] = pseudolang_and_val
                 if y_helptext is not None:
-                    y_values[y_start_key][y[idx_y]]['help_text'] = \
-                        y_helptext[idx_y]
+                    # Add the help text for the row/column
+                    if (ht := y_helptext[idx_y]) is None or len(  # noqa
+                            y_helptext[idx_y]) == 0:
+                        # If it is not set or is empty string, use NaN value
+                        ht = nan_replacement
+                    y_values[y_start_key][y[idx_y]][y_helptext_descriptor] = ht
             values[x_start_key][x[idx_x]] = y_values
             if x_helptext is not None:
-                values[x_start_key][x[idx_x]][
-                    'help_text'] = x_helptext[idx_x]
+                # Add the help text for the column/row
+                if (ht := x_helptext[idx_x]) is None or len(  # noqa
+                        x_helptext[idx_x]) == 0:
+                    # If it is not set or is empty string, use NaN value
+                    ht = nan_replacement
+                values[x_start_key][x[idx_x]][x_helptext_descriptor] = ht
 
         # Create data parent
         data = {'data': values}
@@ -443,18 +487,24 @@ class Serialization(abc.ABC):
 
     def to_json(self,
                 languages: List[str] = None,
+                use_language_for_description: Optional[str] = None,
                 /, *,  # noqa E999
                 by_row: bool = True,
                 languages_pseudonyms: List[str] = None,
                 spaces_replacement: str = ' ',
                 skip_nan_cell: bool = False,
                 nan_replacement: object = None,
-                append_dict: dict = {}) -> str:
+                append_dict: dict = {},
+                generate_schema: bool = False) -> str:
         """Dumps the exported dictionary to the JSON object.
 
         Args:
             languages (List[str]): List of languages that should be exported.
                 If it has value None, all the languages are exported.
+            use_language_for_description (Optional[str]): If set-up (using
+                the language name), description field is set to be either
+                the description value (if defined) or the value of this
+                language.
             by_row (bool): If True, rows are the first indices and columns
                 are the second in the order. If False it is vice-versa.
             languages_pseudonyms (List[str]): Rename languages to the strings
@@ -464,6 +514,7 @@ class Serialization(abc.ABC):
             skip_nan_cell (bool): If True, None (NaN) values are skipped.
             nan_replacement (object): Replacement for the None (NaN) value
             append_dict (dict): Append this dictionary to output.
+            generate_schema (bool): If true, returns the JSON schema.
 
         Returns:
             dict:
@@ -485,15 +536,185 @@ class Serialization(abc.ABC):
                     return super(_NumPyEncoder, self).default(obj)
         # Return correctly encoded JSON
         return json.dumps(
-            self.to_dictionary(languages,
+            self.to_dictionary(languages, use_language_for_description,
                                by_row=by_row,
                                languages_pseudonyms=languages_pseudonyms,
                                spaces_replacement=spaces_replacement,
                                skip_nan_cell=skip_nan_cell,
                                nan_replacement=nan_replacement,
-                               append_dict=append_dict),
+                               append_dict=append_dict,
+                               generate_schema=generate_schema),
             cls=_NumPyEncoder
         )
+
+    @staticmethod
+    def generate_json_schema() -> dict:
+        """Generate JSON schema.
+
+        Returns:
+            dict: JSON schema for the Portable Spreadsheet JSON table output.
+        """
+        false = False
+        schema = {
+            "$id": "http://portable-spreadsheet.com/spreadsheet.v2.schema.json",  # noqa
+            # noqa
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "title": "Portable Spreadsheet JSON output schema",
+            "description": "JSON schema of the Portable Spreadsheet output",
+
+            "required": ["table"],
+
+            "properties": {
+                "table": {
+                    "type": "object",
+                    "required": ["variables", "row-labels", "column-labels",
+                                 "data"],  # noqa
+                    "properties": {
+                        "row-labels": {
+                            "minProperties": 0,
+                            "propertyNames": {
+                                "pattern": "^[0-9]*$"
+                            },
+                            "patternProperties": {
+                                "^[0-9]*$": {
+                                    "type": "string"
+                                }
+                            },
+                            "additionalProperties": false
+                        },
+                        "column-labels": {
+                            "minProperties": 0,
+                            "propertyNames": {
+                                "pattern": "^[0-9]*$"
+                            },
+                            "patternProperties": {
+                                "^[0-9]*$": {
+                                    "type": "string"
+                                }
+                            },
+                            "additionalProperties": false
+                        },
+                        "variables": {
+                            "minProperties": 0,
+                            "propertyNames": {
+                                "type": "string"
+                            },
+                            "patternProperties": {
+                                "^.*$": {
+                                    "type": "object",
+                                    "properties": {
+                                        "value": {
+                                            "anyOf": [
+                                                {"type": "string"},
+                                                {"type": "number"},
+                                                {"type": "null"}
+                                            ]
+                                        },
+                                        "description": {
+                                            "anyOf": [
+                                                {"type": "string"},
+                                                {"type": "number"},
+                                                {"type": "null"}
+                                            ]
+                                        }
+                                    },
+                                    "required": ["value", "description"],
+                                    "additionalProperties": false
+                                }
+                            },
+                            "additionalProperties": false
+                        },
+                        "data": {
+                            "type": "object",
+                            "minProperties": 1,
+                            "maxProperties": 2,
+                            "additionalProperties": false,
+                            "patternProperties": {
+                                r"rows|columns": {
+                                    "type": "object",
+                                    "minProperties": 0,
+                                    "propertyNames": {
+                                        "type": "string"
+                                    },
+                                    "patternProperties": {
+                                        "^.*$": {
+                                            "type": "object",
+                                            "patternProperties": {
+                                                r"rows|columns": {
+                                                    "type": "object",
+                                                    "minProperties": 0,
+                                                    "propertyNames": {
+                                                        "type": "string"
+                                                    },
+                                                    "patternProperties": {
+                                                        "^.*$": {
+                                                            "type": "object",
+                                                            "minProperties": 2,
+                                                            "propertyNames": {
+                                                                "type": "string" # noqa
+                                                            },
+                                                            "patternProperties": {  # noqa
+                                                                "value": {
+                                                                    "anyOf": [
+                                                                        {"type": "string"},  # noqa
+                                                                        {"type": "number"},  # noqa
+                                                                        {"type": "null"}  # noqa
+                                                                    ]
+                                                                },
+                                                                "description": {  # noqa
+                                                                    "anyOf": [
+                                                                        {"type": "string"},  # noqa
+                                                                        {"type": "number"},  # noqa
+                                                                        {"type": "null"}  # noqa
+                                                                    ]
+                                                                },
+                                                                r"row_description|column_description": {  # noqa
+                                                                    "anyOf": [
+                                                                        {"type": "string"},  # noqa
+                                                                        {"type": "number"},  # noqa
+                                                                        {"type": "null"}  # noqa
+                                                                    ]
+                                                                },
+                                                                "^.*$": {
+                                                                    "anyOf": [
+                                                                        {"type": "string"},  # noqa
+                                                                        {"type": "number"},  # noqa
+                                                                        {"type": "null"}  # noqa
+                                                                    ]
+                                                                },
+                                                            },
+                                                            "required": ['value', 'description'],  # noqa
+                                                            "additionalProperties": false  # noqa
+                                                        }
+                                                    }
+                                                },
+                                                r"row_description|column_description": {  # noqa
+                                                    "anyOf": [
+                                                            {"type": "string"},
+                                                            {"type": "number"},
+                                                            {"type": "null"}
+                                                        ]
+                                                    }
+                                            },
+                                            "minProperties": 1,
+                                            "maxProperties": 2,
+                                            "additionalProperties": false
+                                        }
+                                    },
+                                    "additionalProperties": false
+                                }
+                            }
+                        }
+                    },
+                    "additionalProperties": false
+                }
+            },
+            "additionalProperties": {
+                "type": "object"
+            }
+        }
+
+        return schema
 
     def to_string_of_values(self) -> str:
         """Export values inside table to the Python array definition string.
