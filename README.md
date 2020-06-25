@@ -34,18 +34,18 @@ global variable `GRAMMAR_PATTERN`. It is basically the dictionary matching
 the description.
 
 To validate the grammar (in the variable `grammar`) use: 
-```
+```python
 is_valid: bool = GrammarUtils.validate_grammar(grammar)
 ```
 To add the grammar describing some language (in the variable `language`)
 to the system (in the variable `grammar`) use: 
-```
+```python
 GrammarUtils.add_grammar(grammar, language)
 ```
 
 User can also check what languages are currently available using the
 static method `get_languages`:
-```
+```python
 languages_in_the_system: Set[str] = GrammarUtils.get_languages()
 ```
 ### Cells
@@ -67,11 +67,11 @@ Word represents the current computation or value of the cell using in given
 languages.
 
 A typical example of the word can be (in language excel):
-```
+```python
 B2*(C1+C2)
 ```
 The equivalent word in the language Python:
-```
+```python
 values[1,1]*(values[0,2]+values[1,2])
 ```
 Words are constructed using prefixes and suffixes defined by the grammar.
@@ -97,7 +97,7 @@ Spreadsheet functionality is documented bellow in a special section.
 Represents the special object that is created when some part slice of the
 spreadsheet is created. Basically, it encapsulates the set of cells and
 aggregating operations (sum, product, minimum, maximum, average). For example:
-```
+```python
 some_slice = spreadsheet_instance.iloc[1,:]
 average_of_slice = some_slice.mean()
 ```
@@ -109,7 +109,7 @@ file `cell_slice.py`.
 
 If you want to assign some value to a `CellSlice` object, you can use
 overloaded operator `<<=`
-```
+```python
 some_slice = spreadsheet_instance.iloc[1,:]
 average_of_slice <<= 55.6  # Some assigned value
 ```
@@ -129,7 +129,7 @@ are discussed below).
 
 ## Spreadsheets functionality
 All following examples expect that user has already imported package.
-```
+```python
 import portable_spreadsheet as ps
 ```
 The default (or system) languages are Excel and Python. There is also
@@ -137,7 +137,7 @@ a language called 'native' ready to be used.
 
 ### How to create a spreadsheet
 The easiest function is to use the built-in static method `create_new_sheet`:
-```
+```python
 sheet = ps.Spreadsheet.create_new_sheet(
     number_of_rows, number_of_columns, [rows_columns]
 )
@@ -150,7 +150,7 @@ language).
 
 For example, if you choose to add _'native'_ language (already available in
 grammars), you can use a shorter version:
-```
+```python
 sheet = ps.Spreadsheet.create_new_sheet(
     number_of_rows, number_of_columns, 
     {
@@ -183,7 +183,7 @@ exported (which can lead to data losses).
 You can only expand the size of the spreadsheet (it's because of the
 built-in behaviour of language construction). We, however, strongly recommend
 not to do so. Simplified logic looks like:
-```
+```python
 # Append 7 rows and 8 columns to existing sheet:
 sheet.expand(
     7, 8,  
@@ -205,7 +205,7 @@ It can be called on both slices or directly on `Spreadsheet` class instances.
 It can be called on both slices or directly on `Spreadsheet` class instances.
 
 Example:
-```
+```python
 column_labels: Tuple[str] = sheet.columns  # Get the column labels
 row_labels: Tuple[str] = sheet.index  # Get the row labels
 ```
@@ -218,7 +218,7 @@ tuple with a number of rows and number of columns (on the second position).
 ### Accessing/setting the cells in the spreadsheet
 You to access the value in the position you can use either the integer
 position (indexed from 0) or the label of the row/column.
-```
+```python
 # Returns the value at second row and third column:
 value = sheet.iloc[1,2]
 # Returns the value by the name of the row, column
@@ -229,7 +229,7 @@ the values (the `loc` access based on the label, and `iloc` access the cell
 based on the integer position).
 
 The same logic can be used for setting-up the values:
-```
+```python
 # Set the value at second row and third column:
 sheet.iloc[1,2] = value
 # Set the value by the name of the row, column
@@ -238,7 +238,7 @@ sheet.loc['super the label of row', 'even better label of column'] = value
 where the variable `value` can be either some constant (string, float or
 created by the `fn` method described below) or the result of some
 operations with cells:
-```
+```python
 sheet.iloc[1,2] = sheet.iloc[1,3] + sheet.iloc[1,4]
 ```
 In the case that you want to assign the result of some operation (or just
@@ -273,25 +273,25 @@ that returns true if there is no variable in the system, false otherwise.
 
 To get (and set similarly) the variable as a cell object, you can also use
 the following approach with square brackets:
-```
+```python
 sheet.iloc[i, j] = sheet.var['VARIABLE_NAME']
 ```
 Same approach can be used for setting the value of variable:
-```
+```python
 sheet.var['VARIABLE_NAME'] = some_value
 ```
 Getting/setting the variables values should be done preferably by this logic.
 
 For defining Excel format/style of the variable value, use the attribute
 `excel_format` of the `var` property in the following logic:
-```
+```python
 sheet.var.excel_format['VARIABLE_NAME'] = {'num_format': '#,##0'} 
 ```
 
 #### Example
 Following example multiply some cell with value of
 PI constant stored as a variable `pi`:
-```
+```python
 sheet.set_variable(pi, 3.14159265359)
 sheet.iloc[i,j] = sheet.var['pi'] * sheet.iloc[x,y]
 ```
@@ -300,12 +300,12 @@ sheet.iloc[i,j] = sheet.var['pi'] * sheet.iloc[x,y]
 Similarly, like in NumPy or Pandas DataFrame, there is a possibility
 how to work with slices (e. g. if you want to select a whole row, column
 or set of rows and columns). Following code, select the third column:
-```
+```python
 sheet.iloc[:,2]
 ```
 You can again set the values in the slice to some constant, or the array
 of constants, or to another cell, or to the result of some computation.
-```
+```python
 sheet.iloc[:,2] = constant  # Constant (float, string)
 sheet.iloc[:,2] = sheet.iloc[1,3] + sheet.iloc[1,4]  # Computation result
 sheet.iloc[:,2] = sheet.iloc[1,3]  # Just a reference to a cell
@@ -390,7 +390,7 @@ All the parameters are the instance of `Cell` class.
 Consider the following example that compares whether two cells are equals,
 if yes, it takes some value in a cell, if not, another value in the
 different cell:
-```
+```python
 sheet.iloc[i,j] = sheet.fn.conditional(
     # Condition is the first parameter:
     sheet.iloc[1,2] == sheet.iloc[2,2],
@@ -413,7 +413,7 @@ The raw statement should never be used unless you really have to.
 
 #### Example of raw statement
 Consider that you need to compute an arccosine value of some cell:
-```
+```python
 sheet.iloc[i,j] = sheet.fn.raw(
     # Value that should be used as the result (as a Cell instance):
     sheet.fn.const(numpy.arccos(0.7)),
@@ -443,7 +443,7 @@ should be skipped.
 #### Example:
 Following example assign the value of the cell that is on the third row and 
 second column to the cell that is on the second row and second column.
-```
+```python
 sheet.iloc[1,1] = sheet.fn.offset(
     sheet.iloc[0,0], sheet.fn.const(2), sheet.fn.const(1)
 )
@@ -455,7 +455,7 @@ All operations have to be done using the objects of type Cell.
 #### Constants
 If you want to use a constant value, you need to create an un-anchored cell
 with this value. The easiest way of doing so is:
-```
+```python
 # For creating the Cell for computation with constant value 7
 constant_cell = sheet.fn.const(7)
 ```
@@ -581,25 +581,25 @@ operand is true or another operand is true, false otherwise.
     Usage: `sheet.iloc[i,j] = OPERAND_1 << OPERAND_2`
 
 Operations can be chained in the string:
-```
+```python
 sheet.iloc[i,j] = OPERAND_1 + OPERAND_2 * OPERAND_3 ** OPERAND_4
 ```
 The priority of the operators is the same as in normal mathematics. If
 you need to modify priority, you need to use brackets, for example:
-```
+```python
 sheet.iloc[i,j] = sheet.fn.brackets(OPERAND_1 + OPERAND_2) \
     * OPERAND_3 ** OPERAND_4
 ```
 #### Brackets for computation
 Brackets are technically speaking just another unary operator. They are
 defined in the `fn` property. They can be used like:
-```
+```python
 sheet.iloc[i,j] = sheet.fn.brackets(OPERAND_1 + OPERAND_2) \ 
     * OPERAND_3 ** OPERAND_4
 ```
 #### Example
 For example
-```
+```python
 # Equivalent of: value at [1,0] * (value at [2,1] + value at [3,1]) * exp(9)
 sheet.iloc[0,0] = sheet.iloc[1,0] * sheet.fn.brackets(
         sheet.iloc[2,1] + sheet.iloc[3,1]
@@ -611,7 +611,7 @@ word that is created in all the languages. The numerical value is accessible
 using the `value` property, whereas the words are accessible using
 the `parse` property (it returns a dictionary with languages as keys
 and word as values).
-```
+```python
 # Access the value of the cell
 value_of_cell: float = sheet.iloc[i, j].value
 # Access all the words in the cell
@@ -654,7 +654,7 @@ because once you rewrite the value of the cell on a given location,
 the description is lost.
 
 Example of using the description field:
-```
+```python
 # Setting the description of a single cell
 sheet.iloc[i, j].description = "Some text describing a cell"
 # Seting the description to a slice (propagate its value to each cell)
@@ -662,7 +662,7 @@ sheet.iloc[i:j, k:l].description = "Text describing each cell in the slice"
 ```
 #### Exporting to Excel
 It can be done using the interface:
-```
+```python
 sheet.to_excel(
     file_path: str,
     /, *,
@@ -708,7 +708,7 @@ assignment of values to the cell overrides its style. Format/style can
 be set for both slice and single value. 
 
 Example of setting Excel format/style for cells and slices:
-```
+```python
 # Set the format of the cell on the position [i, j] (use bold value)
 sheet.iloc[i, j].excel_format = {'bold': True}
 # Set the format of the cell slice (use bold value and red color)
@@ -721,7 +721,7 @@ library relies.
 
 #### Exporting to the dictionary (and JSON)
 It can be done using the interface:
-```
+```python
 sheet.to_dictionary(languages: List[str] = None,
                     use_language_for_description: Optional[str] = None, 
                     /, *, 
@@ -772,7 +772,7 @@ directly use static method `generate_json_schema` of the `Spreadsheet` class.
 
 ##### Output example
 Output of the JSON format
-```
+```json
 {
    "table":{
       "data":{
@@ -985,7 +985,7 @@ Output of the JSON format
 
 #### Exporting to the CSV
 It can be done using the interface:
-```
+```python
 sheet.to_excel(*,
     language: Optional[str] = None,
     spaces_replacement: str = ' ',
@@ -1014,7 +1014,7 @@ language in each cell instead of values.
 CSV of the values as a string.
 
 ##### Output example
-```
+```text
 Sheet,NL_C_0,NL_C_1,NL_C_2,NL_C_3
 R_0,1,2,3,4
 R_1,5,6,7,8
@@ -1025,7 +1025,7 @@ R_4,17,18,19,20
 
 #### Exporting to Markdown (MD) format
 It can be done using the interface:
-```
+```python
 sheet.to_markdown(*,
     language: Optional[str] = None,
     spaces_replacement: str = ' ',
@@ -1050,7 +1050,7 @@ skipped
 Markdown (MD) compatible table of the values as a string.
 
 ##### Output example
-```
+```markdown
 | Sheet |*NL_C_0* | *NL_C_1* | *NL_C_2* | *NL_C_3* |
 |----|----|----|----|----|
 | *R_0* | 1 | 2 | 3 | 4 |
@@ -1062,7 +1062,7 @@ Markdown (MD) compatible table of the values as a string.
 
 #### Exporting to HTML table format
 It can be done using the interface:
-```
+```python
 sheet.to_html_table(*,
     spaces_replacement: str = ' ',
     top_right_corner_text: str = "Sheet",
@@ -1089,7 +1089,7 @@ HTML table of the values as a string. Table is usable mainly for debugging
 purposes.
 
 ##### Output example
-```
+```html
 <table>
    <tr>
       <th>Sheet</th>
@@ -1144,7 +1144,7 @@ a constant defined by the user for some computation (and does not have
 any position in the sheet grid yet).
 
 **Example:**
-```
+```python
 anchored_cell = sheet.iloc[4,2]
 unanchored_cell_1 = sheet.iloc[4,2] * sheet.iloc[5,2]
 unanchored_cell_2 = sheet.fn.const(9)
@@ -1153,24 +1153,24 @@ unanchored_cell_2 = sheet.fn.const(9)
 ## Software User Manual (SUM), how to use it?
 ### Installation
 To install the most actual package, use the command:
-```
+```commandline
 git clone https://github.com/david-salac/Portable-spreadsheet-generator
 cd Portable-spreadsheet-generator/
 python setup.py install
 ```
 or simply install using PIP:
-```
+```commandline
 pip install portable-spreadsheet
 ```
 #### Running of the unit-tests
 For running package unit-tests, use command:
-```
+```commandline
 python setup.py test
 ```
 In order to run package unit-tests you need to clone package first.
 ### Demo
 The following demo contains a simple example with aggregations.
-```
+```python
 import portable_spreadsheet as ps
 import numpy as np
 
