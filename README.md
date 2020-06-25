@@ -734,7 +734,8 @@ this list.
 descriptions (labels) are replaced with this string.
 * `skip_nan_cell (bool)`: If true, `None` (NaN, empty cells) values are
 skipped, default value is false (NaN values are included).
-* `nan_replacement (object)`: Replacement for the `None` (NaN) value
+* `nan_replacement (object)`: Replacement for the `None` (NaN) value.
+* `error_replacement (object)`: Replacement for the error value.
 * `append_dict (dict)`: Append this dictionary to output.
 * `generate_schema (bool)`: If true, returns the JSON schema.
 

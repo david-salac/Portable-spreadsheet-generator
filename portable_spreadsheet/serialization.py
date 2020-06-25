@@ -7,7 +7,7 @@ from numbers import Number
 import xlsxwriter
 import numpy
 
-from .cell import Cell
+from .cell import Cell, CellValueError
 from .cell_type import CellType
 from .cell_indices import CellIndices
 
@@ -252,7 +252,14 @@ class Serialization(abc.ABC):
                     else:
                         cell_format = None
                     # Write actual data
-                    if values_only or (cell.cell_type == CellType.value_only):
+                    if type(cell.value) == CellValueError:
+                        worksheet.write_formula(row_idx + offset_row,
+                                                col_idx + offset_col,
+                                                cell.parse['excel'],
+                                                value='#VALUE!',
+                                                cell_format=cell_format)
+                    elif values_only or (
+                            cell.cell_type == CellType.value_only):
                         # If the cell is a value only, use method 'write'
                         worksheet.write(row_idx + offset_row,
                                         col_idx + offset_col,
@@ -302,6 +309,7 @@ class Serialization(abc.ABC):
                       spaces_replacement: str = ' ',
                       skip_nan_cell: bool = False,
                       nan_replacement: object = None,
+                      error_replacement: object = None,
                       append_dict: dict = {},
                       generate_schema: bool = False
                       ) -> T_out_dict:
@@ -321,7 +329,8 @@ class Serialization(abc.ABC):
             spaces_replacement (str): All the spaces in the rows and columns
                 descriptions (labels) are replaced with this string.
             skip_nan_cell (bool): If True, None (NaN) values are skipped.
-            nan_replacement (object): Replacement for the None (NaN) value
+            nan_replacement (object): Replacement for the None (NaN) value.
+            error_replacement (object): Replacement for the error value.
             append_dict (dict): Append this dictionary to output.
             generate_schema (bool): If true, returns the JSON schema.
 
@@ -425,6 +434,8 @@ class Serialization(abc.ABC):
                 # Replace the NaN value as required
                 if cell_value is None:
                     cell_value = nan_replacement
+                elif type(cell_value) == CellValueError:
+                    cell_value = error_replacement
                 # Receive values from cell (either integer or building text)
                 parsed_cell = cell.parse
                 # Following dict is the dict that is exported as a cell
@@ -494,6 +505,7 @@ class Serialization(abc.ABC):
                 spaces_replacement: str = ' ',
                 skip_nan_cell: bool = False,
                 nan_replacement: object = None,
+                error_replacement: object = None,
                 append_dict: dict = {},
                 generate_schema: bool = False) -> str:
         """Dumps the exported dictionary to the JSON object.
@@ -512,7 +524,8 @@ class Serialization(abc.ABC):
             spaces_replacement (str): All the spaces in the rows and columns
                 descriptions (labels) are replaced with this string.
             skip_nan_cell (bool): If True, None (NaN) values are skipped.
-            nan_replacement (object): Replacement for the None (NaN) value
+            nan_replacement (object): Replacement for the None (NaN) value.
+            error_replacement (object): Replacement for the error value.
             append_dict (dict): Append this dictionary to output.
             generate_schema (bool): If true, returns the JSON schema.
 
@@ -542,6 +555,7 @@ class Serialization(abc.ABC):
                                spaces_replacement=spaces_replacement,
                                skip_nan_cell=skip_nan_cell,
                                nan_replacement=nan_replacement,
+                               error_replacement=error_replacement,
                                append_dict=append_dict,
                                generate_schema=generate_schema),
             cls=_NumPyEncoder
