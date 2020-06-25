@@ -7,7 +7,7 @@ from numbers import Number
 import xlsxwriter
 import numpy
 
-from .cell import Cell
+from .cell import Cell, CellValueError
 from .cell_type import CellType
 from .cell_indices import CellIndices
 
@@ -252,7 +252,14 @@ class Serialization(abc.ABC):
                     else:
                         cell_format = None
                     # Write actual data
-                    if values_only or (cell.cell_type == CellType.value_only):
+                    if type(cell.value) == CellValueError:
+                        worksheet.write_formula(row_idx + offset_row,
+                                                col_idx + offset_col,
+                                                cell.parse['excel'],
+                                                value='#VALUE!',
+                                                cell_format=cell_format)
+                    elif values_only or (
+                            cell.cell_type == CellType.value_only):
                         # If the cell is a value only, use method 'write'
                         worksheet.write(row_idx + offset_row,
                                         col_idx + offset_col,
@@ -302,6 +309,7 @@ class Serialization(abc.ABC):
                       spaces_replacement: str = ' ',
                       skip_nan_cell: bool = False,
                       nan_replacement: object = None,
+                      error_replacement: object = None,
                       append_dict: dict = {},
                       generate_schema: bool = False
                       ) -> T_out_dict:
@@ -321,7 +329,8 @@ class Serialization(abc.ABC):
             spaces_replacement (str): All the spaces in the rows and columns
                 descriptions (labels) are replaced with this string.
             skip_nan_cell (bool): If True, None (NaN) values are skipped.
-            nan_replacement (object): Replacement for the None (NaN) value
+            nan_replacement (object): Replacement for the None (NaN) value.
+            error_replacement (object): Replacement for the error value.
             append_dict (dict): Append this dictionary to output.
             generate_schema (bool): If true, returns the JSON schema.
 
@@ -363,7 +372,6 @@ class Serialization(abc.ABC):
                           ]
              ]
         if (x_helptext := self.cell_indices.columns_help_text) is not None:  # noqa E203
-            x_helptext_descriptor = "column_description"
             # Reflects the column offset for export
             x_helptext = x_helptext[self.export_offset[1]:self.shape[1]]
         x_start_key = 'columns'
@@ -376,7 +384,6 @@ class Serialization(abc.ABC):
                           ]
              ]
         if (y_helptext := self.cell_indices.rows_help_text) is not None:  # noqa E203
-            y_helptext_descriptor = "row_description"
             # Reflects the row offset for export
             y_helptext = y_helptext[self.export_offset[0]:self.shape[0]]
         y_start_key = 'rows'
@@ -391,7 +398,6 @@ class Serialization(abc.ABC):
                           ]
                  ]
             if (x_helptext := self.cell_indices.rows_help_text) is not None:  # noqa E203
-                x_helptext_descriptor = "row_description"
                 # Reflects the row offset for export
                 x_helptext = x_helptext[self.export_offset[0]:self.shape[0]]
             x_start_key = 'rows'
@@ -403,7 +409,6 @@ class Serialization(abc.ABC):
                           self.export_offset[1]:self.shape[1]
                           ]]
             if (y_helptext := self.cell_indices.columns_help_text) is not None:  # noqa E203
-                y_helptext_descriptor = "column_description"
                 # Reflects the column offset for export
                 y_helptext = y_helptext[self.export_offset[1]:self.shape[1]]
             y_start_key = 'columns'
@@ -425,6 +430,8 @@ class Serialization(abc.ABC):
                 # Replace the NaN value as required
                 if cell_value is None:
                     cell_value = nan_replacement
+                elif type(cell_value) == CellValueError:
+                    cell_value = error_replacement
                 # Receive values from cell (either integer or building text)
                 parsed_cell = cell.parse
                 # Following dict is the dict that is exported as a cell
@@ -447,21 +454,8 @@ class Serialization(abc.ABC):
                 pseudolang_and_val['value'] = cell_value
                 pseudolang_and_val['description'] = cell_description
                 y_values[y_start_key][y[idx_y]] = pseudolang_and_val
-                if y_helptext is not None:
-                    # Add the help text for the row/column
-                    if (ht := y_helptext[idx_y]) is None or len(  # noqa
-                            y_helptext[idx_y]) == 0:
-                        # If it is not set or is empty string, use NaN value
-                        ht = nan_replacement
-                    y_values[y_start_key][y[idx_y]][y_helptext_descriptor] = ht
+
             values[x_start_key][x[idx_x]] = y_values
-            if x_helptext is not None:
-                # Add the help text for the column/row
-                if (ht := x_helptext[idx_x]) is None or len(  # noqa
-                        x_helptext[idx_x]) == 0:
-                    # If it is not set or is empty string, use NaN value
-                    ht = nan_replacement
-                values[x_start_key][x[idx_x]][x_helptext_descriptor] = ht
 
         # Create data parent
         data = {'data': values}
@@ -469,13 +463,36 @@ class Serialization(abc.ABC):
         # Add variables
         data['variables'] = self._get_variables().variables_dict
         # Add a row and column labels as arrays
-        if by_row:
-            data['row-labels'] = x
-            data['column-labels'] = y
-        else:
-            data['row-labels'] = y
-            data['column-labels'] = x
+        if not by_row:
+            x, y = y, x
 
+        # Add column/row metadata
+
+        # Add row description (and labels)
+        data['rows'] = []
+        for idx, x_label in enumerate(x):
+            metadata: dict = {"name": x_label}
+            if x_helptext is not None:
+                # Add the help text (description) for the row
+                if (ht := x_helptext[idx]) is None or len(  # noqa
+                        x_helptext[idx]) == 0:
+                    # If it is not set or is empty string, use NaN value
+                    ht = nan_replacement
+                metadata['description'] = ht
+            data['rows'].append(metadata)
+
+        # Add column description (and labels)
+        data['columns'] = []
+        for idx, y_label in enumerate(y):
+            metadata = {"name": y_label}
+            if y_helptext is not None:
+                # Add the help text (description) for the column
+                if (ht := y_helptext[idx]) is None or len(  # noqa
+                        y_helptext[idx]) == 0:
+                    # If it is not set or is empty string, use NaN value
+                    ht = nan_replacement
+                metadata['description'] = ht
+            data['columns'].append(metadata)
         # Create table parent
         table = {'table': data}
 
@@ -494,6 +511,7 @@ class Serialization(abc.ABC):
                 spaces_replacement: str = ' ',
                 skip_nan_cell: bool = False,
                 nan_replacement: object = None,
+                error_replacement: object = None,
                 append_dict: dict = {},
                 generate_schema: bool = False) -> str:
         """Dumps the exported dictionary to the JSON object.
@@ -512,7 +530,8 @@ class Serialization(abc.ABC):
             spaces_replacement (str): All the spaces in the rows and columns
                 descriptions (labels) are replaced with this string.
             skip_nan_cell (bool): If True, None (NaN) values are skipped.
-            nan_replacement (object): Replacement for the None (NaN) value
+            nan_replacement (object): Replacement for the None (NaN) value.
+            error_replacement (object): Replacement for the error value.
             append_dict (dict): Append this dictionary to output.
             generate_schema (bool): If true, returns the JSON schema.
 
@@ -542,6 +561,7 @@ class Serialization(abc.ABC):
                                spaces_replacement=spaces_replacement,
                                skip_nan_cell=skip_nan_cell,
                                nan_replacement=nan_replacement,
+                               error_replacement=error_replacement,
                                append_dict=append_dict,
                                generate_schema=generate_schema),
             cls=_NumPyEncoder
@@ -556,46 +576,75 @@ class Serialization(abc.ABC):
         """
         false = False
         schema = {
-            "$id": "http://portable-spreadsheet.com/spreadsheet.v2.schema.json",  # noqa
-            # noqa
+            "$id": "http://portable-spreadsheet.com/spreadsheet.v3.schema.json",  # noqa
             "$schema": "http://json-schema.org/draft-07/schema#",
             "title": "Portable Spreadsheet JSON output schema",
             "description": "JSON schema of the Portable Spreadsheet output",
 
+            "type": "object",
             "required": ["table"],
 
             "properties": {
                 "table": {
                     "type": "object",
-                    "required": ["variables", "row-labels", "column-labels",
+                    "required": ["variables",
+                                 "rows",
+                                 "columns",
                                  "data"],  # noqa
                     "properties": {
-                        "row-labels": {
-                            "minProperties": 0,
-                            "propertyNames": {
-                                "pattern": "^[0-9]*$"
-                            },
-                            "patternProperties": {
-                                "^[0-9]*$": {
-                                    "type": "string"
-                                }
+                        "rows": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "name": {
+                                        "anyOf": [
+                                            {"type": "string"},
+                                            {"type": "number"},
+                                            {"type": "null"}
+                                        ]
+                                    },
+                                    "description": {
+                                        "anyOf": [
+                                            {"type": "string"},
+                                            {"type": "number"},
+                                            {"type": "null"}
+                                        ]
+                                    },
+                                },
+                                "additionalProperties": false,
+                                "required": ['name']
                             },
                             "additionalProperties": false
                         },
-                        "column-labels": {
-                            "minProperties": 0,
-                            "propertyNames": {
-                                "pattern": "^[0-9]*$"
-                            },
-                            "patternProperties": {
-                                "^[0-9]*$": {
-                                    "type": "string"
-                                }
+                        "columns": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "name": {
+                                        "anyOf": [
+                                            {"type": "string"},
+                                            {"type": "number"},
+                                            {"type": "null"}
+                                        ]
+                                    },
+                                    "description": {
+                                        "anyOf": [
+                                            {"type": "string"},
+                                            {"type": "number"},
+                                            {"type": "null"}
+                                        ]
+                                    },
+                                },
+                                "additionalProperties": false,
+                                "required": ['name']
                             },
                             "additionalProperties": false
                         },
                         "variables": {
                             "minProperties": 0,
+                            "type": "object",
                             "propertyNames": {
                                 "type": "string"
                             },
@@ -668,13 +717,6 @@ class Serialization(abc.ABC):
                                                                         {"type": "null"}  # noqa
                                                                     ]
                                                                 },
-                                                                r"row_description|column_description": {  # noqa
-                                                                    "anyOf": [
-                                                                        {"type": "string"},  # noqa
-                                                                        {"type": "number"},  # noqa
-                                                                        {"type": "null"}  # noqa
-                                                                    ]
-                                                                },
                                                                 "^.*$": {
                                                                     "anyOf": [
                                                                         {"type": "string"},  # noqa
@@ -687,14 +729,7 @@ class Serialization(abc.ABC):
                                                             "additionalProperties": false  # noqa
                                                         }
                                                     }
-                                                },
-                                                r"row_description|column_description": {  # noqa
-                                                    "anyOf": [
-                                                            {"type": "string"},
-                                                            {"type": "number"},
-                                                            {"type": "null"}
-                                                        ]
-                                                    }
+                                                }
                                             },
                                             "minProperties": 1,
                                             "maxProperties": 2,
