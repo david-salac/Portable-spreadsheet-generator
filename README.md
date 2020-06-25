@@ -784,35 +784,30 @@ Output of the JSON format
                      "python_numpy":"1",
                      "native":"1",
                      "value":1,
-                     "description":"DescFor0,0",
-                     "column_description":"HT_C_0"
+                     "description":"DescFor0,0"
                   },
                   "NL_C_1":{
                      "excel":"2",
                      "python_numpy":"2",
                      "native":"2",
                      "value":2,
-                     "description":"DescFor0,1",
-                     "column_description":"HT_C_1"
+                     "description":"DescFor0,1"
                   },
                   "NL_C_2":{
                      "excel":"3",
                      "python_numpy":"3",
                      "native":"3",
                      "value":3,
-                     "description":"DescFor0,2",
-                     "column_description":"HT_C_2"
+                     "description":"DescFor0,2"
                   },
                   "NL_C_3":{
                      "excel":"4",
                      "python_numpy":"4",
                      "native":"4",
                      "value":4,
-                     "description":"DescFor0,3",
-                     "column_description":"HT_C_3"
+                     "description":"DescFor0,3"
                   }
-               },
-               "row_description":"HT_R_0"
+               }
             },
             "R_1":{
                "columns":{
@@ -821,35 +816,30 @@ Output of the JSON format
                      "python_numpy":"5",
                      "native":"5",
                      "value":5,
-                     "description":"DescFor1,0",
-                     "column_description":"HT_C_0"
+                     "description":"DescFor1,0"
                   },
                   "NL_C_1":{
                      "excel":"6",
                      "python_numpy":"6",
                      "native":"6",
                      "value":6,
-                     "description":"DescFor1,1",
-                     "column_description":"HT_C_1"
+                     "description":"DescFor1,1"
                   },
                   "NL_C_2":{
                      "excel":"7",
                      "python_numpy":"7",
                      "native":"7",
                      "value":7,
-                     "description":"DescFor1,2",
-                     "column_description":"HT_C_2"
+                     "description":"DescFor1,2"
                   },
                   "NL_C_3":{
                      "excel":"8",
                      "python_numpy":"8",
                      "native":"8",
                      "value":8,
-                     "description":"DescFor1,3",
-                     "column_description":"HT_C_3"
+                     "description":"DescFor1,3"
                   }
-               },
-               "row_description":"HT_R_1"
+               }
             },
             "R_2":{
                "columns":{
@@ -858,35 +848,30 @@ Output of the JSON format
                      "python_numpy":"9",
                      "native":"9",
                      "value":9,
-                     "description":"DescFor2,0",
-                     "column_description":"HT_C_0"
+                     "description":"DescFor2,0"
                   },
                   "NL_C_1":{
                      "excel":"10",
                      "python_numpy":"10",
                      "native":"10",
                      "value":10,
-                     "description":"DescFor2,1",
-                     "column_description":"HT_C_1"
+                     "description":"DescFor2,1"
                   },
                   "NL_C_2":{
                      "excel":"11",
                      "python_numpy":"11",
                      "native":"11",
                      "value":11,
-                     "description":"DescFor2,2",
-                     "column_description":"HT_C_2"
+                     "description":"DescFor2,2"
                   },
                   "NL_C_3":{
                      "excel":"12",
                      "python_numpy":"12",
                      "native":"12",
                      "value":12,
-                     "description":"DescFor2,3",
-                     "column_description":"HT_C_3"
+                     "description":"DescFor2,3"
                   }
-               },
-               "row_description":"HT_R_2"
+               }
             },
             "R_3":{
                "columns":{
@@ -895,35 +880,30 @@ Output of the JSON format
                      "python_numpy":"13",
                      "native":"13",
                      "value":13,
-                     "description":"DescFor3,0",
-                     "column_description":"HT_C_0"
+                     "description":"DescFor3,0"
                   },
                   "NL_C_1":{
                      "excel":"14",
                      "python_numpy":"14",
                      "native":"14",
                      "value":14,
-                     "description":"DescFor3,1",
-                     "column_description":"HT_C_1"
+                     "description":"DescFor3,1"
                   },
                   "NL_C_2":{
                      "excel":"15",
                      "python_numpy":"15",
                      "native":"15",
                      "value":15,
-                     "description":"DescFor3,2",
-                     "column_description":"HT_C_2"
+                     "description":"DescFor3,2"
                   },
                   "NL_C_3":{
                      "excel":"16",
                      "python_numpy":"16",
                      "native":"16",
                      "value":16,
-                     "description":"DescFor3,3",
-                     "column_description":"HT_C_3"
+                     "description":"DescFor3,3"
                   }
-               },
-               "row_description":"HT_R_3"
+               }
             },
             "R_4":{
                "columns":{
@@ -932,52 +912,75 @@ Output of the JSON format
                      "python_numpy":"17",
                      "native":"17",
                      "value":17,
-                     "description":"DescFor4,0",
-                     "column_description":"HT_C_0"
+                     "description":"DescFor4,0"
                   },
                   "NL_C_1":{
                      "excel":"18",
                      "python_numpy":"18",
                      "native":"18",
                      "value":18,
-                     "description":"DescFor4,1",
-                     "column_description":"HT_C_1"
+                     "description":"DescFor4,1"
                   },
                   "NL_C_2":{
                      "excel":"19",
                      "python_numpy":"19",
                      "native":"19",
                      "value":19,
-                     "description":"DescFor4,2",
-                     "column_description":"HT_C_2"
+                     "description":"DescFor4,2"
                   },
                   "NL_C_3":{
                      "excel":"20",
                      "python_numpy":"20",
                      "native":"20",
                      "value":20,
-                     "description":"DescFor4,3",
-                     "column_description":"HT_C_3"
+                     "description":"DescFor4,3"
                   }
-               },
-               "row_description":"HT_R_4"
+               }
             }
          }
       },
       "variables":{
+
       },
-      "row-labels":[
-         "R_0",
-         "R_1",
-         "R_2",
-         "R_3",
-         "R_4"
+      "rows":[
+         {
+            "name":"R_0",
+            "description":"HT_R_0"
+         },
+         {
+            "name":"R_1",
+            "description":"HT_R_1"
+         },
+         {
+            "name":"R_2",
+            "description":"HT_R_2"
+         },
+         {
+            "name":"R_3",
+            "description":"HT_R_3"
+         },
+         {
+            "name":"R_4",
+            "description":"HT_R_4"
+         }
       ],
-      "column-labels":[
-         "NL_C_0",
-         "NL_C_1",
-         "NL_C_2",
-         "NL_C_3"
+      "columns":[
+         {
+            "name":"NL_C_0",
+            "description":"HT_C_0"
+         },
+         {
+            "name":"NL_C_1",
+            "description":"HT_C_1"
+         },
+         {
+            "name":"NL_C_2",
+            "description":"HT_C_2"
+         },
+         {
+            "name":"NL_C_3",
+            "description":"HT_C_3"
+         }
       ]
    }
 }

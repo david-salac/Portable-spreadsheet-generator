@@ -372,7 +372,6 @@ class Serialization(abc.ABC):
                           ]
              ]
         if (x_helptext := self.cell_indices.columns_help_text) is not None:  # noqa E203
-            x_helptext_descriptor = "column_description"
             # Reflects the column offset for export
             x_helptext = x_helptext[self.export_offset[1]:self.shape[1]]
         x_start_key = 'columns'
@@ -385,7 +384,6 @@ class Serialization(abc.ABC):
                           ]
              ]
         if (y_helptext := self.cell_indices.rows_help_text) is not None:  # noqa E203
-            y_helptext_descriptor = "row_description"
             # Reflects the row offset for export
             y_helptext = y_helptext[self.export_offset[0]:self.shape[0]]
         y_start_key = 'rows'
@@ -400,7 +398,6 @@ class Serialization(abc.ABC):
                           ]
                  ]
             if (x_helptext := self.cell_indices.rows_help_text) is not None:  # noqa E203
-                x_helptext_descriptor = "row_description"
                 # Reflects the row offset for export
                 x_helptext = x_helptext[self.export_offset[0]:self.shape[0]]
             x_start_key = 'rows'
@@ -412,7 +409,6 @@ class Serialization(abc.ABC):
                           self.export_offset[1]:self.shape[1]
                           ]]
             if (y_helptext := self.cell_indices.columns_help_text) is not None:  # noqa E203
-                y_helptext_descriptor = "column_description"
                 # Reflects the column offset for export
                 y_helptext = y_helptext[self.export_offset[1]:self.shape[1]]
             y_start_key = 'columns'
@@ -458,21 +454,8 @@ class Serialization(abc.ABC):
                 pseudolang_and_val['value'] = cell_value
                 pseudolang_and_val['description'] = cell_description
                 y_values[y_start_key][y[idx_y]] = pseudolang_and_val
-                if y_helptext is not None:
-                    # Add the help text for the row/column
-                    if (ht := y_helptext[idx_y]) is None or len(  # noqa
-                            y_helptext[idx_y]) == 0:
-                        # If it is not set or is empty string, use NaN value
-                        ht = nan_replacement
-                    y_values[y_start_key][y[idx_y]][y_helptext_descriptor] = ht
+
             values[x_start_key][x[idx_x]] = y_values
-            if x_helptext is not None:
-                # Add the help text for the column/row
-                if (ht := x_helptext[idx_x]) is None or len(  # noqa
-                        x_helptext[idx_x]) == 0:
-                    # If it is not set or is empty string, use NaN value
-                    ht = nan_replacement
-                values[x_start_key][x[idx_x]][x_helptext_descriptor] = ht
 
         # Create data parent
         data = {'data': values}
@@ -480,13 +463,36 @@ class Serialization(abc.ABC):
         # Add variables
         data['variables'] = self._get_variables().variables_dict
         # Add a row and column labels as arrays
-        if by_row:
-            data['row-labels'] = x
-            data['column-labels'] = y
-        else:
-            data['row-labels'] = y
-            data['column-labels'] = x
+        if not by_row:
+            x, y = y, x
 
+        # Add column/row metadata
+
+        # Add row description (and labels)
+        data['rows'] = []
+        for idx, x_label in enumerate(x):
+            metadata: dict = {"name": x_label}
+            if x_helptext is not None:
+                # Add the help text (description) for the row
+                if (ht := x_helptext[idx]) is None or len(  # noqa
+                        x_helptext[idx]) == 0:
+                    # If it is not set or is empty string, use NaN value
+                    ht = nan_replacement
+                metadata['description'] = ht
+            data['rows'].append(metadata)
+
+        # Add column description (and labels)
+        data['columns'] = []
+        for idx, y_label in enumerate(y):
+            metadata = {"name": y_label}
+            if y_helptext is not None:
+                # Add the help text (description) for the column
+                if (ht := y_helptext[idx]) is None or len(  # noqa
+                        y_helptext[idx]) == 0:
+                    # If it is not set or is empty string, use NaN value
+                    ht = nan_replacement
+                metadata['description'] = ht
+            data['columns'].append(metadata)
         # Create table parent
         table = {'table': data}
 
@@ -570,46 +576,75 @@ class Serialization(abc.ABC):
         """
         false = False
         schema = {
-            "$id": "http://portable-spreadsheet.com/spreadsheet.v2.schema.json",  # noqa
-            # noqa
+            "$id": "http://portable-spreadsheet.com/spreadsheet.v3.schema.json",  # noqa
             "$schema": "http://json-schema.org/draft-07/schema#",
             "title": "Portable Spreadsheet JSON output schema",
             "description": "JSON schema of the Portable Spreadsheet output",
 
+            "type": "object",
             "required": ["table"],
 
             "properties": {
                 "table": {
                     "type": "object",
-                    "required": ["variables", "row-labels", "column-labels",
+                    "required": ["variables",
+                                 "rows",
+                                 "columns",
                                  "data"],  # noqa
                     "properties": {
-                        "row-labels": {
-                            "minProperties": 0,
-                            "propertyNames": {
-                                "pattern": "^[0-9]*$"
-                            },
-                            "patternProperties": {
-                                "^[0-9]*$": {
-                                    "type": "string"
-                                }
+                        "rows": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "name": {
+                                        "anyOf": [
+                                            {"type": "string"},
+                                            {"type": "number"},
+                                            {"type": "null"}
+                                        ]
+                                    },
+                                    "description": {
+                                        "anyOf": [
+                                            {"type": "string"},
+                                            {"type": "number"},
+                                            {"type": "null"}
+                                        ]
+                                    },
+                                },
+                                "additionalProperties": false,
+                                "required": ['name']
                             },
                             "additionalProperties": false
                         },
-                        "column-labels": {
-                            "minProperties": 0,
-                            "propertyNames": {
-                                "pattern": "^[0-9]*$"
-                            },
-                            "patternProperties": {
-                                "^[0-9]*$": {
-                                    "type": "string"
-                                }
+                        "columns": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "name": {
+                                        "anyOf": [
+                                            {"type": "string"},
+                                            {"type": "number"},
+                                            {"type": "null"}
+                                        ]
+                                    },
+                                    "description": {
+                                        "anyOf": [
+                                            {"type": "string"},
+                                            {"type": "number"},
+                                            {"type": "null"}
+                                        ]
+                                    },
+                                },
+                                "additionalProperties": false,
+                                "required": ['name']
                             },
                             "additionalProperties": false
                         },
                         "variables": {
                             "minProperties": 0,
+                            "type": "object",
                             "propertyNames": {
                                 "type": "string"
                             },
@@ -682,13 +717,6 @@ class Serialization(abc.ABC):
                                                                         {"type": "null"}  # noqa
                                                                     ]
                                                                 },
-                                                                r"row_description|column_description": {  # noqa
-                                                                    "anyOf": [
-                                                                        {"type": "string"},  # noqa
-                                                                        {"type": "number"},  # noqa
-                                                                        {"type": "null"}  # noqa
-                                                                    ]
-                                                                },
                                                                 "^.*$": {
                                                                     "anyOf": [
                                                                         {"type": "string"},  # noqa
@@ -701,14 +729,7 @@ class Serialization(abc.ABC):
                                                             "additionalProperties": false  # noqa
                                                         }
                                                     }
-                                                },
-                                                r"row_description|column_description": {  # noqa
-                                                    "anyOf": [
-                                                            {"type": "string"},
-                                                            {"type": "number"},
-                                                            {"type": "null"}
-                                                        ]
-                                                    }
+                                                }
                                             },
                                             "minProperties": 1,
                                             "maxProperties": 2,
