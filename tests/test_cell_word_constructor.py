@@ -258,6 +258,13 @@ class TestCellBinaryOperations(unittest.TestCase):
                                real_operation_fn(self.u_operand_1.value,
                                                  self.u_operand_2.value))
 
+    def test_string_equal(self):
+        """Test if the strings are interpreted correctly in operations"""
+        u_operand_str = Cell(None, None, "abc", cell_indices=self.cell_indices)
+        comp = (self.a_operand_1 == u_operand_str)
+        self.assertEqual(comp.parse['python_numpy'], 'values[3,4]=="abc"')
+        self.assertEqual(comp.parse['excel'], '=F5="abc"')
+
     def test_add(self):
         """Test adding"""
         # Method test

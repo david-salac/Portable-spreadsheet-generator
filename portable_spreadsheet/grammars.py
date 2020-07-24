@@ -11,9 +11,13 @@ EXCEL = {
     },
     "cells": {
         # like 7
-        "constant": {
+        "constant-numeric": {
             "prefix": "",
             "suffix": "",
+        },
+        "constant-string": {
+            "prefix": '"',
+            "suffix": '"',
         },
         "variable": {
             "prefix": "",
@@ -295,9 +299,13 @@ NATIVE = {
     },
     "cells": {
         # like 7
-        "constant": {
+        "constant-numeric": {
             "prefix": "",
             "suffix": "",
+        },
+        "constant-string": {
+            "prefix": '"',
+            "suffix": '"',
         },
         "variable": {
             "prefix": "value of variable '",
@@ -580,9 +588,13 @@ PYTHON_NUMPY = {
     },
     "cells": {
         # like 7
-        "constant": {
+        "constant-numeric": {
             "prefix": "",
             "suffix": "",
+        },
+        "constant-string": {
+            "prefix": '"',
+            "suffix": '"',
         },
         "empty": {
             "content": ""
@@ -885,8 +897,13 @@ GRAMMAR_PATTERN: dict = {
     "cells": {
         # Define the basic words related to a cell
 
-        # Constant definition (like 7):
-        "constant": {
+        # Numeric constant definition (like 7):
+        "constant-numeric": {
+            "prefix": str,
+            "suffix": str,
+        },
+        # String constant definition (like "hello"):
+        "constant-string": {
             "prefix": str,
             "suffix": str,
         },

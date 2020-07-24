@@ -317,7 +317,7 @@ class CellSlice(Serialization):
                 Some value or list (or numpy array) of values that should be
                 set for all the cells inside slice.
         """
-        if isinstance(other, (np.ndarray, list)):
+        if isinstance(other, (np.ndarray, list, tuple)):
             dim_match = True
             is_list = True
             is_1d = False
