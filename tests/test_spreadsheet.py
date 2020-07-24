@@ -1,6 +1,7 @@
 import unittest
 
 import copy
+import os
 
 import numpy as np
 
@@ -10,6 +11,7 @@ from portable_spreadsheet.cell_type import CellType
 from portable_spreadsheet.cell_slice import CellSlice
 from portable_spreadsheet.cell_indices import CellIndices
 from portable_spreadsheet.cell_indices_templates import excel_generator
+from portable_spreadsheet import __version__
 
 
 class TestSpreadsheetBasicFunctionality(unittest.TestCase):
@@ -329,3 +331,12 @@ class TestSpreadsheetSelection(unittest.TestCase):
         self.assertAllClose2D(sheet.to_numpy(), np_sheet)
         # Test getter
         self.assertAllClose2D(sheet.iloc[i_idx].to_numpy(), np_sheet[i_idx])
+
+    def test_versions(self):
+        """Tests if the version in __init__.py matches to the setup.py one.
+        """
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+        setup_path = os.path.join(dir_path, "../setup.py")
+        with open(setup_path) as fp:
+            value: str = str(fp.read())
+            self.assertTrue(f'version="{__version__}"' in value)
