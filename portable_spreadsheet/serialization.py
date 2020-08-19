@@ -10,6 +10,7 @@ import numpy
 from .cell import Cell, CellValueError
 from .cell_type import CellType
 from .cell_indices import CellIndices
+from .skipped_label import SkippedLabel
 
 # ==== TYPES ====
 # Type for the output dictionary with the logic:
@@ -159,7 +160,8 @@ class Serialization(abc.ABC):
                          "value": "Value",
                          "description": "Description"
                      }),
-                 values_only: bool = False
+                 values_only: bool = False,
+                 skipped_label_value: str = ''
                  ) -> None:
         """Export the values inside Spreadsheet instance to the
             Excel 2010 compatible .xslx file
@@ -180,6 +182,8 @@ class Serialization(abc.ABC):
                 for the sheet with variables (first row in the sheet).
             values_only (bool): If true, only values (and not formulas) are
                 exported.
+            skipped_label_value (str): Replacement for the SkippedLabel
+                instances.
         """
         # Quick sanity check
         if ".xlsx" not in file_path[-5:]:
@@ -276,26 +280,32 @@ class Serialization(abc.ABC):
         if self.cell_indices.excel_append_column_labels:
             # Add labels of column
             for col_idx in range(self.shape[1]):
+                col_lbl = self.cell_indices.columns_labels[
+                                    # Reflect the export offset
+                                    col_idx + self.export_offset[1]
+                                ].replace(' ', spaces_replacement)
+                if isinstance(col_lbl, SkippedLabel):
+                    col_lbl = skipped_label_value
                 worksheet.write(0,
                                 col_idx + int(
                                     self.cell_indices.excel_append_row_labels
                                 ),
-                                self.cell_indices.columns_labels[
-                                    # Reflect the export offset
-                                    col_idx + self.export_offset[1]
-                                ].replace(' ', spaces_replacement),
+                                col_lbl,
                                 col_label_format)
         if self.cell_indices.excel_append_row_labels:
             # Add labels for rows
             for row_idx in range(self.shape[0]):
+                # Reflect the export offset
+                row_lbl = self.cell_indices.rows_labels[
+                    row_idx + self.export_offset[0]
+                ].replace(' ', spaces_replacement)
+                if isinstance(row_lbl, SkippedLabel):
+                    row_lbl = skipped_label_value
                 worksheet.write(row_idx + int(
                     self.cell_indices.excel_append_column_labels
                 ),
                                 0,
-                                self.cell_indices.rows_labels[
-                                    # Reflect the export offset
-                                    row_idx + self.export_offset[0]
-                                ].replace(' ', spaces_replacement),
+                                row_lbl,
                                 row_label_format)
         # Store results
         workbook.close()
@@ -1075,9 +1085,9 @@ class Serialization(abc.ABC):
         Returns:
             List[str]: List of column labels
         """
-        return self.cell_indices.columns_labels[
-            self.export_offset[1]:(self.export_offset[1] + self.shape[1])
-        ]
+        return self.cell_indices.columns_labels_str[self.export_offset[1]:(
+                self.export_offset[1] + self.shape[1])
+               ]
 
     @property
     def index(self) -> List[str]:
@@ -1086,6 +1096,6 @@ class Serialization(abc.ABC):
         Returns:
             List[str]: List of row labels.
         """
-        return self.cell_indices.rows_labels[
-            self.export_offset[0]:(self.export_offset[0] + self.shape[0])
-        ]
+        return self.cell_indices.rows_labels_str[self.export_offset[0]:(
+                self.export_offset[0] + self.shape[0])
+               ]
