@@ -161,13 +161,14 @@ sheet = ps.Spreadsheet.create_new_sheet(
 ```
 
 Other (keywords) arguments:
-1. `rows_labels (List[str])`: _(optional)_ List of masks (aliases)
-for row names.
-2. `columns_labels (List[str])`: _(optional)_ List of masks (aliases)
-for column names.
+1. `rows_labels (List[Union[str, SkippedLabel]])`: _(optional)_ List of masks
+(aliases) for row names.
+2. `columns_labels (List[Union[str, SkippedLabel]])`: _(optional)_ List of
+masks (aliases) for column names. If the instance of SkippedLabel is
+used, the export skips this label.
 3. `rows_help_text (List[str])`: _(optional)_ List of help texts for each row.
 4. `columns_help_text (List[str])`: _(optional)_ List of help texts for each
-column.
+column. If the instance of SkippedLabel is used, the export skips this label.
 5. `excel_append_row_labels (bool)`: _(optional)_ If True, one column is added
 on the beginning of the sheet as a offset for labels.
 6. `excel_append_column_labels (bool)`: _(optional)_ If True, one row is
@@ -710,7 +711,8 @@ sheet.to_excel(
         "value": "Value",
         "description": "Description"
     }),
-    values_only: bool = False
+    values_only: bool = False,
+    skipped_label_replacement: str = ''
 )
 ```
 The only required argument is the path to the destination file (positional
@@ -732,6 +734,8 @@ for the sheet with variables (first row in the sheet). Dictionary should look
 like: `{"name": "Name", "value": "Value", "description": "Description"}`.
 * `values_only (bool)`: If true, only values (and not formulas) are
 exported.
+* `skipped_label_replacement (str)`: Replacement for the SkippedLabel
+instances.
 
 ##### Setting the format/style for Excel cells
 There is a possibility to set the style/format of each cell in the grid
@@ -786,6 +790,9 @@ skipped, default value is false (NaN values are included).
 * `error_replacement (object)`: Replacement for the error value.
 * `append_dict (dict)`: Append this dictionary to output.
 * `generate_schema (bool)`: If true, returns the JSON schema.
+
+All the rows and columns with labels that are instances of SkippedLabel are
+entirely skipped. 
 
 **The return value is:** 
 
@@ -1029,7 +1036,8 @@ sheet.to_excel(*,
     sep: str = ',',
     line_terminator: str = '\n',
     na_rep: str = '',
-    skip_labels: bool = False
+    skip_labels: bool = False,
+    skipped_label_replacement: str = ''
 )
 ```
 Parameters are (all optional and key-value only):
@@ -1044,6 +1052,8 @@ language in each cell instead of values.
 * `na_rep (str)`: Replacement for the missing data.
 * `skip_labels (bool)`: If true, first row and column with labels is
  skipped
+* `skipped_label_replacement (str)`: Replacement for the SkippedLabel
+instances.
 
 **The return value is:** 
 
@@ -1067,7 +1077,8 @@ sheet.to_markdown(*,
     spaces_replacement: str = ' ',
     top_right_corner_text: str = "Sheet",
     na_rep: str = '',
-    skip_labels: bool = False
+    skip_labels: bool = False,
+    skipped_label_replacement: str = ''
 )
 ```
 Parameters are (all optional, all key-value only):
@@ -1080,6 +1091,8 @@ descriptions (labels) are replaced with this string.
 * `na_rep (str)`: Replacement for the missing data.
 * `skip_labels (bool)`: If true, first row and column with labels is
 skipped
+* `skipped_label_replacement (str)`: Replacement for the SkippedLabel
+instances.
                 
 **The return value is:** 
 
@@ -1104,7 +1117,8 @@ sheet.to_html_table(*,
     top_right_corner_text: str = "Sheet",
     na_rep: str = '',
     language_for_description: str = None,
-    skip_labels: bool = False
+    skip_labels: bool = False,
+    skipped_label_replacement: str = ''
 )
 ```
 Parameters are (all optional, all key-value only):
@@ -1118,6 +1132,8 @@ of each computational cell is inserted as word of this language
 (if the property description is not set).
 * `skip_labels (bool)`: If true, first row and column with labels is
 skipped
+* `skipped_label_replacement (str)`: Replacement for the SkippedLabel
+instances.
 
 **The return value is:** 
 

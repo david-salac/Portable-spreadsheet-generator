@@ -8,6 +8,7 @@ import copy
 import numpy as np
 
 from portable_spreadsheet.spreadsheet import Spreadsheet
+from portable_spreadsheet.skipped_label import SkippedLabel
 
 
 class TestSerialization(unittest.TestCase):
@@ -169,6 +170,27 @@ class TestSerializationToArrays(unittest.TestCase):
         """Test exporting to NumPy"""
         self.assertTrue(np.allclose(self.sheet.to_numpy(),
                                     self.inserted_rand_values))
+
+    def test_to_2d_list_skipped_labels(self):
+        """Test when some labels are passed as SkippedLabel"""
+        sheet = Spreadsheet.create_new_sheet(
+            2, 3,
+            rows_labels=[SkippedLabel('A'), 'B'],
+            columns_labels=['C1', SkippedLabel('C2'), 'C3']
+        )
+        sheet.iloc[:, :] = [[2, 1, 3], [7, 3, 9]]
+        # Test the setter
+        val_t = 72.8
+        sheet.loc['A', 'C2'] = val_t
+        self.assertTrue(np.allclose(sheet.to_numpy(), [[2., val_t, 3.],
+                                                       [7., 3., 9.]]))
+        # Test the getter
+        self.assertAlmostEqual(sheet.loc['A', 'C2'].value, val_t)
+        # Test export (regression test)
+        self.assertListEqual([['Sheet', 'C1', 'HH', 'C3'],
+                              ['HH', 2, 72.8, 3],
+                              ['B', 7, 3, 9]],
+                             sheet.to_2d_list(skipped_label_replacement="HH"))
 
     def test_to_2d_list(self):
         """Test the serialization to 2D list"""

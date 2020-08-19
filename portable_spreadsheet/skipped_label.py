@@ -30,9 +30,10 @@ class SkippedLabel(object):
         if self.label is None:
             return
         self.label = self.label.replace(old, new, count)
+        return self
 
     def __str__(self):
         """Overload to string method."""
         if self.label is None:
-            return None
+            return ""
         return self.label

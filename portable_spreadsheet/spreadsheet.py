@@ -88,9 +88,11 @@ class Spreadsheet(Serialization):
             rows_columns (T_lg_col_row): List of all row names and column names
                 for each user defined language.
             rows_labels (List[Union[str, SkippedLabel]]): List of masks
-                (aliases) for row names.
+                (aliases) for row names. If the instance of SkippedLabel is
+                used, the export skips this label.
             columns_labels (List[Union[str, SkippedLabel]]): List of masks
-                (aliases) for column names.
+                (aliases) for column names. If the instance of SkippedLabel is
+                used, the export skips this label.
             rows_help_text (List[str]): List of help texts for each row.
             columns_help_text (List[str]): List of help texts for each column.
             excel_append_row_labels (bool): If True, one column is added
@@ -367,8 +369,8 @@ class Spreadsheet(Serialization):
                new_number_of_columns: int,
                new_rows_columns: Optional[T_lg_col_row] = {},
                /, *,  # noqa E225
-               new_rows_labels: List[str] = None,
-               new_columns_labels: List[str] = None,
+               new_rows_labels: List[Union[str, 'SkippedLabel']] = None,
+               new_columns_labels: List[Union[str, 'SkippedLabel']] = None,
                new_rows_help_text: List[str] = None,
                new_columns_help_text: List[str] = None
                ):
@@ -379,10 +381,12 @@ class Spreadsheet(Serialization):
             new_number_of_columns (int): Number of columns to be added.
             new_rows_columns (T_lg_col_row): List of all row names and column
                 names for each language to be added.
-            new_rows_labels (List[str]): List of masks (aliases) for row
-                names to be added.
-            new_columns_labels (List[str]): List of masks (aliases) for
-                column names to be added.
+            new_rows_labels (List[Union[str, SkippedLabel]]): List of masks
+                (aliases) for row names to be added. If the instance of
+                SkippedLabel is used, the export skips this label.
+            new_columns_labels (List[Union[str, 'SkippedLabel']]): List of
+                masks (aliases) for column names to be added. If the instance
+                of SkippedLabel is used, the export skips this label.
             new_rows_help_text (List[str]): List of help texts for each row to
                 be added.
             new_columns_help_text (List[str]): List of help texts for each
