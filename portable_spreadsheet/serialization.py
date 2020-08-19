@@ -10,6 +10,7 @@ import numpy
 from .cell import Cell, CellValueError
 from .cell_type import CellType
 from .cell_indices import CellIndices
+from .skipped_label import SkippedLabel
 
 # ==== TYPES ====
 # Type for the output dictionary with the logic:
@@ -159,7 +160,8 @@ class Serialization(abc.ABC):
                          "value": "Value",
                          "description": "Description"
                      }),
-                 values_only: bool = False
+                 values_only: bool = False,
+                 skipped_label_replacement: str = ''
                  ) -> None:
         """Export the values inside Spreadsheet instance to the
             Excel 2010 compatible .xslx file
@@ -180,6 +182,8 @@ class Serialization(abc.ABC):
                 for the sheet with variables (first row in the sheet).
             values_only (bool): If true, only values (and not formulas) are
                 exported.
+            skipped_label_replacement (str): Replacement for the SkippedLabel
+                instances.
         """
         # Quick sanity check
         if ".xlsx" not in file_path[-5:]:
@@ -276,26 +280,32 @@ class Serialization(abc.ABC):
         if self.cell_indices.excel_append_column_labels:
             # Add labels of column
             for col_idx in range(self.shape[1]):
+                col_lbl = self.cell_indices.columns_labels[
+                                    # Reflect the export offset
+                                    col_idx + self.export_offset[1]
+                                ].replace(' ', spaces_replacement)
+                if isinstance(col_lbl, SkippedLabel):
+                    col_lbl = skipped_label_replacement
                 worksheet.write(0,
                                 col_idx + int(
                                     self.cell_indices.excel_append_row_labels
                                 ),
-                                self.cell_indices.columns_labels[
-                                    # Reflect the export offset
-                                    col_idx + self.export_offset[1]
-                                ].replace(' ', spaces_replacement),
+                                col_lbl,
                                 col_label_format)
         if self.cell_indices.excel_append_row_labels:
             # Add labels for rows
             for row_idx in range(self.shape[0]):
+                # Reflect the export offset
+                row_lbl = self.cell_indices.rows_labels[
+                    row_idx + self.export_offset[0]
+                ].replace(' ', spaces_replacement)
+                if isinstance(row_lbl, SkippedLabel):
+                    row_lbl = skipped_label_replacement
                 worksheet.write(row_idx + int(
                     self.cell_indices.excel_append_column_labels
                 ),
                                 0,
-                                self.cell_indices.rows_labels[
-                                    # Reflect the export offset
-                                    row_idx + self.export_offset[0]
-                                ].replace(' ', spaces_replacement),
+                                row_lbl,
                                 row_label_format)
         # Store results
         workbook.close()
@@ -416,8 +426,14 @@ class Serialization(abc.ABC):
         # Export the spreadsheet to the dictionary (that can by JSON-ified)
         values = {x_start_key: {}}
         for idx_x in range(x_range):
+            if isinstance(x[idx_x], SkippedLabel):
+                # Skip labels that are intended to be skipped
+                continue
             y_values = {y_start_key: {}}
             for idx_y in range(y_range):
+                if isinstance(y[idx_y], SkippedLabel):
+                    # Skip labels that are intended to be skipped
+                    continue
                 # Select the correct cell
                 if by_row:
                     cell = self._get_cell_at(idx_x, idx_y)
@@ -471,6 +487,9 @@ class Serialization(abc.ABC):
         # Add row description (and labels)
         data['rows'] = []
         for idx, x_label in enumerate(x):
+            if isinstance(x[idx_x], SkippedLabel):
+                # Skip labels that are intended to be skipped
+                continue
             metadata: dict = {"name": x_label}
             if x_helptext is not None:
                 # Add the help text (description) for the row
@@ -484,6 +503,9 @@ class Serialization(abc.ABC):
         # Add column description (and labels)
         data['columns'] = []
         for idx, y_label in enumerate(y):
+            if isinstance(y[idx_y], SkippedLabel):
+                # Skip labels that are intended to be skipped
+                continue
             metadata = {"name": y_label}
             if y_helptext is not None:
                 # Add the help text (description) for the column
@@ -753,6 +775,7 @@ class Serialization(abc.ABC):
 
     def to_string_of_values(self) -> str:
         """Export values inside table to the Python array definition string.
+            (Mainly helpful for debugging purposes)
 
         Returns:
             str: Python list definition string.
@@ -777,7 +800,8 @@ class Serialization(abc.ABC):
                    top_right_corner_text: str = "Sheet",
                    skip_labels: bool = False,
                    na_rep: Optional[object] = None,
-                   spaces_replacement: str = ' ',) -> List[List[object]]:
+                   spaces_replacement: str = ' ',
+                   skipped_label_replacement: str = '') -> List[List[object]]:
         """Export values 2 dimensional Python array.
 
         Args:
@@ -790,6 +814,8 @@ class Serialization(abc.ABC):
                 equals to None).
             skip_labels (bool): If true, first row and column with labels is
                 skipped
+            skipped_label_replacement (str): Replacement for the SkippedLabel
+                instances.
 
         Returns:
             List[List[object]]: Python array.
@@ -806,17 +832,21 @@ class Serialization(abc.ABC):
                 row.append(top_right_corner_text)
                 # Insert labels of columns:
                 for col_i in range(self.shape[1]):
-                    col = self.cell_indices.columns_labels[
+                    col_lbl = self.cell_indices.columns_labels[
                         col_i + self.export_offset[1]
-                    ]
-                    value = col.replace(' ', spaces_replacement)
-                    row.append(value)
+                    ].replace(' ', spaces_replacement)
+                    if isinstance(col_lbl, SkippedLabel):
+                        col_lbl = skipped_label_replacement
+                    row.append(col_lbl)
             else:
                 if not skip_labels:
                     # Insert labels of rows
-                    row.append(self.cell_indices.rows_labels[
+                    row_lbl = self.cell_indices.rows_labels[
                                   row_idx + self.export_offset[0]
-                              ].replace(' ', spaces_replacement))
+                              ].replace(' ', spaces_replacement)
+                    if isinstance(row_lbl, SkippedLabel):
+                        row_lbl = skipped_label_replacement
+                    row.append(row_lbl)
                 for col_idx in range(self.shape[1]):
                     # Append actual values:
                     cell_at_position = self._get_cell_at(row_idx, col_idx)
@@ -844,6 +874,7 @@ class Serialization(abc.ABC):
 
                sep: str = ',',
                line_terminator: str = '\n',
+               skipped_label_replacement: str = ''
                ) -> str:
         """Export values to the string in the CSV logic
 
@@ -858,14 +889,19 @@ class Serialization(abc.ABC):
             na_rep (str): Replacement for the missing data.
             skip_labels (bool): If true, first row and column with labels is
                 skipped
+            skipped_label_replacement (str): Replacement for the SkippedLabel
+                instances.
 
         Returns:
             str: CSV of the values
         """
         sheet_as_array = self.to_2d_list(
-            top_right_corner_text=top_right_corner_text, na_rep=na_rep,
-            skip_labels=skip_labels, spaces_replacement=spaces_replacement,
-            language=language
+            top_right_corner_text=top_right_corner_text,
+            na_rep=na_rep,
+            skip_labels=skip_labels,
+            spaces_replacement=spaces_replacement,
+            language=language,
+            skipped_label_replacement=skipped_label_replacement
         )
         export = ""
         for row_idx in range(len(sheet_as_array)):
@@ -882,7 +918,8 @@ class Serialization(abc.ABC):
                     top_right_corner_text: str = "Sheet",
                     skip_labels: bool = False,
                     na_rep: Optional[object] = '',
-                    spaces_replacement: str = ' '
+                    spaces_replacement: str = ' ',
+                    skipped_label_replacement: str = ''
                     ):
         """Export values to the string in the Markdown (MD) file logic
 
@@ -895,14 +932,19 @@ class Serialization(abc.ABC):
             na_rep (str): Replacement for the missing data.
             skip_labels (bool): If true, first row and column with labels is
                 skipped
+            skipped_label_replacement (str): Replacement for the SkippedLabel
+                instances.
 
         Returns:
             str: Markdown (MD) compatible table of the values
         """
         sheet_as_array = self.to_2d_list(
-            top_right_corner_text=top_right_corner_text, na_rep=na_rep,
-            skip_labels=skip_labels, spaces_replacement=spaces_replacement,
-            language=language
+            top_right_corner_text=top_right_corner_text,
+            na_rep=na_rep,
+            skip_labels=skip_labels,
+            spaces_replacement=spaces_replacement,
+            language=language,
+            skipped_label_replacement=skipped_label_replacement
         )
         export = ""
         for row_idx in range(len(sheet_as_array)):
@@ -979,7 +1021,8 @@ class Serialization(abc.ABC):
                       top_right_corner_text: str = "Sheet",
                       na_rep: str = '',
                       language_for_description: str = None,
-                      skip_labels: bool = False) -> str:
+                      skip_labels: bool = False,
+                      skipped_label_replacement: str = '') -> str:
         """Export values to the string in the HTML table logic
 
         Args:
@@ -992,6 +1035,8 @@ class Serialization(abc.ABC):
                 language (if the property description is not set).
             skip_labels (bool): If true, first row and column with labels is
                 skipped
+            skipped_label_replacement (str): Replacement for the SkippedLabel
+                instances.
 
         Returns:
             str: HTML table definition
@@ -1013,7 +1058,9 @@ class Serialization(abc.ABC):
                     export += "<th>"
                     col = self.cell_indices.columns_labels[
                         col_i + self.export_offset[1]
-                        ]
+                        ].replace(' ', spaces_replacement)
+                    if isinstance(col, SkippedLabel):
+                        col = skipped_label_replacement
                     if (help_text :=  # noqa 203
                             self.cell_indices.columns_help_text) is not None:
                         title_attr = ' title="{}"'.format(
@@ -1022,7 +1069,7 @@ class Serialization(abc.ABC):
                     else:
                         title_attr = ""
                     export += f'<a href="javascript:;" {title_attr}>'
-                    export += col.replace(' ', spaces_replacement)
+                    export += col
                     export += "</a>"
                     export += "</th>"
             else:
@@ -1037,9 +1084,12 @@ class Serialization(abc.ABC):
                         title_attr = ""
                     export += "<td>"
                     export += f'<a href="javascript:;" {title_attr}>'
-                    export += self.cell_indices.rows_labels[
+                    row_lbl = self.cell_indices.rows_labels[
                                   row_idx + self.export_offset[0]
                                   ].replace(' ', spaces_replacement)
+                    if isinstance(row_lbl, SkippedLabel):
+                        row_lbl = skipped_label_replacement
+                    export += row_lbl
                     export += "</a>"
                     export += "</td>"
 
@@ -1075,9 +1125,9 @@ class Serialization(abc.ABC):
         Returns:
             List[str]: List of column labels
         """
-        return self.cell_indices.columns_labels[
-            self.export_offset[1]:(self.export_offset[1] + self.shape[1])
-        ]
+        return self.cell_indices.columns_labels_str[self.export_offset[1]:(
+                self.export_offset[1] + self.shape[1])
+               ]
 
     @property
     def index(self) -> List[str]:
@@ -1086,6 +1136,6 @@ class Serialization(abc.ABC):
         Returns:
             List[str]: List of row labels.
         """
-        return self.cell_indices.rows_labels[
-            self.export_offset[0]:(self.export_offset[0] + self.shape[0])
-        ]
+        return self.cell_indices.rows_labels_str[self.export_offset[0]:(
+                self.export_offset[0] + self.shape[0])
+               ]

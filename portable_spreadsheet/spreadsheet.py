@@ -1,5 +1,5 @@
 from numbers import Number
-from typing import Tuple, List, Union, Optional, Callable
+from typing import Tuple, List, Union, Optional, Callable, TYPE_CHECKING
 import copy
 
 from .cell import Cell
@@ -7,6 +7,9 @@ from .cell_indices import CellIndices, T_lg_col_row
 from .cell_slice import CellSlice
 from .spreadsheet_utils import _Location, _Functionality, _SheetVariables
 from .serialization import Serialization
+
+if TYPE_CHECKING:
+    from .skipped_label import SkippedLabel
 
 # ==== TYPES ====
 # Type for the sheet (list of the list of the cells)
@@ -69,8 +72,8 @@ class Spreadsheet(Serialization):
             number_of_columns: int,
             rows_columns: Optional[T_lg_col_row] = None,
             /, *,  # noqa E999
-            rows_labels: List[str] = None,
-            columns_labels: List[str] = None,
+            rows_labels: List[Union[str, 'SkippedLabel']] = None,
+            columns_labels: List[Union[str, 'SkippedLabel']] = None,
             rows_help_text: List[str] = None,
             columns_help_text: List[str] = None,
             excel_append_row_labels: bool = True,
@@ -84,10 +87,12 @@ class Spreadsheet(Serialization):
             number_of_columns (int): Number of columns.
             rows_columns (T_lg_col_row): List of all row names and column names
                 for each user defined language.
-            rows_labels (List[str]): List of masks (aliases) for row
-                names.
-            columns_labels (List[str]): List of masks (aliases) for column
-                names.
+            rows_labels (List[Union[str, SkippedLabel]]): List of masks
+                (aliases) for row names. If the instance of SkippedLabel is
+                used, the export skips this label.
+            columns_labels (List[Union[str, SkippedLabel]]): List of masks
+                (aliases) for column names. If the instance of SkippedLabel is
+                used, the export skips this label.
             rows_help_text (List[str]): List of help texts for each row.
             columns_help_text (List[str]): List of help texts for each column.
             excel_append_row_labels (bool): If True, one column is added
@@ -146,8 +151,8 @@ class Spreadsheet(Serialization):
             raise ValueError("Only one of parameters 'index_integer' and"
                              "'index_label' has to be set!")
         if index_label is not None:
-            _x = self.cell_indices.rows_labels.index(index_label[0])
-            _y = self.cell_indices.columns_labels.index(index_label[1])
+            _x = self.cell_indices.rows_labels_str.index(index_label[0])
+            _y = self.cell_indices.columns_labels_str.index(index_label[1])
             index_integer = (_x, _y)
         if index_integer is not None:
             _x = index_integer[0]
@@ -188,8 +193,8 @@ class Spreadsheet(Serialization):
             raise ValueError("Only one of parameters 'index_integer' and"
                              "'index_label' has to be set!")
         if index_label is not None:
-            _x = self.cell_indices.rows_labels.index(index_label[0])
-            _y = self.cell_indices.columns_labels.index(index_label[1])
+            _x = self.cell_indices.rows_labels_str.index(index_label[0])
+            _y = self.cell_indices.columns_labels_str.index(index_label[1])
             index_integer = (_x, _y)
         if index_integer is not None:
             _x = index_integer[0]
@@ -203,7 +208,9 @@ class Spreadsheet(Serialization):
 
     def _get_slice(self,
                    index_integer: Tuple[slice, slice],
-                   index_label: Tuple[slice, slice]) -> CellSlice:
+                   index_label: Tuple[slice, slice],
+                   *,
+                   include_right: bool = False) -> CellSlice:
         """Get the values in the slice.
 
         Args:
@@ -212,6 +219,7 @@ class Spreadsheet(Serialization):
             index_label (Tuple[object, object]): The position of the slice
                 in the spreadsheet. Mutually exclusive with parameter
                 index_integer (only one can be set to not None).
+            include_right (bool): If True, right most value is included.
         Returns:
             CellSlice: Slice of the cells (aggregate).
         """
@@ -219,23 +227,28 @@ class Spreadsheet(Serialization):
             raise ValueError("Only one of parameters 'index_integer' and"
                              "'index_label' has to be set!")
 
+        # This value is added to the right-most index in the slice
+        #   It makes sure that the right-most value is included if needed.
+        slice_offset: int = 1 if include_right else 0
+
         if index_label is not None:
+            # If sliced by labels (not by integer positions)
             if isinstance(index_label[0], slice):
                 # If the first index is slice
                 _x_start = 0
                 if index_label[0].start:
-                    _x_start = self.cell_indices.rows_labels.index(
+                    _x_start = self.cell_indices.rows_labels_str.index(
                         index_label[0].start)
-                _x_end = self.shape[0]
+                _x_end = self.shape[0]  # in the case of ':'
                 if index_label[0].stop:
-                    _x_end = self.cell_indices.rows_labels.index(
-                        index_label[0].stop)
+                    _x_end = self.cell_indices.rows_labels_str.index(
+                        index_label[0].stop) + slice_offset
                 _x_step = 1
                 if index_label[0].step:
                     _x_step = int(index_label[0].step)
             else:
                 # If the first index is scalar
-                _x_start = self.cell_indices.rows_labels.index(
+                _x_start = self.cell_indices.rows_labels_str.index(
                     index_label[0])
                 _x_end = _x_start + 1
                 _x_step = 1
@@ -244,18 +257,18 @@ class Spreadsheet(Serialization):
                 # If the second index is slice
                 _y_start = 0
                 if index_label[1].start:
-                    _y_start = self.cell_indices.columns_labels.index(
+                    _y_start = self.cell_indices.columns_labels_str.index(
                         index_label[1].start)
-                _y_end = self.shape[1]
+                _y_end = self.shape[1]  # in the case of ':'
                 if index_label[1].stop:
-                    _y_end = self.cell_indices.columns_labels.index(
-                        index_label[1].stop)
+                    _y_end = self.cell_indices.columns_labels_str.index(
+                        index_label[1].stop) + slice_offset
                 _y_step = 1
                 if index_label[1].step:
                     _y_step = int(index_label[1].step)
             else:
-                # If the first index is scalar
-                _y_start = self.cell_indices.columns_labels.index(
+                # If the second index is scalar
+                _y_start = self.cell_indices.columns_labels_str.index(
                     index_label[1])
                 _y_end = _y_start + 1
                 _y_step = 1
@@ -275,12 +288,18 @@ class Spreadsheet(Serialization):
                     # Negative index starts from end
                     if _x_end < 0:
                         _x_end = self.shape[0] + _x_end
+                    else:
+                        # If the right-most value is included
+                        #   Relevant only for positive slice indices
+                        _x_end += slice_offset
                 _x_step = 1
                 if index_integer[0].step:
                     _x_step = int(index_integer[0].step)
             else:
                 # If the first index is scalar
                 _x_start = index_integer[0]
+                if _x_start < 0:
+                    _x_start = self.shape[0] + _x_start
                 _x_end = _x_start + 1
                 _x_step = 1
 
@@ -298,12 +317,18 @@ class Spreadsheet(Serialization):
                     # Negative index starts from end
                     if _y_end < 0:
                         _y_end = self.shape[1] + _y_end
+                    else:
+                        # If the right-most value is included
+                        #   Relevant only for positive slice indices
+                        _y_end += slice_offset
                 _y_step = 1
                 if index_integer[1].step:
                     _y_step = int(index_integer[1].step)
             else:
-                # If the first index is scalar
+                # If the second index is scalar
                 _y_start = index_integer[1]
+                if _y_start < 0:
+                    _y_start = self.shape[1] + _y_start
                 _y_end = _y_start + 1
                 _y_step = 1
 
@@ -321,7 +346,9 @@ class Spreadsheet(Serialization):
     def _set_slice(self,
                    value: T_cell_val,
                    index_integer: Tuple[int, int],
-                   index_label: Tuple[object, object]) -> None:
+                   index_label: Tuple[object, object],
+                   *,
+                   include_right: bool = False) -> None:
         """Set the value of each cell in the slice
 
         Args:
@@ -331,8 +358,10 @@ class Spreadsheet(Serialization):
             index_label (Tuple[object, object]): The position of the slice
                 in the spreadsheet. Mutually exclusive with parameter
                 index_integer (only one can be set to not None).
+            include_right (bool): If True, right most value is included.
         """
-        cell_slice: CellSlice = self._get_slice(index_integer, index_label)
+        cell_slice: CellSlice = self._get_slice(index_integer, index_label,
+                                                include_right=include_right)
         cell_slice.set(value)
 
     def expand(self,
@@ -340,8 +369,8 @@ class Spreadsheet(Serialization):
                new_number_of_columns: int,
                new_rows_columns: Optional[T_lg_col_row] = {},
                /, *,  # noqa E225
-               new_rows_labels: List[str] = None,
-               new_columns_labels: List[str] = None,
+               new_rows_labels: List[Union[str, 'SkippedLabel']] = None,
+               new_columns_labels: List[Union[str, 'SkippedLabel']] = None,
                new_rows_help_text: List[str] = None,
                new_columns_help_text: List[str] = None
                ):
@@ -352,10 +381,12 @@ class Spreadsheet(Serialization):
             new_number_of_columns (int): Number of columns to be added.
             new_rows_columns (T_lg_col_row): List of all row names and column
                 names for each language to be added.
-            new_rows_labels (List[str]): List of masks (aliases) for row
-                names to be added.
-            new_columns_labels (List[str]): List of masks (aliases) for
-                column names to be added.
+            new_rows_labels (List[Union[str, SkippedLabel]]): List of masks
+                (aliases) for row names to be added. If the instance of
+                SkippedLabel is used, the export skips this label.
+            new_columns_labels (List[Union[str, 'SkippedLabel']]): List of
+                masks (aliases) for column names to be added. If the instance
+                of SkippedLabel is used, the export skips this label.
             new_rows_help_text (List[str]): List of help texts for each row to
                 be added.
             new_columns_help_text (List[str]): List of help texts for each

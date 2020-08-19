@@ -161,13 +161,14 @@ sheet = ps.Spreadsheet.create_new_sheet(
 ```
 
 Other (keywords) arguments:
-1. `rows_labels (List[str])`: _(optional)_ List of masks (aliases)
-for row names.
-2. `columns_labels (List[str])`: _(optional)_ List of masks (aliases)
-for column names.
+1. `rows_labels (List[Union[str, SkippedLabel]])`: _(optional)_ List of masks
+(aliases) for row names.
+2. `columns_labels (List[Union[str, SkippedLabel]])`: _(optional)_ List of
+masks (aliases) for column names. If the instance of SkippedLabel is
+used, the export skips this label.
 3. `rows_help_text (List[str])`: _(optional)_ List of help texts for each row.
 4. `columns_help_text (List[str])`: _(optional)_ List of help texts for each
-column.
+column. If the instance of SkippedLabel is used, the export skips this label.
 5. `excel_append_row_labels (bool)`: _(optional)_ If True, one column is added
 on the beginning of the sheet as a offset for labels.
 6. `excel_append_column_labels (bool)`: _(optional)_ If True, one row is
@@ -303,6 +304,12 @@ or set of rows and columns). Following code, select the third column:
 ```python
 sheet.iloc[:,2]
 ```
+On the other hand
+```python
+sheet.loc[:,'Handy column']
+``` 
+selects all the rows in the columns with the label _'Handy column'_. 
+
 You can again set the values in the slice to some constant, or the array
 of constants, or to another cell, or to the result of some computation.
 ```python
@@ -311,6 +318,33 @@ sheet.iloc[:,2] = sheet.iloc[1,3] + sheet.iloc[1,4]  # Computation result
 sheet.iloc[:,2] = sheet.iloc[1,3]  # Just a reference to a cell
 ```
 Technically the slice is the instance of `CellSlice` class.
+
+There are two ways how to slice, either using `.loc` or `.iloc` attribute.
+Where `iloc` uses integer position and `loc` uses label of the position
+(as a string).
+
+By default the right-most value is excluded when defining slices. If you want
+to use right-most value indexing, use one of the methods described below.
+
+#### Slicing using method (with the right-most value included option)
+Sometimes, it is quite helpful to use a slice that includes the right-most
+value. There are two functions for this purpose:
+1. `sheet.iloc.get_slice(ROW_INDEX, COLUMN_INDEX, include_right=[True/False])`:
+This way is equivalent to the one presented above with square brackets `[]`.
+The difference is the key-value attribute `include_right` that enables the
+possibility of including the right-most value of the slice (default value is
+False). If you want to use slice as your index, you need to pass some `slice`
+object to one (or both) of the indices. For example: 
+`sheet.iloc.get_slice(slice(0, 7), 3, include_right=True])` selects first nine
+rows (because 8th row - right-most one - is included) from the fourth column
+of the sheet _(remember, all is indexed from zero)_.
+
+2. `sheet.iloc.set_slice(ROW_INDEX, COLUMN_INDEX, VALUE, 
+include_right=[True/False])`: this command set slice to _VALUE_ in the similar
+logic as when you call `get_slice` method (see the first point).
+
+There are again two possibilities, either to use `iloc` with integer position
+or to use `loc` with labels.
 
 #### Aggregate functions
 The slice itself can be used for computations using aggregate functions.
@@ -677,7 +711,8 @@ sheet.to_excel(
         "value": "Value",
         "description": "Description"
     }),
-    values_only: bool = False
+    values_only: bool = False,
+    skipped_label_replacement: str = ''
 )
 ```
 The only required argument is the path to the destination file (positional
@@ -699,6 +734,8 @@ for the sheet with variables (first row in the sheet). Dictionary should look
 like: `{"name": "Name", "value": "Value", "description": "Description"}`.
 * `values_only (bool)`: If true, only values (and not formulas) are
 exported.
+* `skipped_label_replacement (str)`: Replacement for the SkippedLabel
+instances.
 
 ##### Setting the format/style for Excel cells
 There is a possibility to set the style/format of each cell in the grid
@@ -753,6 +790,9 @@ skipped, default value is false (NaN values are included).
 * `error_replacement (object)`: Replacement for the error value.
 * `append_dict (dict)`: Append this dictionary to output.
 * `generate_schema (bool)`: If true, returns the JSON schema.
+
+All the rows and columns with labels that are instances of SkippedLabel are
+entirely skipped. 
 
 **The return value is:** 
 
@@ -996,7 +1036,8 @@ sheet.to_excel(*,
     sep: str = ',',
     line_terminator: str = '\n',
     na_rep: str = '',
-    skip_labels: bool = False
+    skip_labels: bool = False,
+    skipped_label_replacement: str = ''
 )
 ```
 Parameters are (all optional and key-value only):
@@ -1011,6 +1052,8 @@ language in each cell instead of values.
 * `na_rep (str)`: Replacement for the missing data.
 * `skip_labels (bool)`: If true, first row and column with labels is
  skipped
+* `skipped_label_replacement (str)`: Replacement for the SkippedLabel
+instances.
 
 **The return value is:** 
 
@@ -1034,7 +1077,8 @@ sheet.to_markdown(*,
     spaces_replacement: str = ' ',
     top_right_corner_text: str = "Sheet",
     na_rep: str = '',
-    skip_labels: bool = False
+    skip_labels: bool = False,
+    skipped_label_replacement: str = ''
 )
 ```
 Parameters are (all optional, all key-value only):
@@ -1047,6 +1091,8 @@ descriptions (labels) are replaced with this string.
 * `na_rep (str)`: Replacement for the missing data.
 * `skip_labels (bool)`: If true, first row and column with labels is
 skipped
+* `skipped_label_replacement (str)`: Replacement for the SkippedLabel
+instances.
                 
 **The return value is:** 
 
@@ -1071,7 +1117,8 @@ sheet.to_html_table(*,
     top_right_corner_text: str = "Sheet",
     na_rep: str = '',
     language_for_description: str = None,
-    skip_labels: bool = False
+    skip_labels: bool = False,
+    skipped_label_replacement: str = ''
 )
 ```
 Parameters are (all optional, all key-value only):
@@ -1085,6 +1132,8 @@ of each computational cell is inserted as word of this language
 (if the property description is not set).
 * `skip_labels (bool)`: If true, first row and column with labels is
 skipped
+* `skipped_label_replacement (str)`: Replacement for the SkippedLabel
+instances.
 
 **The return value is:** 
 

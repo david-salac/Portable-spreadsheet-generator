@@ -129,8 +129,8 @@ class CellIndices(object):
                 self.columns[language] = cols
                 self.user_defined_languages.append(language)
         # Define user defined names for rows and columns
-        self.rows_labels: List[str] = copy.deepcopy(rows_labels)
-        self.columns_labels: List[str] = copy.deepcopy(columns_labels)
+        self.rows_labels: list = copy.deepcopy(rows_labels)
+        self.columns_labels: list = copy.deepcopy(columns_labels)
         # Or define auto generated aliases as an integer sequence from 0
         if rows_labels is None:
             self.rows_labels = [str(_row_n) for _row_n in
@@ -138,6 +138,11 @@ class CellIndices(object):
         if columns_labels is None:
             self.columns_labels = [str(_col_n) for _col_n in
                                    range(number_of_columns)]
+        # String representation of indices
+        self.rows_labels_str: List[str] = \
+            [str(lb) for lb in self.rows_labels]
+        self.columns_labels_str: List[str] = \
+            [str(lb) for lb in self.columns_labels]
         # assign the help texts
         self.rows_help_text: List[str] = copy.deepcopy(rows_help_text)
         self.columns_help_text: List[str] = copy.deepcopy(columns_help_text)
@@ -282,14 +287,11 @@ class CellIndices(object):
                     expanded.number_of_columns + new_number_of_columns
                 )
             ]
-        # Or define auto generated aliases as an integer sequence from 0
-        if new_columns_labels is None:
-            expanded.columns_labels = [
-                str(i)
-                for i in range(
-                    expanded.number_of_columns + new_number_of_columns
-                )
-            ]
+        # String representation of indices
+        expanded.rows_labels_str: List[str] = \
+            [str(lb) for lb in expanded.rows_labels]
+        expanded.columns_labels_str: List[str] = \
+            [str(lb) for lb in expanded.columns_labels]
         # assign the help texts
         if expanded.rows_help_text is not None and new_number_of_rows > 0:
             if new_rows_help_text is None:
