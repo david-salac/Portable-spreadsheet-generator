@@ -1,10 +1,13 @@
-from typing import Dict, Union, Optional
+from typing import Dict, Union, Optional, TYPE_CHECKING
 import re
 import copy
 from numbers import Number
 
 from .cell import Cell
 from .cell_type import CellType
+
+if TYPE_CHECKING:
+    from .cell_slice import CellSlice
 
 # ========== File with the functionality for internal purposes only ===========
 
@@ -68,6 +71,55 @@ class _Location(object):
                 return self.spreadsheet._get_slice(index, None)
             else:
                 return self.spreadsheet._get_slice(None, index)
+
+    def get_slice(self,
+                  index_row: Union[slice, int],
+                  index_column: Union[slice, int],
+                  *,
+                  include_right: bool = False) -> 'CellSlice':
+        """Get the slice directly using method.
+
+        Args:
+            index_row (slice): Position of the row inside spreadsheet.
+            index_column (slice): Position of the column inside spreadsheet.
+            include_right (bool): If True, right most value (end parameter
+                value) is included.
+
+        Returns:
+            CellSlice: slice of the cells
+        """
+        if self.by_integer:
+            return self.spreadsheet._get_slice((index_row, index_column), None,
+                                               include_right=include_right)
+        else:
+            return self.spreadsheet._get_slice(None, (index_row, index_column),
+                                               include_right=include_right)
+
+    def set_slice(self,
+                  index_row: Union[slice, int],
+                  index_column: Union[slice, int],
+                  value,
+                  *,
+                  include_right: bool = False) -> None:
+        """Get the slice directly using method.
+
+        Args:
+            index_row (slice): Position of the row inside spreadsheet.
+            index_column (slice): Position of the column inside spreadsheet.
+            include_right (bool): If True, right most value (end parameter
+                value) is included.
+            value: The new value to be set.
+        """
+        if self.by_integer:
+            return self.spreadsheet._set_slice(value,
+                                               (index_row, index_column),
+                                               None,
+                                               include_right=include_right)
+        else:
+            return self.spreadsheet._set_slice(value,
+                                               None,
+                                               (index_row, index_column),
+                                               include_right=include_right)
 
 
 class _Functionality(object):

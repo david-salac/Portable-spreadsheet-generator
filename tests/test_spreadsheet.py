@@ -332,6 +332,22 @@ class TestSpreadsheetSelection(unittest.TestCase):
         # Test getter
         self.assertAllClose2D(sheet.iloc[i_idx].to_numpy(), np_sheet[i_idx])
 
+    def test_right_most_included_slices(self):
+        """Test the method selectors (get_slice and set_slice)."""
+        # A) Test the setter
+        self.sheet.iloc.set_slice(slice(0, 5), 0, [1., 2., 3., 4., 5., 6.],
+                                  include_right=True)
+        self.assertTrue(np.allclose(self.sheet.to_numpy()[:6, 0],
+                                    [1., 2., 3., 4., 5., 6.]))
+        # B) Test the getter
+        self.assertTrue(
+            np.allclose(
+                self.sheet.iloc.get_slice(
+                    slice(0, 5), 0, include_right=True).to_numpy().transpose(),
+                [1., 2., 3., 4., 5., 6.]
+            )
+        )
+
     def test_versions(self):
         """Tests if the version in __init__.py matches to the setup.py one.
         """

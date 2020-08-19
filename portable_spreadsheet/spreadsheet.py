@@ -203,7 +203,9 @@ class Spreadsheet(Serialization):
 
     def _get_slice(self,
                    index_integer: Tuple[slice, slice],
-                   index_label: Tuple[slice, slice]) -> CellSlice:
+                   index_label: Tuple[slice, slice],
+                   *,
+                   include_right: bool = False) -> CellSlice:
         """Get the values in the slice.
 
         Args:
@@ -212,6 +214,7 @@ class Spreadsheet(Serialization):
             index_label (Tuple[object, object]): The position of the slice
                 in the spreadsheet. Mutually exclusive with parameter
                 index_integer (only one can be set to not None).
+            include_right (bool): If True, right most value is included.
         Returns:
             CellSlice: Slice of the cells (aggregate).
         """
@@ -219,17 +222,22 @@ class Spreadsheet(Serialization):
             raise ValueError("Only one of parameters 'index_integer' and"
                              "'index_label' has to be set!")
 
+        # This value is added to the right-most index in the slice
+        #   It makes sure that the right-most value is included if needed.
+        slice_offset: int = 1 if include_right else 0
+
         if index_label is not None:
+            # If sliced by labels (not by integer positions)
             if isinstance(index_label[0], slice):
                 # If the first index is slice
                 _x_start = 0
                 if index_label[0].start:
                     _x_start = self.cell_indices.rows_labels.index(
                         index_label[0].start)
-                _x_end = self.shape[0]
+                _x_end = self.shape[0]  # in the case of ':'
                 if index_label[0].stop:
                     _x_end = self.cell_indices.rows_labels.index(
-                        index_label[0].stop)
+                        index_label[0].stop) + slice_offset
                 _x_step = 1
                 if index_label[0].step:
                     _x_step = int(index_label[0].step)
@@ -246,15 +254,15 @@ class Spreadsheet(Serialization):
                 if index_label[1].start:
                     _y_start = self.cell_indices.columns_labels.index(
                         index_label[1].start)
-                _y_end = self.shape[1]
+                _y_end = self.shape[1]  # in the case of ':'
                 if index_label[1].stop:
                     _y_end = self.cell_indices.columns_labels.index(
-                        index_label[1].stop)
+                        index_label[1].stop) + slice_offset
                 _y_step = 1
                 if index_label[1].step:
                     _y_step = int(index_label[1].step)
             else:
-                # If the first index is scalar
+                # If the second index is scalar
                 _y_start = self.cell_indices.columns_labels.index(
                     index_label[1])
                 _y_end = _y_start + 1
@@ -275,12 +283,18 @@ class Spreadsheet(Serialization):
                     # Negative index starts from end
                     if _x_end < 0:
                         _x_end = self.shape[0] + _x_end
+                    else:
+                        # If the right-most value is included
+                        #   Relevant only for positive slice indices
+                        _x_end += slice_offset
                 _x_step = 1
                 if index_integer[0].step:
                     _x_step = int(index_integer[0].step)
             else:
                 # If the first index is scalar
                 _x_start = index_integer[0]
+                if _x_start < 0:
+                    _x_start = self.shape[0] + _x_start
                 _x_end = _x_start + 1
                 _x_step = 1
 
@@ -298,12 +312,18 @@ class Spreadsheet(Serialization):
                     # Negative index starts from end
                     if _y_end < 0:
                         _y_end = self.shape[1] + _y_end
+                    else:
+                        # If the right-most value is included
+                        #   Relevant only for positive slice indices
+                        _y_end += slice_offset
                 _y_step = 1
                 if index_integer[1].step:
                     _y_step = int(index_integer[1].step)
             else:
-                # If the first index is scalar
+                # If the second index is scalar
                 _y_start = index_integer[1]
+                if _y_start < 0:
+                    _y_start = self.shape[1] + _y_start
                 _y_end = _y_start + 1
                 _y_step = 1
 
@@ -321,7 +341,9 @@ class Spreadsheet(Serialization):
     def _set_slice(self,
                    value: T_cell_val,
                    index_integer: Tuple[int, int],
-                   index_label: Tuple[object, object]) -> None:
+                   index_label: Tuple[object, object],
+                   *,
+                   include_right: bool = False) -> None:
         """Set the value of each cell in the slice
 
         Args:
@@ -331,8 +353,10 @@ class Spreadsheet(Serialization):
             index_label (Tuple[object, object]): The position of the slice
                 in the spreadsheet. Mutually exclusive with parameter
                 index_integer (only one can be set to not None).
+            include_right (bool): If True, right most value is included.
         """
-        cell_slice: CellSlice = self._get_slice(index_integer, index_label)
+        cell_slice: CellSlice = self._get_slice(index_integer, index_label,
+                                                include_right=include_right)
         cell_slice.set(value)
 
     def expand(self,

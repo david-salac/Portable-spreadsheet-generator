@@ -5,5 +5,5 @@ from .cell_slice import CellSlice  # noqa
 from .grammars import GRAMMARS  # noqa
 from .grammar_utils import GrammarUtils  # noqa
 
-__version__ = "0.1.15"
+__version__ = "1.0.0"
 __status__ = "Production"

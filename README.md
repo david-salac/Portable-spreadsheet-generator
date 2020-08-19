@@ -303,6 +303,12 @@ or set of rows and columns). Following code, select the third column:
 ```python
 sheet.iloc[:,2]
 ```
+On the other hand
+```python
+sheet.loc[:,'Handy column']
+``` 
+selects all the rows in the columns with the label _'Handy column'_. 
+
 You can again set the values in the slice to some constant, or the array
 of constants, or to another cell, or to the result of some computation.
 ```python
@@ -311,6 +317,33 @@ sheet.iloc[:,2] = sheet.iloc[1,3] + sheet.iloc[1,4]  # Computation result
 sheet.iloc[:,2] = sheet.iloc[1,3]  # Just a reference to a cell
 ```
 Technically the slice is the instance of `CellSlice` class.
+
+There are two ways how to slice, either using `.loc` or `.iloc` attribute.
+Where `iloc` uses integer position and `loc` uses label of the position
+(as a string).
+
+By default the right-most value is excluded when defining slices. If you want
+to use right-most value indexing, use one of the methods described below.
+
+#### Slicing using method (with the right-most value included option)
+Sometimes, it is quite helpful to use a slice that includes the right-most
+value. There are two functions for this purpose:
+1. `sheet.iloc.get_slice(ROW_INDEX, COLUMN_INDEX, include_right=[True/False])`:
+This way is equivalent to the one presented above with square brackets `[]`.
+The difference is the key-value attribute `include_right` that enables the
+possibility of including the right-most value of the slice (default value is
+False). If you want to use slice as your index, you need to pass some `slice`
+object to one (or both) of the indices. For example: 
+`sheet.iloc.get_slice(slice(0, 7), 3, include_right=True])` selects first nine
+rows (because 8th row - right-most one - is included) from the fourth column
+of the sheet _(remember, all is indexed from zero)_.
+
+2. `sheet.iloc.set_slice(ROW_INDEX, COLUMN_INDEX, VALUE, 
+include_right=[True/False])`: this command set slice to _VALUE_ in the similar
+logic as when you call `get_slice` method (see the first point).
+
+There are again two possibilities, either to use `iloc` with integer position
+or to use `loc` with labels.
 
 #### Aggregate functions
 The slice itself can be used for computations using aggregate functions.
