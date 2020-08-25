@@ -3,22 +3,16 @@ class SkippedLabel(object):
 
     Attributes:
         label: the label that is used for selection.
-        empty_entity: if true, row or column is intended to be empty
-            and are skipped for some types of exports.
     """
 
     def __init__(self,
-                 label: str = None,
-                 empty_entity: bool = False):
+                 label: str = None):
         """Initialise skipped label.
 
         Args:
             label: the label that is used for selection.
-            empty_entity: if true, row or column is intended to be empty
-                and are skipped for some types of exports.
         """
         self.label: str = label
-        self.empty_entity: bool = empty_entity
 
     def replace(self, old, new, count: int = -1):
         """Replace the characters inside the label.
