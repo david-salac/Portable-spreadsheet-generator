@@ -508,7 +508,7 @@ class Serialization(abc.ABC):
         # Add row description (and labels)
         data['rows'] = []
         for idx, x_label in enumerate(x):
-            if isinstance(x[idx_x], SkippedLabel):
+            if isinstance(x_label, SkippedLabel):
                 # Skip labels that are intended to be skipped
                 continue
             metadata: dict = {"name": x_label}
@@ -524,7 +524,7 @@ class Serialization(abc.ABC):
         # Add column description (and labels)
         data['columns'] = []
         for idx, y_label in enumerate(y):
-            if isinstance(y[idx_y], SkippedLabel):
+            if isinstance(y_label, SkippedLabel):
                 # Skip labels that are intended to be skipped
                 continue
             metadata = {"name": y_label}
