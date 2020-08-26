@@ -22,7 +22,7 @@ class SkippedLabel(object):
             count: how many times should be repeated.
         """
         if self.label is None:
-            return
+            return self
         self.label = self.label.replace(old, new, count)
         return self
 
