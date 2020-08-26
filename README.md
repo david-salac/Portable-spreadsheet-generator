@@ -714,7 +714,8 @@ sheet.to_excel(
     values_only: bool = False,
     skipped_label_replacement: str = '',
     row_height: List[float] = [],
-    column_width: List[float] = []
+    column_width: List[float] = [],
+    top_left_corner_text: str = ""
 )
 ```
 The only required argument is the path to the destination file (positional
@@ -746,6 +747,8 @@ first position in array.
 default widths (or `None` for the default width in the series).
 If column labels are included, there is a label column width
 on the first position in array.
+* `top_left_corner_text (str)`: Text in the top left corner. Apply
+only when the row and column labels are included.
 
 ##### Setting the format/style for Excel cells
 There is a possibility to set the style/format of each cell in the grid
@@ -1042,7 +1045,7 @@ It can be done using the interface:
 sheet.to_csv(*,
     language: Optional[str] = None,
     spaces_replacement: str = ' ',
-    top_right_corner_text: str = "Sheet",
+    top_left_corner_text: str = "Sheet",
     sep: str = ',',
     line_terminator: str = '\n',
     na_rep: str = '',
@@ -1056,7 +1059,7 @@ Parameters are (all optional and key-value only):
 language in each cell instead of values.
 * `spaces_replacement (str)`: All the spaces in the rows and columns
  descriptions (labels) are replaced with this string.
-* `top_right_corner_text (str)`: Text in the top right corner.
+* `top_left_corner_text (str)`: Text in the top left corner.
 * `sep (str)`: Separator of values in a row.
 * `line_terminator (str)`: Ending sequence (character) of a row.
 * `na_rep (str)`: Replacement for the missing data.
@@ -1085,7 +1088,7 @@ It can be done using the interface:
 sheet.to_markdown(*,
     language: Optional[str] = None,
     spaces_replacement: str = ' ',
-    top_right_corner_text: str = "Sheet",
+    top_left_corner_text: str = "Sheet",
     na_rep: str = '',
     skip_labels: bool = False,
     skipped_label_replacement: str = ''
@@ -1097,7 +1100,7 @@ Parameters are (all optional, all key-value only):
 language in each cell instead of values.
 * `spaces_replacement (str)`: All the spaces in the rows and columns
 descriptions (labels) are replaced with this string.
-* `top_right_corner_text (str)`: Text in the top right corner.
+* `top_left_corner_text (str)`: Text in the top left corner.
 * `na_rep (str)`: Replacement for the missing data.
 * `skip_labels (bool)`: If true, first row and column with labels is
 skipped
@@ -1124,7 +1127,7 @@ It can be done using the interface:
 ```python
 sheet.to_html_table(*,
     spaces_replacement: str = ' ',
-    top_right_corner_text: str = "Sheet",
+    top_left_corner_text: str = "Sheet",
     na_rep: str = '',
     language_for_description: str = None,
     skip_labels: bool = False,
@@ -1135,7 +1138,7 @@ Parameters are (all optional, all key-value only):
 
 * `spaces_replacement (str)`: All the spaces in the rows and columns
 descriptions (labels) are replaced with this string.
-* `top_right_corner_text (str)`: Text in the top right corner.
+* `top_left_corner_text (str)`: Text in the top left corner.
 * `na_rep (str)`: Replacement for the missing data.
 * `language_for_description (str)`: If not `None`, the description
 of each computational cell is inserted as word of this language
