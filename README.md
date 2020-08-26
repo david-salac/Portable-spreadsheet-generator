@@ -1039,7 +1039,7 @@ Output of the JSON format
 #### Exporting to the CSV
 It can be done using the interface:
 ```python
-sheet.to_excel(*,
+sheet.to_csv(*,
     language: Optional[str] = None,
     spaces_replacement: str = ' ',
     top_right_corner_text: str = "Sheet",
@@ -1048,7 +1048,7 @@ sheet.to_excel(*,
     na_rep: str = '',
     skip_labels: bool = False,
     skipped_label_replacement: str = ''
-)
+) -> str
 ```
 Parameters are (all optional and key-value only):
 
