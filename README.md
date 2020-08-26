@@ -712,7 +712,9 @@ sheet.to_excel(
         "description": "Description"
     }),
     values_only: bool = False,
-    skipped_label_replacement: str = ''
+    skipped_label_replacement: str = '',
+    row_height: List[float] = [],
+    column_width: List[float] = []
 )
 ```
 The only required argument is the path to the destination file (positional
@@ -736,6 +738,14 @@ like: `{"name": "Name", "value": "Value", "description": "Description"}`.
 exported.
 * `skipped_label_replacement (str)`: Replacement for the SkippedLabel
 instances.
+* `row_height (List[float])`: List of row heights, or empty for the
+default height (or `None` for default height in the series).
+If row labels are included, there is a label row height on the
+first position in array.
+* `column_width (List[float])`: List of column widths, or empty for the
+default widths (or `None` for the default width in the series).
+If column labels are included, there is a label column width
+on the first position in array.
 
 ##### Setting the format/style for Excel cells
 There is a possibility to set the style/format of each cell in the grid

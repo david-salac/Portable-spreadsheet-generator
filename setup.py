@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="portable-spreadsheet",
-    version="1.0.0",
+    version="1.1.0",
     author="David Salac",
     author_email="info@davidsalac.eu",
     description="Simple spreadsheet that keeps tracks of each operation in "

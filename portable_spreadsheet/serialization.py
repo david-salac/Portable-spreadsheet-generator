@@ -161,7 +161,9 @@ class Serialization(abc.ABC):
                          "description": "Description"
                      }),
                  values_only: bool = False,
-                 skipped_label_replacement: str = ''
+                 skipped_label_replacement: str = '',
+                 row_height: List[float] = [],
+                 column_width: List[float] = []
                  ) -> None:
         """Export the values inside Spreadsheet instance to the
             Excel 2010 compatible .xslx file
@@ -184,6 +186,14 @@ class Serialization(abc.ABC):
                 exported.
             skipped_label_replacement (str): Replacement for the SkippedLabel
                 instances.
+            row_height (List[float]): List of row heights, or empty for the
+                default height (or None for default height in the series).
+                If row labels are included, there is a label row height on the
+                first position in array.
+            column_width (List[float]): List of column widths, or empty for the
+                default widths (or None for the default width in the series).
+                If column labels are included, there is a label column width
+                on the first position in array.
         """
         # Quick sanity check
         if ".xlsx" not in file_path[-5:]:
@@ -307,6 +317,17 @@ class Serialization(abc.ABC):
                                 0,
                                 row_lbl,
                                 row_label_format)
+
+        # Set the row heights:
+        for row_position, s_row_height in enumerate(row_height):
+            if s_row_height is not None:
+                worksheet.set_row(row_position, s_row_height)
+
+        # Set the column widths:
+        for col_position, s_col_width in enumerate(column_width):
+            if s_col_width is not None:
+                worksheet.set_column(col_position, col_position, s_col_width)
+
         # Store results
         workbook.close()
 
