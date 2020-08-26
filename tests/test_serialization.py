@@ -203,7 +203,7 @@ class TestSerializationToArrays(unittest.TestCase):
         # Check labels:
         corner = "yMq7W0bk"
         computed_2d_list = self.sheet.to_2d_list(skip_labels=False,
-                                                 top_right_corner_text=corner)
+                                                 top_left_corner_text=corner)
         self.assertTrue(isinstance(computed_2d_list, list))
         self.assertTrue(computed_2d_list[0][0], corner)
         # Check row labels

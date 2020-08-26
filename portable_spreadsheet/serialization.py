@@ -163,7 +163,8 @@ class Serialization(abc.ABC):
                  values_only: bool = False,
                  skipped_label_replacement: str = '',
                  row_height: List[float] = [],
-                 column_width: List[float] = []
+                 column_width: List[float] = [],
+                 top_left_corner_text: str = ""
                  ) -> None:
         """Export the values inside Spreadsheet instance to the
             Excel 2010 compatible .xslx file
@@ -194,6 +195,8 @@ class Serialization(abc.ABC):
                 default widths (or None for the default width in the series).
                 If column labels are included, there is a label column width
                 on the first position in array.
+            top_left_corner_text (str): Text in the top left corner. Apply
+                only when the row and column labels are included.
         """
         # Quick sanity check
         if ".xlsx" not in file_path[-5:]:
@@ -316,6 +319,11 @@ class Serialization(abc.ABC):
                 ),
                                 0,
                                 row_lbl,
+                                row_label_format)
+            if self.cell_indices.excel_append_column_labels:
+                # Write the left/top corner text
+                worksheet.write(0, 0,
+                                top_left_corner_text,
                                 row_label_format)
 
         # Set the row heights:
@@ -818,7 +826,7 @@ class Serialization(abc.ABC):
 
     def to_2d_list(self, *,
                    language: Optional[str] = None,
-                   top_right_corner_text: str = "Sheet",
+                   top_left_corner_text: str = "Sheet",
                    skip_labels: bool = False,
                    na_rep: Optional[object] = None,
                    spaces_replacement: str = ' ',
@@ -830,7 +838,7 @@ class Serialization(abc.ABC):
                 language in each cell instead of values.
             spaces_replacement (str): All the spaces in the rows and columns
                 descriptions (labels) are replaced with this string.
-            top_right_corner_text (str): Text in the top right corner.
+            top_left_corner_text (str): Text in the top left corner.
             na_rep (str): Replacement for the missing data (cells with value
                 equals to None).
             skip_labels (bool): If true, first row and column with labels is
@@ -850,7 +858,7 @@ class Serialization(abc.ABC):
             if row_idx == -1:
                 if skip_labels:
                     continue
-                row.append(top_right_corner_text)
+                row.append(top_left_corner_text)
                 # Insert labels of columns:
                 for col_i in range(self.shape[1]):
                     col_lbl = self.cell_indices.columns_labels[
@@ -888,7 +896,7 @@ class Serialization(abc.ABC):
 
     def to_csv(self, *,
                language: Optional[str] = None,
-               top_right_corner_text: str = "Sheet",
+               top_left_corner_text: str = "Sheet",
                skip_labels: bool = False,
                na_rep: Optional[object] = '',
                spaces_replacement: str = ' ',
@@ -904,7 +912,7 @@ class Serialization(abc.ABC):
                 language in each cell instead of values.
             spaces_replacement (str): All the spaces in the rows and columns
                 descriptions (labels) are replaced with this string.
-            top_right_corner_text (str): Text in the top right corner.
+            top_left_corner_text (str): Text in the top left corner.
             sep (str): Separator of values in a row.
             line_terminator (str): Ending sequence (character) of a row.
             na_rep (str): Replacement for the missing data.
@@ -917,7 +925,7 @@ class Serialization(abc.ABC):
             str: CSV of the values
         """
         sheet_as_array = self.to_2d_list(
-            top_right_corner_text=top_right_corner_text,
+            top_left_corner_text=top_left_corner_text,
             na_rep=na_rep,
             skip_labels=skip_labels,
             spaces_replacement=spaces_replacement,
@@ -936,7 +944,7 @@ class Serialization(abc.ABC):
 
     def to_markdown(self, *,
                     language: Optional[str] = None,
-                    top_right_corner_text: str = "Sheet",
+                    top_left_corner_text: str = "Sheet",
                     skip_labels: bool = False,
                     na_rep: Optional[object] = '',
                     spaces_replacement: str = ' ',
@@ -949,7 +957,7 @@ class Serialization(abc.ABC):
                 language in each cell instead of values.
             spaces_replacement (str): All the spaces in the rows and columns
                 descriptions (labels) are replaced with this string.
-            top_right_corner_text (str): Text in the top right corner.
+            top_left_corner_text (str): Text in the top left corner.
             na_rep (str): Replacement for the missing data.
             skip_labels (bool): If true, first row and column with labels is
                 skipped
@@ -960,7 +968,7 @@ class Serialization(abc.ABC):
             str: Markdown (MD) compatible table of the values
         """
         sheet_as_array = self.to_2d_list(
-            top_right_corner_text=top_right_corner_text,
+            top_left_corner_text=top_left_corner_text,
             na_rep=na_rep,
             skip_labels=skip_labels,
             spaces_replacement=spaces_replacement,
@@ -1039,7 +1047,7 @@ class Serialization(abc.ABC):
 
     def to_html_table(self, *,
                       spaces_replacement: str = ' ',
-                      top_right_corner_text: str = "Sheet",
+                      top_left_corner_text: str = "Sheet",
                       na_rep: str = '',
                       language_for_description: str = None,
                       skip_labels: bool = False,
@@ -1049,7 +1057,7 @@ class Serialization(abc.ABC):
         Args:
             spaces_replacement (str): All the spaces in the rows and columns
                 descriptions (labels) are replaced with this string.
-            top_right_corner_text (str): Text in the top right corner.
+            top_left_corner_text (str): Text in the top left corner.
             na_rep (str): Replacement for the missing data.
             language_for_description (str): If not None, the description
                 of each computational cell is inserted as word of this
@@ -1072,7 +1080,7 @@ class Serialization(abc.ABC):
             export += "<tr>"
             if row_idx == -1:
                 export += "<th>"
-                export += top_right_corner_text
+                export += top_left_corner_text
                 export += "</th>"
                 # Insert labels of columns:
                 for col_i in range(self.shape[1]):
