@@ -3,6 +3,7 @@ import json
 from typing import Tuple, List, Dict, Union, Callable, Optional
 from types import MappingProxyType
 from numbers import Number
+import pathlib
 
 import xlsxwriter
 import numpy
@@ -342,7 +343,7 @@ class Serialization(SerializationInterface, abc.ABC):
         return workbook
 
     def to_excel(self,
-                 file_path: str,
+                 file_path: Union[str, pathlib.Path],
                  *,
                  spaces_replacement: str = ' ',
                  label_row_format: dict = {'bold': True},
@@ -364,7 +365,8 @@ class Serialization(SerializationInterface, abc.ABC):
             Excel 2010 compatible .xslx file
 
         Args:
-            file_path (str): Path to the target .xlsx file.
+            file_path (Union[str, pathlib.Path]): Path to the target Excel
+                .xlsx file.
             spaces_replacement (str): All the spaces in the rows and columns
                 descriptions (labels) are replaced with this string.
             label_row_format (dict): Excel styles for the label of rows,
@@ -392,12 +394,12 @@ class Serialization(SerializationInterface, abc.ABC):
                 only when the row and column labels are included.
         """
         # Quick sanity check
-        if ".xlsx" not in file_path[-5:]:
+        if ".xlsx" not in str(file_path)[-5:]:
             raise ValueError("Suffix of the file has to be '.xslx'!")
         if not isinstance(self.name, str) or len(self.name) < 1:
             raise ValueError("Sheet name has to be non-empty string!")
 
-        workbook = xlsxwriter.Workbook(file_path)
+        workbook = xlsxwriter.Workbook(str(file_path))
         self._to_excel(
             spaces_replacement=spaces_replacement,
             label_row_format=label_row_format,
@@ -685,7 +687,7 @@ class Serialization(SerializationInterface, abc.ABC):
         """Generate JSON schema.
 
         Returns:
-            dict: JSON schema for the Portable Spreadsheet JSON table output.
+            dict: JSON schema for the Portable Spreadsheet JSON sheet output.
         """
         false = False
         schema = {
@@ -1110,7 +1112,6 @@ class Serialization(SerializationInterface, abc.ABC):
         Args:
             spaces_replacement (str): All the spaces in the rows and columns
                 descriptions (labels) are replaced with this string.
-            top_left_corner_text (str): Text in the top left corner.
             na_rep (str): Replacement for the missing data.
             language_for_description (str): If not None, the description
                 of each computational cell is inserted as word of this

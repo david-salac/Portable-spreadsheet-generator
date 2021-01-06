@@ -479,3 +479,7 @@ class _SheetVariables(object):
             bool: Return True if the variable set is empty, False otherwise.
         """
         return len(self._variables) == 0
+
+    def __len__(self) -> int:
+        """Overload length operator"""
+        return len(self._variables)
