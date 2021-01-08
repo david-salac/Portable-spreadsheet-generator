@@ -20,6 +20,24 @@ def general_interface(rows: int,
     pass
 
 
+def excel_column(column: int) -> str:
+    """Convert column position (indexed from 0) to Excel column name.
+
+    Args:
+        column (int): Column index (position from 0).
+
+    Returns:
+        str: Definition of column in Excel.
+    """
+    letter_list = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    result = []
+    column += 1
+    while column:
+        column, rem = divmod(column - 1, 26)
+        result[:0] = letter_list[rem]
+    return ''.join(result)
+
+
 def excel_generator(rows: int,
                     columns: int,
                     offset_row: int = 0,

@@ -14,6 +14,7 @@ from .cell_indices import CellIndices
 from .skipped_label import SkippedLabel
 from .serialization_interface import SerializationInterface
 from .utils import NumPyEncoder
+from .cell_indices_templates import excel_column
 
 # ==== TYPES ====
 # Type for the output dictionary with the logic:
@@ -153,10 +154,82 @@ class Serialization(SerializationInterface, abc.ABC):
             self.warning_logger("Slice is being exported => there is"
                                 " a possibility of data losses.")
 
+    def _excel_register_variables(self, workbook):
+        """Register variables in Excel spreadsheet.
+
+        Args:
+            workbook: Workbook where variables are registered.
+        """
+        # Just register variables (without writing them to sheet)
+        for name, value in self._get_variables().variables_dict.items():
+            workbook.define_name(name, str(value['value']))
+
+    @staticmethod
+    def _excel_write_variables_to_sheet(workbook: object,
+                                        variables_sheet: object,
+                                        variables: List[object],
+                                        offset_rows: int = 0,
+                                        offset_columns: int = 0,
+                                        col_label_format: object = None,
+                                        header: Optional[Dict[str, str]] = None
+                                        ) -> object:
+        """Create sheet with variables.
+
+        Args:
+            workbook (object): Workbook where variables are registered.
+            variables_sheet (object): Sheet where variables are defined.
+            variables (List[object]): List of variables set.
+            offset_rows (int): How many rows should be skipped.
+            offset_columns (int): How many columns should be skipped.
+            header (Optional[Dict[str, str]]): Definition of the first line
+                with header. If None, header line is skipped.
+            col_label_format (object): Define style for header.
+
+        Returns:
+            xlsxwriter.worksheet.Worksheet: Worksheet with variables
+        """
+        row_idx = offset_rows
+        if header:
+            # Insert header (labels)
+            variables_sheet.write(row_idx, offset_columns + 0,
+                                  header['name'], col_label_format)
+            variables_sheet.write(row_idx, offset_columns + 1,
+                                  header['value'], col_label_format)
+            variables_sheet.write(row_idx, offset_columns + 2,
+                                  header['description'], col_label_format)
+            row_idx += 1
+
+        for var_set in variables:
+            for var_n, var_v in var_set.variables_dict.items():
+                # Format the variable style
+                try:
+                    style_var = var_set.excel_format[var_n]
+                    variable_style = workbook.add_format(style_var)
+                except KeyError:
+                    variable_style = None
+                # Insert variables to the sheet
+                variables_sheet.write(row_idx, offset_columns + 0,
+                                      var_n)
+                variables_sheet.write(row_idx, offset_columns + 1,
+                                      var_v['value'], variable_style)
+                variables_sheet.write(row_idx, offset_columns + 2,
+                                      var_v['description'])
+                # Register variable
+                workbook.define_name(
+                    var_n, '={}!${}${}'.format(
+                        variables_sheet.name,
+                        excel_column(offset_columns + 1),
+                        row_idx + 1
+                    )
+                )
+                row_idx += 1
+
+        return variables_sheet
+
     def _to_excel(self, *,
                   spaces_replacement: str = ' ',
-                  label_row_format: dict = {'bold': True},
-                  label_column_format: dict = {'bold': True},
+                  label_row_format: dict = MappingProxyType({'bold': True}),
+                  label_column_format: dict = MappingProxyType({'bold': True}),
                   variables_sheet_name: Optional[str] = None,
                   variables_sheet_header: Dict[str, str] = MappingProxyType(
                       {
@@ -166,11 +239,12 @@ class Serialization(SerializationInterface, abc.ABC):
                       }),
                   values_only: bool = False,
                   skipped_label_replacement: str = '',
-                  row_height: List[float] = [],
-                  column_width: List[float] = [],
+                  row_height: List[float] = tuple(),
+                  column_width: List[float] = tuple(),
                   top_left_corner_text: str = "",
                   workbook: xlsxwriter.Workbook,
-                  ) -> xlsxwriter.Workbook:
+                  worksheet: Optional[object] = None
+                  ) -> object:
         """Export the values inside Spreadsheet instance to the
             Excel 2010 compatible .xslx file
 
@@ -202,15 +276,17 @@ class Serialization(SerializationInterface, abc.ABC):
             top_left_corner_text (str): Text in the top left corner. Apply
                 only when the row and column labels are included.
             workbook (xlsxwriter.Workbook): Handler of the file.
+            worksheet (object): Sheet where values should be written.
 
         Return:
-            xlsxwriter.Workbook: Modified workbook.
+            object: Created worksheet.
         """
         # Log warning if needed
         self.log_export_subset_warning_if_needed()
 
         # A) Create a sheet inside Excel file:
-        worksheet = workbook.add_worksheet(name=self.name)
+        if worksheet is None:
+            worksheet = workbook.add_worksheet(name=self.name)
 
         # B) Register the style for the labels:
         col_label_format = workbook.add_format(label_column_format)
@@ -218,39 +294,20 @@ class Serialization(SerializationInterface, abc.ABC):
 
         # C) Register all variables:
         if self._get_variables().empty:
+            # If there are no variables, skip this
             pass
         elif variables_sheet_name is None:
-            for name, value in self._get_variables().variables_dict.items():
-                workbook.define_name(name, str(value['value']))
+            # Just register variables (without writing them to sheet)
+            self._excel_register_variables(workbook)
         else:
-            # Add variable
+            # Register variables and create the variable's sheet
             variables_sheet = workbook.add_worksheet(name=variables_sheet_name)
-            # Insert header (labels)
-            variables_sheet.write(0, 0, variables_sheet_header['name'],
-                                  col_label_format)
-            variables_sheet.write(0, 1, variables_sheet_header['value'],
-                                  col_label_format)
-            variables_sheet.write(0, 2, variables_sheet_header['description'],
-                                  col_label_format)
-            row_idx = 1
-            for var_n, var_v in self._get_variables().variables_dict.items():
-                # Format the variable style
-                try:
-                    style_var = self._get_variables().excel_format[var_n]
-                    variable_style = workbook.add_format(style_var)
-                except KeyError:
-                    variable_style = None
-                # Insert variables to the sheet
-                variables_sheet.write(row_idx, 0, var_n)
-                variables_sheet.write(
-                    row_idx, 1, var_v['value'], variable_style
-                )
-                variables_sheet.write(row_idx, 2, var_v['description'])
-                # Register variable
-                workbook.define_name(
-                    var_n, f'={variables_sheet_name}!$B${row_idx + 1}'
-                )
-                row_idx += 1
+
+            # Write variable sheet
+            self._excel_write_variables_to_sheet(
+                workbook, variables_sheet, [self._get_variables()], 0, 0,
+                col_label_format, variables_sheet_header
+            )
 
         # D) Iterate through all columns and rows and add data
         for row_idx in range(self.shape[0]):
@@ -340,7 +397,7 @@ class Serialization(SerializationInterface, abc.ABC):
                 worksheet.set_column(col_position, col_position, s_col_width)
 
         # Return results
-        return workbook
+        return worksheet, worksheet
 
     def to_excel(self,
                  file_path: Union[str, pathlib.Path],
@@ -394,12 +451,14 @@ class Serialization(SerializationInterface, abc.ABC):
                 only when the row and column labels are included.
         """
         # Quick sanity check
-        if ".xlsx" not in str(file_path)[-5:]:
+        if ".xlsx" not in pathlib.Path(file_path).suffix:
             raise ValueError("Suffix of the file has to be '.xslx'!")
         if not isinstance(self.name, str) or len(self.name) < 1:
             raise ValueError("Sheet name has to be non-empty string!")
 
         workbook = xlsxwriter.Workbook(str(file_path))
+        # Create a sheet inside Excel file:
+        worksheet = workbook.add_worksheet(name=self.name)
         self._to_excel(
             spaces_replacement=spaces_replacement,
             label_row_format=label_row_format,
@@ -411,8 +470,10 @@ class Serialization(SerializationInterface, abc.ABC):
             row_height=row_height,
             column_width=column_width,
             top_left_corner_text=top_left_corner_text,
-            workbook=workbook
-        ).close()
+            workbook=workbook,
+            worksheet=worksheet
+        )
+        workbook.close()
 
     def to_dictionary(self,
                       languages: List[str] = None,
