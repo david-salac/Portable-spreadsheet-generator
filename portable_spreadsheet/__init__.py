@@ -1,3 +1,4 @@
+from .work_book import WorkBook, ExcelParameters, DictionaryParameters, ListParameters  # noqa
 from .sheet import Sheet  # noqa
 from .cell import Cell  # noqa
 from .cell_indices import CellIndices  # noqa

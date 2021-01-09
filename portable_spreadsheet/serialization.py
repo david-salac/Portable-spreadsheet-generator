@@ -243,7 +243,8 @@ class Serialization(SerializationInterface, abc.ABC):
                   column_width: List[float] = tuple(),
                   top_left_corner_text: str = "",
                   workbook: xlsxwriter.Workbook,
-                  worksheet: Optional[object] = None
+                  worksheet: Optional[object] = None,
+                  register_variables: bool = True
                   ) -> object:
         """Export the values inside Spreadsheet instance to the
             Excel 2010 compatible .xslx file
@@ -277,6 +278,8 @@ class Serialization(SerializationInterface, abc.ABC):
                 only when the row and column labels are included.
             workbook (xlsxwriter.Workbook): Handler of the file.
             worksheet (object): Sheet where values should be written.
+            register_variables (bool): If false, variable registration is
+                skipped.
 
         Return:
             object: Created worksheet.
@@ -293,7 +296,7 @@ class Serialization(SerializationInterface, abc.ABC):
         row_label_format = workbook.add_format(label_row_format)
 
         # C) Register all variables:
-        if self._get_variables().empty:
+        if self._get_variables().empty or not register_variables:
             # If there are no variables, skip this
             pass
         elif variables_sheet_name is None:
