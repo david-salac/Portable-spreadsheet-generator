@@ -205,7 +205,7 @@ class Serialization(SerializationInterface, abc.ABC):
             for var_n, var_v in var_set.get_variables_dict(True).items():
                 # Format the variable style
                 try:
-                    style_var = var_v['excel_format']
+                    style_var = var_v.excel_format
                     variable_style = workbook.add_format(style_var)
                 except KeyError:
                     variable_style = None
