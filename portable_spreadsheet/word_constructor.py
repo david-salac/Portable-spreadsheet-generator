@@ -4,6 +4,7 @@ from typing import Dict, Set, Tuple, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .cell import Cell
+    from .sheet import Sheet
 
 from .grammars import GRAMMARS
 
@@ -577,6 +578,63 @@ class WordConstructor(object):
             if row_first:
                 body = prefix + row_parsed + separator + col_parsed + suffix
             instance.words[language] = body
+        return instance
+
+    @staticmethod
+    def cross_reference(cell: 'Cell', sheet: 'Sheet', /) -> 'WordConstructor':  # noqa
+        """Return the reference to the cell in another sheet.
+
+        Args:
+            cell (Cell): The cell to which value is referenced (in sheet).
+            sheet (Sheet): The sheet in which the cell is located.
+
+        Returns:
+            WordConstructor: Word with reference
+        """
+        instance = WordConstructor(cell_indices=cell.cell_indices)
+        for language in instance.languages:
+            # Deal with cell reference
+            cell_prefix = GRAMMARS[language]['cells']['cross-reference'][
+                'cell-prefix'
+            ]
+            cell_separator = GRAMMARS[language]['cells']['cross-reference'][
+                'cell-separator'
+            ]
+            cell_suffix = GRAMMARS[language]['cells']['cross-reference'][
+                'cell-suffix'
+            ]
+            row_first = GRAMMARS[language]['cells']['cross-reference'][
+                'row-first'
+            ]
+            # Parse the position to the text of the column and row
+            col_parsed = cell.cell_indices.columns[language][cell.column]
+            row_parsed = cell.cell_indices.rows[language][cell.row]
+
+            if row_first:
+                cell_body = (cell_prefix + row_parsed + cell_separator +
+                             col_parsed + cell_suffix)
+            else:
+                cell_body = (cell_prefix + col_parsed +
+                             cell_separator + row_parsed + cell_suffix)
+
+            # Deal with sheet reference
+            sheet_prefix = GRAMMARS[language]['cells']['cross-reference'][
+                'sheet-prefix'
+            ]
+            sheet_suffix = GRAMMARS[language]['cells']['cross-reference'][
+                'sheet-suffix'
+            ]
+            sheet_first = GRAMMARS[language]['cells']['cross-reference'][
+                'sheet-first'
+            ]
+            ref_sheet_value = sheet_prefix + sheet.name + sheet_suffix
+            if sheet_first:
+                body = ref_sheet_value + cell_body
+            else:
+                body = cell_body + ref_sheet_value
+
+            instance.words[language] = body
+
         return instance
 
     @staticmethod

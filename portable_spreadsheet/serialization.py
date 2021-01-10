@@ -203,15 +203,17 @@ class Serialization(SerializationInterface, abc.ABC):
             for var_n, var_v in var_set.variables_dict.items():
                 # Format the variable style
                 try:
-                    style_var = var_set.excel_format[var_n]
+                    style_var = var_v['excel_format']
                     variable_style = workbook.add_format(style_var)
                 except KeyError:
                     variable_style = None
                 # Insert variables to the sheet
                 variables_sheet.write(row_idx, offset_columns + 0,
                                       var_n)
-                variables_sheet.write(row_idx, offset_columns + 1,
-                                      var_v['value'], variable_style)
+                variables_sheet.write_formula(row_idx, offset_columns + 1,
+                                        var_v['cell'].parse['excel'],
+                                        value=var_v['value'],
+                                        cell_format=variable_style)
                 variables_sheet.write(row_idx, offset_columns + 2,
                                       var_v['description'])
                 # Register variable

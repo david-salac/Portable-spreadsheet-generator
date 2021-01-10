@@ -5,7 +5,7 @@ import copy
 from .cell import Cell
 from .cell_indices import CellIndices, T_lg_col_row
 from .cell_slice import CellSlice
-from .spreadsheet_utils import _Location, _Functionality, _SheetVariables
+from .sheet_utils import _Location, _Functionality, _SheetVariable
 from .serialization import Serialization
 
 if TYPE_CHECKING:
@@ -66,7 +66,7 @@ class Sheet(Serialization):
         # To make accessible shortcuts for functionality
         self.fn: _Functionality = _Functionality(self)
         # Variables of the sheet
-        self.var: _SheetVariables = _SheetVariables(self)
+        self.var: _SheetVariable = _SheetVariable(self)
 
     @classmethod
     def create_new_sheet(

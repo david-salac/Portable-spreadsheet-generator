@@ -8,6 +8,7 @@ from .cell_type import CellType
 
 if TYPE_CHECKING:
     from .cell_slice import CellSlice
+    from .sheet import Sheet
 
 # ========== File with the functionality for internal purposes only ===========
 
@@ -178,6 +179,19 @@ class _Functionality(object):
         return Cell.brackets(body)
 
     @staticmethod
+    def cross_reference(target: Cell, sheet: 'Sheet') -> Cell:
+        """Cross reference to other sheet in the workbook.
+
+        Args:
+            target (Cell): Target cell in a different sheet.
+            sheet (Sheet): Sheet of the target cell.
+
+        Return:
+            Cell: reference to the different location.
+        """
+        return Cell.cross_reference(target, sheet)
+
+    @staticmethod
     def ln(value: Cell) -> Cell:
         """Natural logarithm of the value.
 
@@ -338,42 +352,70 @@ class _Functionality(object):
         return Cell.offset(reference, row_skip, column_skip, target=target)
 
 
-class _SheetVariables(object):
+class _SheetVariable(object):
     """Encapsulate the sheet variables.
 
     Attributes:
-        _variables (Dict[str, object]): Dictionary with variables, key is the
-            name of the variable and value is the actual value assigned to the
-            variable.
-        _excel_format (Dict[str, dict]): Style/format for showing values of
-            selected variables.
-        spreadsheet (Spreadsheet): Reference to spreadsheet instance.
+        _variables (Dict[str, Cell]): Mapping from variable name to definition.
+        description (Dict[str, str]): Description of concrete variable.
+        spreadsheet (Sheet): Reference to spreadsheet instance.
     """
-    def __init__(self, spreadsheet):
-        """
+    def __init__(self, spreadsheet: 'Sheet'):
+        """Initialize instance
         Args:
-            spreadsheet (Spreadsheet): Reference to spreadsheet instance.
+            spreadsheet (Sheet): Reference to spreadsheet instance.
         """
-        self._variables: Dict[str, Dict[str, object]] = {}
-        self._excel_format: Dict[str, dict] = {}
-        self.spreadsheet = spreadsheet
+        self.spreadsheet: 'Sheet' = spreadsheet
+        self._variables: Dict[str, Cell] = dict()
+        self.description: Dict[str, str] = dict()
 
     @property
-    def excel_format(self):
-        """Return the dictionary defining Excel format for the XlsxWriter.
-
-        Read the documentation: https://xlsxwriter.readthedocs.io/format.html
+    def empty(self) -> bool:
+        """Return True if the variable set is empty, False otherwise.
 
         Returns:
-            Dict[str, dict]: Dictionary defining Excel format for XlsxWriter.
+            bool: Return True if the variable set is empty, False otherwise.
         """
-        return self._excel_format
+        return len(self._variables) == 0
+
+    def __len__(self) -> int:
+        """Overload length operator"""
+        return len(self._variables)
+
+    def get_variable(self, item):
+        """Return the item by name.
+        Returns:
+            Cell: variable definition.
+        """
+        return self._variables[item]
+
+    def __getitem__(self, item):
+        """Overloads [item] operator getter"""
+        return self.get_variable(item)
+
+    def __setitem__(self, key, value):
+        """Overloads [item] operator setter"""
+        self.set_variable(key, value)
+
+    def get_variable(self, name: str, /) -> Cell:  # noqa E225
+        """Get variable value as a Cell by its name.
+
+        Args:
+            name (str): Name of the variable
+
+        Returns:
+            Cell: variable
+        """
+        if name in self._variables:
+            return self._variables[name]
+        else:
+            raise IndexError(f"Variable with name {name} does not exist in "
+                             f"the system!")
 
     def set_variable(self,
                      name: str,
-                     value: Union[str, Number],
-                     description: Optional[str] = None,
-                     exclude_description_update: bool = False) -> None:
+                     value: Union[str, Number, Cell],
+                     description: Optional[str] = None) -> None:
         """Check the name consistency and set the variable.
 
         If the variable with given name is already in the dictionary, it is
@@ -384,8 +426,6 @@ class _SheetVariables(object):
                 alphanumeric value maximally with underscore symbols.
             value (Union[str, Number]): A value to be set.
             description (Optional[str]): Description of the variable
-            exclude_description_update (bool): If true, description is not
-                updated
 
         Raises:
             ValueError: If the structure of the name does not match the
@@ -406,80 +446,30 @@ class _SheetVariables(object):
             pass
         else:
             raise ValueError("Name of variable has to be alphanumeric value "
-                             "maximally with underscores!")
+                             "with underscores!")
 
-        # Use the existing description if required
-        if name in self._variables.keys():
-            if exclude_description_update:
-                description = self._variables[name]["description"]
-
-        # Add the value to the dictionary:
-        self._variables[name] = {
-            "value": value,
-            "description": description
-        }
-
-    @property
-    def variables_dict(self) -> Dict[str, Dict[str, object]]:
-        """Return the variables as a read-only dictionary with keys as a name
-            of variable and value as actual value of the variable.
-
-        Returns:
-            Dict[str, Dict[str, object]]: Read-only dictionary with names of
-                variables (keys) and their values and description (value).
-                Example: 'key' -> {'value': VALUE, "description": DESCRIPTION}
-        """
-        return copy.deepcopy(self._variables)
-
-    def variable_exist(self, name: str) -> bool:
-        """Returns true if the variable exist in the dictionary.
-
-        Args:
-            name (str): Unique name for the variable. Has to be lower case
-                alphanumeric value maximally with underscore symbols.
-        Return:
-            bool: True if variable exists in the system, False otherwise.
-        """
-        return str(name) in self._variables.keys()
-
-    def get_variable(self, name: str, /) -> Cell:  # noqa E225
-        """Get variable value as a new Cell by its name.
-
-        Args:
-            name (str): Name of the variable
-        """
-        if self.variable_exist(name):
-            return Cell.variable(
-                Cell(None,
-                     None,
-                     variable_name=name,
-                     value=self._variables[name]['value'],
-                     is_variable=True,
-                     cell_type=CellType.computational,
-                     cell_indices=self.spreadsheet.cell_indices
-                     )
-            )
+        self.description[name] = description
+        if isinstance(value, Cell):
+            self._variables[name] = value
         else:
-            raise ValueError(f"Variable with name {name} does not exist in "
-                             f"the system!")
-
-    def __getitem__(self, item):
-        """Overloads [item] operator getter"""
-        return self.get_variable(item)
-
-    def __setitem__(self, key, value):
-        """Overloads [item] operator setter"""
-        self.set_variable(key, value, exclude_description_update=True)
+            self._variables[name] = Cell.variable(
+                    Cell(None, None,  # No position
+                         variable_name=name,
+                         value=value,
+                         is_variable=True,
+                         cell_type=CellType.computational,
+                         cell_indices=self.spreadsheet.cell_indices
+                         )
+                )
 
     @property
-    def empty(self) -> bool:
-        """Return True if the variable set is empty, False otherwise.
-
-        Returns:
-            bool: Return True if the variable set is empty, False otherwise.
-        """
-        return len(self._variables) == 0
-
-    def __len__(self) -> int:
-        """Overload length operator"""
-        return len(self._variables)
+    def variables_dict(self) -> dict:
+        res = {}
+        for _name, _var in self._variables.items():
+            res[_name] = {
+                'value': _var.value,
+                'description': self.description[_name],
+                'excel_format': _var.excel_format,
+                'cell': _var
+            }
+        return res

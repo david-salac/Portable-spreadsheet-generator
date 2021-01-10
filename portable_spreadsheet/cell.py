@@ -1,4 +1,5 @@
-from typing import Dict, Optional, Iterable, Tuple, Callable, Union
+from typing import Dict, Optional, Iterable, Tuple, \
+    Callable, Union, TYPE_CHECKING
 
 import numpy as np
 import numpy_financial as npf
@@ -6,6 +7,8 @@ import numpy_financial as npf
 from .word_constructor import WordConstructor
 from .cell_type import CellType
 from .cell_indices import CellIndices
+if TYPE_CHECKING:
+    from .sheet import Sheet
 
 
 class CellValueError(ValueError):
@@ -759,6 +762,27 @@ class Cell(object):
         return Cell(value=Cell._compute_value(lambda x: x.value, x=other),
                     words=WordConstructor.reference(other),
                     cell_indices=other.cell_indices,
+                    cell_type=CellType.computational
+                    )
+
+    @staticmethod
+    def cross_reference(target: 'Cell', sheet: 'Sheet') -> 'Cell':
+        """Cross reference to other sheet in the workbook.
+
+        Args:
+            target (Cell): Target cell in a different sheet.
+            sheet (Sheet): Sheet of the target cell.
+
+        Return:
+            Cell: reference to the different location.
+        """
+
+        if not target.anchored:
+            raise ValueError("The referenced cell has to be anchored.")
+
+        return Cell(value=Cell._compute_value(lambda x: x.value, x=target),
+                    words=WordConstructor.cross_reference(target, sheet),
+                    cell_indices=target.cell_indices,
                     cell_type=CellType.computational
                     )
 
