@@ -94,15 +94,17 @@ class WorkBook(SerializationInterface):
         Returns:
             Sheet: Sheet for variables definition.
         """
+        # Get the number of variables in all sheets
+        number_of_variables: int = sum([len(sht.var) for sht in self.sheets])
+        if number_of_variables == 0:
+            raise ValueError("there has to be at least 1 variable")
         if self.variable_sheet_offset is not None:
             # Check if singleton
             raise ValueError("there can be just one sheet for variables")
 
         self.variable_sheet_offset = (nr_rows_prefix, nr_columns_prefix)
-        # Get the number of variables in all sheets
-        number_of_variables: int = sum([len(sht.var) for sht in self.sheets])
-        number_of_rows = number_of_variables + nr_rows_prefix + nr_rows_suffix
 
+        number_of_rows = number_of_variables + nr_rows_prefix + nr_rows_suffix
         # Three for var_name, var_value, var_description
         number_of_columns = 3 + nr_columns_prefix + nr_columns_suffix
 
@@ -124,7 +126,7 @@ class WorkBook(SerializationInterface):
 
     def to_excel(self,
                  file_path: Union[str, pathlib.Path],
-                 /, *,  # noqa: E225, E999
+                 /, *,  # noqa: E225
                  export_parameters: Tuple[ExcelParameters]
                  ) -> None:
         """Export to Excel file.
@@ -224,7 +226,7 @@ class WorkBook(SerializationInterface):
                 "items": {
                     "type": "object",
                     "properties": {
-                        schema['properties']
+                        **schema['properties']
                     }
                 }
             }
@@ -258,7 +260,7 @@ class WorkBook(SerializationInterface):
             res.append(sheet.to_list(**dict(export_parameters[idx])))
         return res
 
-    def __getattr__(self, sheet_name: str):
+    def __getitem__(self, sheet_name: str):
         """Returns the concrete sheet in the work book.
 
         Args:

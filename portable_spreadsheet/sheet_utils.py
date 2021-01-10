@@ -301,7 +301,7 @@ class _Functionality(object):
     @staticmethod
     def conditional(condition: Cell,
                     consequent: Cell,
-                    alternative: Cell, /) -> Cell:  # noqa E225
+                    alternative: Cell, /) -> Cell:  # noqa: E225
         """Conditional statement (standard if-then-else statement).
 
         Evaluate the value of the condition, if it is true, take the value
@@ -323,7 +323,7 @@ class _Functionality(object):
     def offset(self,
                reference: Cell,
                row_skip: Cell,
-               column_skip: Cell, /) -> Cell:  # noqa E225
+               column_skip: Cell, /) -> Cell:  # noqa: E225
         """Return the cell with value computed as offset from reference
             cell plus row_skip rows and column_skip columns.
 
@@ -381,13 +381,6 @@ class _SheetVariable(object):
         """Overload length operator"""
         return len(self._variables)
 
-    def get_variable(self, item):
-        """Return the item by name.
-        Returns:
-            Cell: variable definition.
-        """
-        return self._variables[item]
-
     def __getitem__(self, item):
         """Overloads [item] operator getter"""
         return self.get_variable(item)
@@ -396,7 +389,7 @@ class _SheetVariable(object):
         """Overloads [item] operator setter"""
         self.set_variable(key, value)
 
-    def get_variable(self, name: str, /) -> Cell:  # noqa E225
+    def get_variable(self, name: str, /) -> Cell:  # noqa: E225
         """Get variable value as a Cell by its name.
 
         Args:

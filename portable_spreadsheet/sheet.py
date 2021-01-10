@@ -371,7 +371,7 @@ class Sheet(Serialization):
                new_number_of_rows: int,
                new_number_of_columns: int,
                new_rows_columns: Optional[T_lg_col_row] = {},
-               /, *,  # noqa E225
+               *,
                new_rows_labels: List[Union[str, SkippedLabel]] = None,
                new_columns_labels: List[Union[str, SkippedLabel]] = None,
                new_rows_help_text: List[str] = None,

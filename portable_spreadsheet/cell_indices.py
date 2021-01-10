@@ -19,7 +19,7 @@ class CellIndices(object):
                  number_of_rows: int,
                  number_of_columns: int,
                  rows_columns: Optional[T_lg_col_row] = None,
-                 /, *,  # noqa E999
+                 *,
                  rows_labels: List[str] = None,
                  columns_labels: List[str] = None,
                  rows_help_text: List[str] = None,
@@ -179,7 +179,7 @@ class CellIndices(object):
                     new_number_of_rows: int,
                     new_number_of_columns: int,
                     new_rows_columns: Optional[T_lg_col_row] = {},
-                    /, *,  # noqa E225
+                    *,
                     new_rows_labels: List[str] = None,
                     new_columns_labels: List[str] = None,
                     new_rows_help_text: List[str] = None,

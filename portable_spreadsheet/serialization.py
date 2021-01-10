@@ -1154,7 +1154,9 @@ class Serialization(SerializationInterface, abc.ABC):
         contains_nonumeric_values = False
         for row_idx in range(self.shape[0]):
             for col_idx in range(self.shape[1]):
-                if (value := self._get_cell_at(row_idx, col_idx).value) is not None:  # noqa E999
+                if (
+                    value := self._get_cell_at(row_idx, col_idx).value  # noqa
+                ) is not None:
                     if isinstance(value, Number):
                         results[row_idx, col_idx] = value
                     else:
@@ -1214,7 +1216,7 @@ class Serialization(SerializationInterface, abc.ABC):
                         ].replace(' ', spaces_replacement)
                     if isinstance(col, SkippedLabel):
                         col = skipped_label_replacement
-                    if (help_text :=  # noqa 203
+                    if (help_text :=  # noqa: 203
                             self.cell_indices.columns_help_text) is not None:
                         title_attr = ' title="{}"'.format(
                             help_text[col_i + self.export_offset[1]]
@@ -1250,7 +1252,7 @@ class Serialization(SerializationInterface, abc.ABC):
                 for col_idx in range(self.shape[1]):
                     title_attr = ""
                     cell_at_pos = self._get_cell_at(row_idx, col_idx)
-                    if (description := # noqa 203
+                    if (description := # noqa: 203
                             cell_at_pos.description) is not None:
                         title_attr = ' title="{}"'.format(description)
                     elif language_for_description is not None:
