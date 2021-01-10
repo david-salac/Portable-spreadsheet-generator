@@ -7,7 +7,7 @@ import copy
 
 import numpy as np
 
-from portable_spreadsheet.spreadsheet import Spreadsheet
+from portable_spreadsheet.sheet import Sheet
 from portable_spreadsheet.skipped_label import SkippedLabel
 
 
@@ -24,13 +24,14 @@ class TestSerialization(unittest.TestCase):
         self.columns_help_text = [f"HT_C_{c_i}" for c_i in range(self.nr_col)]
         self.native_rows = [f"NL_R_{r_i}" for r_i in range(self.nr_row)]
         self.native_cols = [f"NL_C_{c_i}" for c_i in range(self.nr_col)]
-        self.sheet = Spreadsheet.create_new_sheet(
+        self.sheet = Sheet.create_new_sheet(
             self.nr_row, self.nr_col, {
                 'native': (
                     self.native_rows,
                     self.native_cols
                 )
             },
+            name="Sheet",
             rows_labels=self.rows_labels,
             columns_labels=self.columns_labels,
             rows_help_text=self.rows_help_text,
@@ -145,7 +146,7 @@ class TestSerializationToArrays(unittest.TestCase):
         self.columns_help_text = [f"HT_C_{c_i}" for c_i in range(self.nr_col)]
         self.native_rows = [f"NL_R_{r_i}" for r_i in range(self.nr_row)]
         self.native_cols = [f"NL_C_{c_i}" for c_i in range(self.nr_col)]
-        self.sheet = Spreadsheet.create_new_sheet(
+        self.sheet = Sheet.create_new_sheet(
             self.nr_row, self.nr_col, {
                 'native': (
                     self.native_rows,
@@ -171,10 +172,11 @@ class TestSerializationToArrays(unittest.TestCase):
         self.assertTrue(np.allclose(self.sheet.to_numpy(),
                                     self.inserted_rand_values))
 
-    def test_to_2d_list_skipped_labels(self):
+    def test_to_list_skipped_labels(self):
         """Test when some labels are passed as SkippedLabel"""
-        sheet = Spreadsheet.create_new_sheet(
+        sheet = Sheet.create_new_sheet(
             2, 3,
+            name="Sheet",
             rows_labels=[SkippedLabel('A'), 'B'],
             columns_labels=['C1', SkippedLabel('C2'), 'C3']
         )
@@ -190,20 +192,20 @@ class TestSerializationToArrays(unittest.TestCase):
         self.assertListEqual([['Sheet', 'C1', 'HH', 'C3'],
                               ['HH', 2, 72.8, 3],
                               ['B', 7, 3, 9]],
-                             sheet.to_2d_list(skipped_label_replacement="HH"))
+                             sheet.to_list(skipped_label_replacement="HH"))
 
-    def test_to_2d_list(self):
+    def test_to_list(self):
         """Test the serialization to 2D list"""
         # Check values
-        computed_2d_list = self.sheet.to_2d_list(skip_labels=True)
+        computed_2d_list = self.sheet.to_list(skip_labels=True)
         self.assertTrue(isinstance(computed_2d_list, list))
         self.assertTrue(
             np.allclose(np.array(computed_2d_list), self.inserted_rand_values)
             )
         # Check labels:
         corner = "yMq7W0bk"
-        computed_2d_list = self.sheet.to_2d_list(skip_labels=False,
-                                                 top_left_corner_text=corner)
+        self.sheet.name = corner
+        computed_2d_list = self.sheet.to_list(skip_labels=False)
         self.assertTrue(isinstance(computed_2d_list, list))
         self.assertTrue(computed_2d_list[0][0], corner)
         # Check row labels
@@ -222,8 +224,7 @@ class TestSerializationToArrays(unittest.TestCase):
         # Check the language export
         sheet = copy.deepcopy(self.sheet)
         sheet.iloc[0, 0] = sheet.iloc[0, 1] * sheet.iloc[1, 0]
-        computed_2d_list = sheet.to_2d_list(skip_labels=True,
-                                            language='excel')
+        computed_2d_list = sheet.to_list(skip_labels=True, language='excel')
         # Regression test
         self.assertEqual(sheet.iloc[0, 0].parse['excel'], '=C2*B3')
         # Test all the values inside

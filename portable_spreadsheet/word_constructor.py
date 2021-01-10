@@ -2,13 +2,14 @@ import copy
 from numbers import Number
 from typing import Dict, Set, Tuple, TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from .cell import Cell
-
 from .grammars import GRAMMARS
 
 from .cell_indices import CellIndices
 from .cell_type import CellType
+
+if TYPE_CHECKING:
+    from .cell import Cell
+    from .sheet import Sheet
 
 # ==== TYPES ====
 # Type for the word of some language, logic: key: language, value: word
@@ -47,7 +48,7 @@ class WordConstructor(object):
             self.words: T_word = {key: "" for key in self.languages}
 
     @staticmethod
-    def init_from_new_cell(cell: 'Cell', /) -> 'WordConstructor':  # noqa E999
+    def init_from_new_cell(cell: 'Cell', /) -> 'WordConstructor':  # noqa: E225
         """Initialise the words when the new cell is created.
 
         Args:
@@ -91,7 +92,7 @@ class WordConstructor(object):
 
     @staticmethod
     def add(first: 'Cell',
-            second: 'Cell', /) -> 'WordConstructor':  # noqa E225
+            second: 'Cell', /) -> 'WordConstructor':  # noqa: E225
         """Add binary operation (+).
 
         Args:
@@ -106,7 +107,7 @@ class WordConstructor(object):
 
     @staticmethod
     def subtract(first: 'Cell',
-                 second: 'Cell', /) -> 'WordConstructor':  # noqa E225
+                 second: 'Cell', /) -> 'WordConstructor':  # noqa: E225
         """Subtract binary operation (-).
 
         Args:
@@ -121,7 +122,7 @@ class WordConstructor(object):
 
     @staticmethod
     def multiply(first: 'Cell',
-                 second: 'Cell', /) -> 'WordConstructor':  # noqa E225
+                 second: 'Cell', /) -> 'WordConstructor':  # noqa: E225
         """Multiply binary operation (*).
 
         Args:
@@ -136,7 +137,7 @@ class WordConstructor(object):
 
     @staticmethod
     def divide(first: 'Cell',
-               second: 'Cell', /) -> 'WordConstructor':  # noqa E225
+               second: 'Cell', /) -> 'WordConstructor':  # noqa: E225
         """Divide binary operation (/).
 
         Args:
@@ -151,7 +152,7 @@ class WordConstructor(object):
 
     @staticmethod
     def modulo(first: 'Cell',
-               second: 'Cell', /) -> 'WordConstructor':  # noqa E225
+               second: 'Cell', /) -> 'WordConstructor':  # noqa: E225
         """Modulo binary operation (%).
 
         Args:
@@ -166,7 +167,7 @@ class WordConstructor(object):
 
     @staticmethod
     def power(first: 'Cell',
-              second: 'Cell', /) -> 'WordConstructor':  # noqa E225
+              second: 'Cell', /) -> 'WordConstructor':  # noqa: E225
         """Power binary operation (**).
 
         Args:
@@ -181,7 +182,8 @@ class WordConstructor(object):
 
     @staticmethod
     def logicalConjunction(first: 'Cell',
-                           second: 'Cell', /) -> 'WordConstructor':  # noqa E225
+                           second: 'Cell',
+                           /) -> 'WordConstructor':  # noqa: E225
         """Logical conjunction operation (and).
 
         Args:
@@ -197,7 +199,8 @@ class WordConstructor(object):
 
     @staticmethod
     def logicalDisjunction(first: 'Cell',
-                           second: 'Cell', /) -> 'WordConstructor':  # noqa E225
+                           second: 'Cell',
+                           /) -> 'WordConstructor':  # noqa: E225
         """Logical disjunction operation (or).
 
         Args:
@@ -213,7 +216,7 @@ class WordConstructor(object):
 
     @staticmethod
     def equalTo(first: 'Cell',
-                second: 'Cell', /) -> 'WordConstructor':  # noqa E225
+                second: 'Cell', /) -> 'WordConstructor':  # noqa: E225
         """Equal to binary operation (==).
 
         Args:
@@ -228,7 +231,7 @@ class WordConstructor(object):
 
     @staticmethod
     def notEqualTo(first: 'Cell',
-                   second: 'Cell', /) -> 'WordConstructor':  # noqa E225
+                   second: 'Cell', /) -> 'WordConstructor':  # noqa: E225
         """Not equal to binary operation (!=).
 
         Args:
@@ -243,7 +246,7 @@ class WordConstructor(object):
 
     @staticmethod
     def greaterThan(first: 'Cell',
-                    second: 'Cell', /) -> 'WordConstructor':  # noqa E225
+                    second: 'Cell', /) -> 'WordConstructor':  # noqa: E225
         """Greater than binary operation (>).
 
         Args:
@@ -258,7 +261,8 @@ class WordConstructor(object):
 
     @staticmethod
     def greaterThanOrEqualTo(first: 'Cell',
-                             second: 'Cell', /) -> 'WordConstructor':  # noqa E225
+                             second: 'Cell',
+                             /) -> 'WordConstructor':  # noqa: E225
         """Greater than or equal to binary operation (>=).
 
         Args:
@@ -274,7 +278,7 @@ class WordConstructor(object):
 
     @staticmethod
     def lessThan(first: 'Cell',
-                 second: 'Cell', /) -> 'WordConstructor':  # noqa E225
+                 second: 'Cell', /) -> 'WordConstructor':  # noqa: E225
         """Less than binary operation (<).
 
         Args:
@@ -289,7 +293,8 @@ class WordConstructor(object):
 
     @staticmethod
     def lessThanOrEqualTo(first: 'Cell',
-                          second: 'Cell', /) -> 'WordConstructor':  # noqa E225
+                          second: 'Cell',
+                          /) -> 'WordConstructor':  # noqa: E225
         """Less than or equal to binary operation (<=).
 
         Args:
@@ -539,7 +544,7 @@ class WordConstructor(object):
         return instance
 
     @staticmethod
-    def empty(cell: 'Cell', /) -> 'WordConstructor':  # noqa E225
+    def empty(cell: 'Cell', /) -> 'WordConstructor':  # noqa: E225
         """Returns the empty string.
 
         Args:
@@ -555,7 +560,7 @@ class WordConstructor(object):
         return instance
 
     @staticmethod
-    def reference(cell: 'Cell', /) -> 'WordConstructor':  # noqa E225
+    def reference(cell: 'Cell', /) -> 'WordConstructor':  # noqa: E225
         """Return the reference to the cell.
 
         Args:
@@ -580,7 +585,64 @@ class WordConstructor(object):
         return instance
 
     @staticmethod
-    def constant(cell: 'Cell', /) -> 'WordConstructor':  # noqa E225
+    def cross_reference(cell: 'Cell', sheet: 'Sheet', /) -> 'WordConstructor':  # noqa
+        """Return the reference to the cell in another sheet.
+
+        Args:
+            cell (Cell): The cell to which value is referenced (in sheet).
+            sheet (Sheet): The sheet in which the cell is located.
+
+        Returns:
+            WordConstructor: Word with reference
+        """
+        instance = WordConstructor(cell_indices=cell.cell_indices)
+        for language in instance.languages:
+            # Deal with cell reference
+            cell_prefix = GRAMMARS[language]['cells']['cross-reference'][
+                'cell-prefix'
+            ]
+            cell_separator = GRAMMARS[language]['cells']['cross-reference'][
+                'cell-separator'
+            ]
+            cell_suffix = GRAMMARS[language]['cells']['cross-reference'][
+                'cell-suffix'
+            ]
+            row_first = GRAMMARS[language]['cells']['cross-reference'][
+                'row-first'
+            ]
+            # Parse the position to the text of the column and row
+            col_parsed = cell.cell_indices.columns[language][cell.column]
+            row_parsed = cell.cell_indices.rows[language][cell.row]
+
+            if row_first:
+                cell_body = (cell_prefix + row_parsed + cell_separator +
+                             col_parsed + cell_suffix)
+            else:
+                cell_body = (cell_prefix + col_parsed +
+                             cell_separator + row_parsed + cell_suffix)
+
+            # Deal with sheet reference
+            sheet_prefix = GRAMMARS[language]['cells']['cross-reference'][
+                'sheet-prefix'
+            ]
+            sheet_suffix = GRAMMARS[language]['cells']['cross-reference'][
+                'sheet-suffix'
+            ]
+            sheet_first = GRAMMARS[language]['cells']['cross-reference'][
+                'sheet-first'
+            ]
+            ref_sheet_value = sheet_prefix + sheet.name + sheet_suffix
+            if sheet_first:
+                body = ref_sheet_value + cell_body
+            else:
+                body = cell_body + ref_sheet_value
+
+            instance.words[language] = body
+
+        return instance
+
+    @staticmethod
+    def constant(cell: 'Cell', /) -> 'WordConstructor':  # noqa: E225
         """Return the value of the cell.
 
         Args:
@@ -603,7 +665,7 @@ class WordConstructor(object):
         return instance
 
     @staticmethod
-    def variable(cell: 'Cell', /) -> 'WordConstructor':  # noqa E225
+    def variable(cell: 'Cell', /) -> 'WordConstructor':  # noqa: E225
         """Return the cell as a variable.
 
         Args:
@@ -657,7 +719,7 @@ class WordConstructor(object):
         return instance
 
     @staticmethod
-    def brackets(cell: 'Cell', /) -> 'WordConstructor':  # noqa E225
+    def brackets(cell: 'Cell', /) -> 'WordConstructor':  # noqa: E225
         """Add brackets around the cell.
 
         Args:
@@ -673,7 +735,7 @@ class WordConstructor(object):
         )
 
     @staticmethod
-    def logarithm(cell: 'Cell', /) -> 'WordConstructor':  # noqa E225
+    def logarithm(cell: 'Cell', /) -> 'WordConstructor':  # noqa: E225
         """Add logarithm definition context around the cell.
 
         Args:
@@ -689,7 +751,7 @@ class WordConstructor(object):
         )
 
     @staticmethod
-    def exponential(cell: 'Cell', /) -> 'WordConstructor':  # noqa E225
+    def exponential(cell: 'Cell', /) -> 'WordConstructor':  # noqa: E225
         """Add exponential definition context around the cell.
 
         Args:
@@ -705,7 +767,7 @@ class WordConstructor(object):
         )
 
     @staticmethod
-    def ceil(cell: 'Cell', /) -> 'WordConstructor':  # noqa E225
+    def ceil(cell: 'Cell', /) -> 'WordConstructor':  # noqa: E225
         """Add ceiling function definition context around the cell.
 
         Args:
@@ -721,7 +783,7 @@ class WordConstructor(object):
         )
 
     @staticmethod
-    def floor(cell: 'Cell', /) -> 'WordConstructor':  # noqa E225
+    def floor(cell: 'Cell', /) -> 'WordConstructor':  # noqa: E225
         """Add floor function definition context around the cell.
 
         Args:
@@ -737,7 +799,7 @@ class WordConstructor(object):
         )
 
     @staticmethod
-    def round(cell: 'Cell', /) -> 'WordConstructor':  # noqa E225
+    def round(cell: 'Cell', /) -> 'WordConstructor':  # noqa: E225
         """Add rounding function definition context around the cell.
 
         Args:
@@ -753,7 +815,7 @@ class WordConstructor(object):
         )
 
     @staticmethod
-    def abs(cell: 'Cell', /) -> 'WordConstructor':  # noqa E225
+    def abs(cell: 'Cell', /) -> 'WordConstructor':  # noqa: E225
         """Add absolute value definition context around the cell.
 
         Args:
@@ -769,7 +831,7 @@ class WordConstructor(object):
         )
 
     @staticmethod
-    def sqrt(cell: 'Cell', /) -> 'WordConstructor':  # noqa E225
+    def sqrt(cell: 'Cell', /) -> 'WordConstructor':  # noqa: E225
         """Add square root value definition context around the cell.
 
         Args:
@@ -785,7 +847,7 @@ class WordConstructor(object):
         )
 
     @staticmethod
-    def signum(cell: 'Cell', /) -> 'WordConstructor':  # noqa E225
+    def signum(cell: 'Cell', /) -> 'WordConstructor':  # noqa: E225
         """Add signum value definition context around the cell.
 
         Args:
@@ -801,7 +863,7 @@ class WordConstructor(object):
         )
 
     @staticmethod
-    def logicalNegation(cell: 'Cell', /) -> 'WordConstructor':  # noqa E225
+    def logicalNegation(cell: 'Cell', /) -> 'WordConstructor':  # noqa: E225
         """Add logical negation definition context around the cell.
 
         Args:
@@ -820,7 +882,7 @@ class WordConstructor(object):
     @staticmethod
     def conditional(condition: 'Cell',
                     consequent: 'Cell',
-                    alternative: 'Cell', /) -> 'WordConstructor':  # noqa E225
+                    alternative: 'Cell', /) -> 'WordConstructor':  # noqa: E225
         """Construct the word for the conditional statement (if-then-else).
 
         Args:
@@ -885,7 +947,7 @@ class WordConstructor(object):
     @staticmethod
     def offset(reference: 'Cell',
                row_skip: 'Cell',
-               column_skip: 'Cell', /) -> 'WordConstructor':  # noqa E225
+               column_skip: 'Cell', /) -> 'WordConstructor':  # noqa: E225
         """Construct the word for the offset statement (skip n rows and m
             columns from the referential position).
 

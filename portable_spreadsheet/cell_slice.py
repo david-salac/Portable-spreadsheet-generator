@@ -23,7 +23,7 @@ class CellSlice(Serialization):
         start_cell (Cell): Top left cell of the slice.
         end_cell (Cell): Bottom right cell of the slice.
         cell_subset (Iterable[Cell]): The list of all cells in the slice.
-        driving_sheet (Spreadsheet): Reference to the spreadsheet.
+        driving_sheet (Sheet): Reference to the spreadsheet.
     """
     def __init__(self,
                  start_idx: Tuple[int, int],
@@ -39,7 +39,7 @@ class CellSlice(Serialization):
             end_idx (Tuple[int, int]): Integer position of the ending cell
                 inside the spreadsheet. Bottom right cell of the slice.
             cell_subset (Iterable[Cell]): The list of all cells in the slice.
-            driving_sheet (Spreadsheet): Reference to the spreadsheet.
+            driving_sheet (Sheet): Reference to the spreadsheet.
         """
         # Initialise functionality for serialization:
         super().__init__(export_offset=start_idx,

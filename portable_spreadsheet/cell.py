@@ -1,4 +1,5 @@
-from typing import Dict, Optional, Iterable, Tuple, Callable, Union
+from typing import Dict, Optional, Iterable, Tuple, \
+    Callable, Union, TYPE_CHECKING
 
 import numpy as np
 import numpy_financial as npf
@@ -6,6 +7,8 @@ import numpy_financial as npf
 from .word_constructor import WordConstructor
 from .cell_type import CellType
 from .cell_indices import CellIndices
+if TYPE_CHECKING:
+    from .sheet import Sheet
 
 
 class CellValueError(ValueError):
@@ -35,7 +38,7 @@ class Cell(object):
     """
     def __init__(self,
                  row: Optional[int] = None,
-                 column: Optional[int] = None, /,  # noqa E999
+                 column: Optional[int] = None, /,  # noqa: E225
                  value: Optional[float] = None, *,
                  cell_indices: CellIndices,
                  # Private arguments
@@ -223,7 +226,8 @@ class Cell(object):
         """
         try:
             return function(**operands)
-        except BaseException:  # noqa Maximally generic here is OK
+        except BaseException:  # noqa
+            # Maximally generic here is OK
             return CellValueError()
 
     # =====================================
@@ -744,7 +748,7 @@ class Cell(object):
 
     # === UNARY OPERATORS: ===
     @staticmethod
-    def reference(other: 'Cell', /) -> 'Cell':  # noqa E225
+    def reference(other: 'Cell', /) -> 'Cell':  # noqa: E225
         """Create a reference to some anchored cell.
 
         Args:
@@ -759,6 +763,27 @@ class Cell(object):
         return Cell(value=Cell._compute_value(lambda x: x.value, x=other),
                     words=WordConstructor.reference(other),
                     cell_indices=other.cell_indices,
+                    cell_type=CellType.computational
+                    )
+
+    @staticmethod
+    def cross_reference(target: 'Cell', sheet: 'Sheet') -> 'Cell':
+        """Cross reference to other sheet in the workbook.
+
+        Args:
+            target (Cell): Target cell in a different sheet.
+            sheet (Sheet): Sheet of the target cell.
+
+        Return:
+            Cell: reference to the different location.
+        """
+
+        if not target.anchored:
+            raise ValueError("The referenced cell has to be anchored.")
+
+        return Cell(value=Cell._compute_value(lambda x: x.value, x=target),
+                    words=WordConstructor.cross_reference(target, sheet),
+                    cell_indices=target.cell_indices,
                     cell_type=CellType.computational
                     )
 
@@ -781,7 +806,7 @@ class Cell(object):
                     )
 
     @staticmethod
-    def variable(other: 'Cell', /) -> 'Cell':  # noqa E225
+    def variable(other: 'Cell', /) -> 'Cell':  # noqa: E225
         """The cell as a variable.
 
         Args:
@@ -799,7 +824,7 @@ class Cell(object):
                     )
 
     @staticmethod
-    def brackets(other: 'Cell', /) -> 'Cell':  # noqa E225
+    def brackets(other: 'Cell', /) -> 'Cell':  # noqa: E225
         """Add brackets to expression.
 
         Args:
@@ -815,7 +840,7 @@ class Cell(object):
                     )
 
     @staticmethod
-    def logarithm(other: 'Cell', /) -> 'Cell':  # noqa E225
+    def logarithm(other: 'Cell', /) -> 'Cell':  # noqa: E225
         """Logarithm of the value in the cell.
 
         Args:
@@ -832,7 +857,7 @@ class Cell(object):
                     )
 
     @staticmethod
-    def exponential(other: 'Cell', /) -> 'Cell':  # noqa E225
+    def exponential(other: 'Cell', /) -> 'Cell':  # noqa: E225
         """Exponential of the value in the cell.
 
         Args:
@@ -849,7 +874,7 @@ class Cell(object):
                     )
 
     @staticmethod
-    def ceil(other: 'Cell', /) -> 'Cell':  # noqa E225
+    def ceil(other: 'Cell', /) -> 'Cell':  # noqa: E225
         """Ceiling function of the value in the cell.
 
         Args:
@@ -866,7 +891,7 @@ class Cell(object):
                     )
 
     @staticmethod
-    def floor(other: 'Cell', /) -> 'Cell':  # noqa E225
+    def floor(other: 'Cell', /) -> 'Cell':  # noqa: E225
         """Floor function of the value in the cell.
 
         Args:
@@ -883,7 +908,7 @@ class Cell(object):
                     )
 
     @staticmethod
-    def round(other: 'Cell', /) -> 'Cell':  # noqa E225
+    def round(other: 'Cell', /) -> 'Cell':  # noqa: E225
         """Round the value in the cell.
 
         Args:
@@ -900,7 +925,7 @@ class Cell(object):
                     )
 
     @staticmethod
-    def abs(other: 'Cell', /) -> 'Cell':  # noqa E225
+    def abs(other: 'Cell', /) -> 'Cell':  # noqa: E225
         """Absolute value of the value in the cell.
 
         Args:
@@ -917,7 +942,7 @@ class Cell(object):
                     )
 
     @staticmethod
-    def sqrt(other: 'Cell', /) -> 'Cell':  # noqa E225
+    def sqrt(other: 'Cell', /) -> 'Cell':  # noqa: E225
         """Square root of the value in the cell.
 
         Args:
@@ -934,7 +959,7 @@ class Cell(object):
                     )
 
     @staticmethod
-    def signum(other: 'Cell', /) -> 'Cell':  # noqa E225
+    def signum(other: 'Cell', /) -> 'Cell':  # noqa: E225
         """Signum function of the value in the cell.
 
         Args:
@@ -951,7 +976,7 @@ class Cell(object):
                     )
 
     @staticmethod
-    def logicalNegation(other: 'Cell', /) -> 'Cell':  # noqa E225
+    def logicalNegation(other: 'Cell', /) -> 'Cell':  # noqa: E225
         """Logical negation of the value in the cell.
 
         Args:
@@ -972,7 +997,7 @@ class Cell(object):
     @staticmethod
     def conditional(condition: 'Cell',
                     consequent: 'Cell',
-                    alternative: 'Cell', /) -> 'Cell':  # noqa E225
+                    alternative: 'Cell', /) -> 'Cell':  # noqa: E225
         """Conditional statement (standard if-then-else statement).
 
         Evaluate the value of the condition, if it is true, take the value
@@ -1004,7 +1029,7 @@ class Cell(object):
     @staticmethod
     def offset(reference: 'Cell',
                row_skip: 'Cell',
-               column_skip: 'Cell', /, *, # noqa E225
+               column_skip: 'Cell', /, *,  # noqa: E225
                target: 'Cell') -> 'Cell':
         """Return the cell with value computed as offset from reference cell
             plus row_skip rows and column_skip columns.

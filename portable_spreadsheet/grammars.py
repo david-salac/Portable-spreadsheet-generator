@@ -38,6 +38,16 @@ EXCEL = {
             "separator": "",
             "row_first": False
         },
+        # Like $'Sheet 3'.D8
+        "cross-reference": {
+            "cell-prefix": "",
+            "cell-suffix": "",
+            "cell-separator": "",
+            "sheet-prefix": "$'",
+            "sheet-suffix": "'.",
+            "row-first": False,
+            "sheet-first": True
+        },
         # like =7+A2
         "operation": {
             "prefix": "=",
@@ -325,6 +335,16 @@ NATIVE = {
             "suffix": ")",
             "separator": ", ",
             "row_first": True
+        },
+        # Like value at (row, col) in sheet 'xyz'
+        "cross-reference": {
+            "cell-prefix": "value at (",
+            "cell-suffix": ")",
+            "cell-separator": ", ",
+            "sheet-prefix": " in the sheet '",
+            "sheet-suffix": "'",
+            "row-first": True,
+            "sheet-first": False
         },
         # like 7 + value at (1.1.2015, 25%)
         "operation": {
@@ -614,6 +634,16 @@ PYTHON_NUMPY = {
             "suffix": "]",
             "separator": ",",
             "row_first": True
+        },
+        # Like sheet.values[row,column]
+        "cross-reference": {
+            "cell-prefix": "values[",
+            "cell-suffix": "]",
+            "cell-separator": ",",
+            "sheet-prefix": "",
+            "sheet-suffix": ".",
+            "row-first": True,
+            "sheet-first": True
         },
         # like 7+values[1,2] (in Python case do nothing)
         "operation": {
@@ -934,6 +964,21 @@ GRAMMAR_PATTERN: dict = {
             # If True, the row is on the first position and column on the
             # second position. (e. g. it is False for Excel)
             "row_first": bool
+        },
+
+        # Cross reference to a cell (like =$'Sheet 3'.D8 in Excel)
+        "cross-reference": {
+            "cell-prefix": str,
+            "cell-suffix": str,
+            "cell-separator": str,
+            # Prefix and suffix defining the sheet
+            "sheet-prefix": str,
+            "sheet-suffix": str,
+            # If True, the row is on the first position and column on the
+            # second position. (e. g. it is False for Excel)
+            "row-first": bool,
+            # If True, the name of sheet is the first parameter
+            "sheet-first": bool
         },
 
         # Operation (like =CELL + CELL)
