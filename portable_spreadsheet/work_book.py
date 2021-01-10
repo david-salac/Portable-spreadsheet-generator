@@ -67,15 +67,15 @@ class WorkBook(SerializationInterface):
         self.variable_sheet_offset: Tuple[int, int] = None
         self.variable_sheet_name: Optional[str] = None
 
-    def excel_create_variable_sheet(self,
-                                    *,
-                                    nr_rows_prefix: int = 0,
-                                    nr_rows_suffix: int = 0,
-                                    nr_columns_prefix: int = 0,
-                                    nr_columns_suffix: int = 0,
-                                    sheet_name: str = "config",
-                                    position: int = 0
-                                    ) -> Sheet:
+    def create_variable_sheet(self,
+                              *,
+                              nr_rows_prefix: int = 0,
+                              nr_rows_suffix: int = 0,
+                              nr_columns_prefix: int = 0,
+                              nr_columns_suffix: int = 0,
+                              sheet_name: str = "config",
+                              position: int = 0
+                              ) -> Sheet:
         """Allows to customize the way how the variable definition tab
         in Excel looks like.
 

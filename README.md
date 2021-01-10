@@ -1,11 +1,16 @@
 # Simple Portable Python Spreadsheet Generator
-Author: David Salac <http://github.com/david-salac>
+Author: David Salac <https://github.com/david-salac>
 
-Simple spreadsheet that keeps tracks of each operation in defined programming
-languages. Logic allows export sheets to Excel files (and see how each cell is
-computed), to the JSON strings with description of computation e. g. in native
-language. Other formats like HTML, CSV and Markdown (MD) are also supported. It
-also allows to reconstruct behaviours in native Python with NumPy.
+Project: Portable Spreadsheet <https://portable-spreadsheet.com/>
+
+A simple spreadsheet that keeps tracks of each operation of each cell
+in defined languages. Logic allows exporting sheets to Excel files (and
+see how each cell is computed), to the JSON strings with a description
+of computation of each cell (e. g. in the native language). Other
+formats, like HTML, CSV and Markdown (MD), are also implemented (user
+can define own format). It also allows reconstructing behaviours in
+native Python with NumPy. The sheets can be easily created and handled
+in a way similar to Pandas DataFrame.
 
 ## Key components of the library
 There are five main objects in the library:
@@ -13,8 +18,9 @@ There are five main objects in the library:
 1. **_Grammar_**: the set of rule that defines language.
 2. **_Cell_**: single cell inside the spreadsheet.
 3. **_Word_**: the word describing how the cell is created in each language.
-4. **_Spreadsheet_**: a set of cells with a defined shape.
+4. **_Sheet_**: a set of cells with a defined shape.
 5. **_Cell slice_**: a subset of the spreadsheet. 
+6. **_Work book_**: a set of multiple sheets.
 
 ### Grammar
 The grammar defines a context-free language (by Chomsky hierarchy). It is
@@ -83,15 +89,15 @@ format or to JSON.
 Operations with words (and word as a data structure) are located in the
 class `WordConstructor`. It should not be used directly.
 
-### Spreadsheet class
-The Spreadsheet is the most important class of the whole package. It is
+### Sheet class
+The Sheet is the most important class of the whole package. It is
 located in the file `spreadsheet.py`. It encapsulates the functionality
 related to accessing cells and modifying them as well as the functionality
 for exporting of the computed results to various formats.
 
 Class is strongly motivated by the API of the Pandas DataFrame. 
 
-Spreadsheet functionality is documented bellow in a special section.
+The functionality of Sheet class is documented in a special section below.
 
 ### Cell slice
 Represents the special object that is created when some part slice of the
@@ -114,7 +120,7 @@ some_slice = spreadsheet_instance.iloc[1,:]
 average_of_slice <<= 55.6  # Some assigned value
 ```
 However, it is strongly recommended to use standard assigning through
-the Spreadsheet object described below.
+the Sheet object described below.
 
 #### Functionality of the CellSlice class
 Cell slice is mainly related to the aggregating functions described in
@@ -127,7 +133,7 @@ be used directly.
 Cell slices can be exported in the same way as a whole spreadsheet (methods
 are discussed below).
 
-## Spreadsheets functionality
+## Sheet functionality
 All following examples expect that user has already imported package.
 ```python
 import portable_spreadsheet as ps
@@ -158,24 +164,26 @@ sheet = ps.Sheet.create_new_sheet(
     {
         "native": cell_indices_generators['native'](number_of_rows,
                                                     number_of_columns),
-    }
+    },
+    name='Sheet Name'
 )
 ```
 
 Other (keywords) arguments:
-1. `rows_labels (List[Union[str, SkippedLabel]])`: _(optional)_ List of masks
+1. `name (str)`: Name of the sheet.
+2. `rows_labels (List[Union[str, SkippedLabel]])`: _(optional)_ List of masks
 (aliases) for row names.
-2. `columns_labels (List[Union[str, SkippedLabel]])`: _(optional)_ List of
+3. `columns_labels (List[Union[str, SkippedLabel]])`: _(optional)_ List of
 masks (aliases) for column names. If the instance of SkippedLabel is
 used, the export skips this label.
-3. `rows_help_text (List[str])`: _(optional)_ List of help texts for each row.
-4. `columns_help_text (List[str])`: _(optional)_ List of help texts for each
+4. `rows_help_text (List[str])`: _(optional)_ List of help texts for each row.
+5. `columns_help_text (List[str])`: _(optional)_ List of help texts for each
 column. If the instance of SkippedLabel is used, the export skips this label.
-5. `excel_append_row_labels (bool)`: _(optional)_ If True, one column is added
+6. `excel_append_row_labels (bool)`: _(optional)_ If True, one column is added
 on the beginning of the sheet as a offset for labels.
-6. `excel_append_column_labels (bool)`: _(optional)_ If True, one row is
+7. `excel_append_column_labels (bool)`: _(optional)_ If True, one row is
 added on the beginning of the sheet as a offset for labels.
-7. `warning_logger (Callable[[str], None]])`: Function that logs the warnings
+8. `warning_logger (Callable[[str], None]])`: Function that logs the warnings
 (or `None` if logging should be skipped).
 
 First two are the most important because they define labels for the columns
@@ -195,17 +203,17 @@ sheet.expand(
     }
 )
 ```
-Parameters of the `Spreadsheet.expand` method are of the same
-logic and order as the parameters of `Spreadsheet.create_new_sheet`.
+Parameters of the `Sheet.expand` method are of the same
+logic and order as the parameters of `Sheet.create_new_sheet`.
 
 ### Column and row labels
 Labels are set once when a sheet is created (or expanded in size). If you
 want to read them as a tuple of labels, you can use the following properties:
 
 * `columns`: property that returns labels of columns as a tuple of strings.
-It can be called on both slices or directly on `Spreadsheet` class instances.
+It can be called on both slices or directly on `Sheet` class instances.
 * `index`: property that returns the labels of rows as a tuple of strings.
-It can be called on both slices or directly on `Spreadsheet` class instances.
+It can be called on both slices or directly on `Sheet` class instances.
 
 Example:
 ```python
@@ -213,7 +221,7 @@ column_labels: Tuple[str] = sheet.columns  # Get the column labels
 row_labels: Tuple[str] = sheet.index  # Get the row labels
 ```
 
-### Shape of the Spreadsheet object
+### Shape of the Sheet object
 If you want to know what is the actual size of the spreadsheet, you can
 use the property `shape` that behaves as in Pandas. It returns you the
 tuple with a number of rows and number of columns (on the second position).
@@ -254,7 +262,7 @@ Variable represents an imaginary entity that can be used for computation if
 you want to refer to something that is common for the whole spreadsheet. 
 Technically it is similar to variables in programming languages.
 
-Variables are encapsulated in the property `var` of the class `Spreadsheet`. 
+Variables are encapsulated in the property `var` of the class `Sheet`. 
 
 It provides the following functionality:
 
@@ -288,7 +296,7 @@ Getting/setting the variables values should be done preferably by this logic.
 For defining Excel format/style of the variable value, use the attribute
 `excel_format` of the `var` property in the following logic:
 ```python
-sheet.var.excel_format['VARIABLE_NAME'] = {'num_format': '#,##0'} 
+sheet.var['VARIABLE_NAME'].excel_format = {'num_format': '#,##0'} 
 ```
 
 #### Example
@@ -409,7 +417,7 @@ if the slice contains a cell with `None` value (empty cell).
 
 ### Conditional
 There is a support for the conditional statement (aka if-then-else statement).
-Functionality is implemented in the property `fn` of the `Spreadsheet`
+Functionality is implemented in the property `fn` of the `Sheet`
 instance in the method `conditional`. It takes three parameters (positional)
 in precisely this order:
 
@@ -442,7 +450,7 @@ The raw statement represents the extreme way how to set-up value and
 computation string of the cell. It should be used only to circumvent
 issues with missing or defective functionality.
 
-The raw statement is accessible using `fn` property of the Spreadsheet class
+The raw statement is accessible using `fn` property of the Sheet class
 object.
 
 The raw statement should never be used unless you really have to.
@@ -467,7 +475,7 @@ The offset function represents the possibility of reading the value
 that is shifted by some number rows left, and some number of columns
 down from some referential cells.
 
-It is accessible from the Spreadsheet instance using `fn`
+It is accessible from the Sheet instance using `fn`
 property and `offset` method. Parameters are following (only
 positional, in exactly this order):
 * **Reference cell**: Reference cell from that the position is computed.
@@ -541,7 +549,7 @@ is the instance of the Cell class):
     Available in the `fn` property of the `sheet` object.
     Usage: `sheet.iloc[i,j] = sheet.fn.sign(OPERAND)`
     
-All unary operators are defined in the `fn` property of the Spreadsheet
+All unary operators are defined in the `fn` property of the Sheet
 object (together with brackets, that works exactly the same - see bellow).
 
 #### Binary operations
@@ -658,7 +666,7 @@ word_in_language_lang = word['lang']
 
 ### Exporting the results
 There are various methods available for exporting the results. All these
-methods can be used either to a whole sheet (instance of Spreadsheet)
+methods can be used either to a whole sheet (instance of Sheet)
 or to any slice (CellSlice instance):
 
 1. **Excel format**, method `to_excel`:
@@ -702,7 +710,6 @@ It can be done using the interface:
 sheet.to_excel(
     file_path: str,
     /, *,
-    sheet_name: str = "Results",
     spaces_replacement: str = ' ',
     label_row_format: dict = {'bold': True},
     label_column_format: dict = {'bold': True},
@@ -724,7 +731,6 @@ The only required argument is the path to the destination file (positional
 only parameter). Other parameters are passed as keywords (non-positional only). 
 * `file_path (str)`: Path to the target .xlsx file. (**REQUIRED**, only
 positional)
-* `sheet_name (str)`: The name of the sheet inside the file.
 * `spaces_replacement (str)`: All the spaces in the rows and columns
 descriptions (labels) are replaced with this string.
 * `label_row_format (dict)`: Excel styles for the label of rows,
@@ -823,7 +829,7 @@ The reason why this method is separate is because of some values inserted
 from NumPy arrays cannot be serialized using native serializer.
 
 To get JSON schema you can use either `generate_schema (bool)` parameter or
-directly use static method `generate_json_schema` of the `Spreadsheet` class.
+directly use static method `generate_json_schema` of the `Sheet` class.
 
 ##### Output example
 Output of the JSON format
@@ -1304,3 +1310,150 @@ sheet.to_excel("OUTPUTS/student_marks.xlsx", sheet_name="Marks")
 # Top print table as Markdown
 print(sheet.to_markdown())
 ```
+
+## Multiple sheets
+If you need to have an application that uses multiple sheets
+simultaneously - there is a special class for these purposes
+called WorkBook. It allows you to create multiple sheets, have
+references from one sheet to another and export to various formats.
+
+### Creation of the WorkBook
+To create a new workbook, you need to have all sheets prepared. The
+constructor accepts just a list of all sheets (Sheet instance).
+```python
+def __init__(self, *sheets: Iterable[Sheet])
+```
+
+### Special sheet for variables
+There is a way how to create a customized sheet for variables. 
+To do so, use the function `create_variable_sheet`. It
+has the following syntax:
+```python
+def create_variable_sheet(self,
+                          *,
+                          nr_rows_prefix: int = 0,
+                          nr_rows_suffix: int = 0,
+                          nr_columns_prefix: int = 0,
+                          nr_columns_suffix: int = 0,
+                          sheet_name: str = "config",
+                          position: int = 0
+                          ) -> Sheet
+```
+parameters have the following logic:
+ * `nr_rows_prefix (int)`: defines the number of rows that are prefix
+for variables definition segment.
+ * `nr_rows_suffix (int)`: defines the number of rows that are suffix
+for variables definition segment.
+ * `nr_columns_prefix (int)`: defines the number of columns that are
+prefix for variables definition segment.
+ * `nr_columns_suffix (int)`: defines the number of columns that are
+suffix for variables definition segment.
+ * `sheet_name (str)`: Name of the sheet for variables.
+ * `position (int)`: Relative position in the workbook (indexed from 0).
+
+### Exporting to Excel (xlsx) format
+For exporting to Excel (.xlsx) format, there is a function called
+`to_excel`. It takes two parameters. The first one is the path to
+the file; another is the set of parameters for exporting each sheet.
+```python
+def to_excel(self,
+             file_path: Union[str, pathlib.Path],
+             /, *,  # noqa: E225
+             export_parameters: Tuple[ExcelParameters]
+             ) -> None
+```
+the first parameter is always positional; another is keyword type.
+
+Data class `ExcelParameters` has the structure motivated by the
+parameters required by `Sheet.to_excel`:
+```python
+class ExcelParameters(ClassVarsToDict):
+    spaces_replacement: str = ' '
+    label_row_format: dict = MappingProxyType({'bold': True})
+    label_column_format: dict = MappingProxyType({'bold': True})
+    values_only: bool = False
+    skipped_label_replacement: str = ''
+    row_height: Tuple[float] = tuple([])
+    column_width: Tuple[float] = tuple([])
+    top_left_corner_text: str = ""
+```
+
+### Exporting to dictionary
+It is possible to export sheets to the dictionary
+by using `to_dictionary` function:
+```python
+def to_dictionary(self,
+                  *,
+                  export_parameters: Tuple[DictionaryParameters]
+                  ) -> dict:
+```
+the second parameter is keyword type.
+
+Data class `DictionaryParameters` has the structure motivated by the
+parameters required by `Sheet.to_dictionary`:
+```python
+class DictionaryParameters(ClassVarsToDict):
+    languages: List[str] = None
+    use_language_for_description: Optional[str] = None
+    by_row: bool = True
+    languages_pseudonyms: List[str] = None
+    spaces_replacement: str = ' '
+    skip_nan_cell: bool = False
+    nan_replacement: object = None
+    error_replacement: object = None
+    append_dict: dict = MappingProxyType({})
+    generate_schema: bool = False
+```
+
+### Export to JSON
+Exporting to JSON has the same logic as exporting to dictionary.
+```python
+def to_json(self,
+            *,
+            export_parameters: Tuple[DictionaryParameters]) -> str:
+```
+The logic is the same as above.
+
+The JSON schema can be generated using the static `generate_json_schema`
+function.
+
+### Export to list
+It is possible to export sheets to the 3D list
+by using `to_list` function:
+```python
+def to_list(self,
+            *,
+            export_parameters: Tuple[ListParameters]) -> list:
+```
+the second parameter is keyword type.
+
+Data class `ListParameters` has the structure motivated by the
+parameters required by `Sheet.to_list`:
+```python
+class ListParameters(ClassVarsToDict):
+    language: Optional[str] = None
+    skip_labels: bool = False
+    na_rep: Optional[object] = None
+    spaces_replacement: str = ' '
+    skipped_label_replacement: str = ''
+```
+
+### Export to string
+There is a simple way how to export to string by using 
+`to_string_of_values` function (no parameters are required).
+
+### Accessing sheet in workbook
+Each sheet in the workbook can be accessed by using `[]` operator:
+```python
+sheet = workbook[NAME_OF_THE_SHEET]
+```
+where `NAME_OF_THE_SHEET` is the string representing the name of the sheet.
+
+### Cross-referencing
+In order to access the value in a different sheet, you have to use:
+```python
+sheet_a.iloc[x1, y1] = sheet.fn.cross_reference(sheet.iloc[x2, y2],
+                                                sheet_b)
+```
+The function `cross_reference` takes two parameters, the first one is the
+cell that is the target, the second one is the whole target sheet.

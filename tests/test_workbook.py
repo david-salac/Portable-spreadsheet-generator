@@ -20,18 +20,18 @@ class TestGrammarUtils(unittest.TestCase):
     def tearDown(self) -> None:
         shutil.rmtree(self.temp_dir)
 
-    def test_excel_create_variable_sheet(self):
+    def test_create_variable_sheet(self):
         """Test if the variable sheet is on the right place"""
         var_sheet_name = "variables"
         with self.assertRaises(ValueError):
             # If there is no variable
-            self.workbook.excel_create_variable_sheet(
+            self.workbook.create_variable_sheet(
                 sheet_name="variables",
                 position=1,
             )
 
         self.sheet_a.var['abc'] = "hello"
-        self.workbook.excel_create_variable_sheet(
+        self.workbook.create_variable_sheet(
             sheet_name="variables",
             position=1,
         )
