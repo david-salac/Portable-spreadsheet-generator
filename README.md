@@ -1,7 +1,7 @@
 # Simple Portable Python Spreadsheet Generator
 Author: David Salac <https://github.com/david-salac>
 
-Project: Portable Spreadsheet <https://portable-spreadsheet.com/>
+Project website: Portable Spreadsheet <https://portable-spreadsheet.com/>
 
 A simple spreadsheet that keeps tracks of each operation of each cell
 in defined languages. Logic allows exporting sheets to Excel files (and

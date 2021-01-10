@@ -5,16 +5,18 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="portable-spreadsheet",
-    version="2.0.1",
+    version="2.0.2",
     author="David Salac",
     author_email="info@davidsalac.eu",
-    description="Simple spreadsheet that keeps tracks of each operation in "
-                "defined programming languages. Logic allows export sheets to "
-                "Excel files (and see how each cell is computed), to the "
-                "JSON strings with description of computation e. g. in "
-                "native language. Other formats like HTML, CSV and "
-                "Markdown (MD) are also supported. It also allows to "
-                "reconstruct behaviours in native Python with NumPy.",
+    description=
+    """A simple spreadsheet that keeps tracks of each operation of each cell
+in defined languages. Logic allows exporting sheets to Excel files (and
+see how each cell is computed), to the JSON strings with a description
+of computation of each cell (e. g. in the native language). Other
+formats, like HTML, CSV and Markdown (MD), are also implemented (user
+can define own format). It also allows reconstructing behaviours in
+native Python with NumPy. The sheets can be easily created and handled
+in a way similar to Pandas DataFrame.""",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/david-salac/Portable-spreadsheet-generator",

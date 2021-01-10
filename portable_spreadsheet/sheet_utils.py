@@ -466,8 +466,7 @@ class _SheetVariable(object):
         for _name, _var in self._variables.items():
             res[_name] = {
                 'value': _var.value,
-                'description': self.description[_name],
-                'excel_format': _var.excel_format
+                'description': self.description[_name]
             }
             if include_cell:
                 res[_name]['cell'] = _var
