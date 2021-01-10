@@ -17,7 +17,7 @@ class _Location(object):
         obj.loc[col, row] or obj.iloc[col_idx, row_idx] logic.
 
     Attributes:
-        spreadsheet (Spreadsheet): Reference to spreadsheet instance.
+        spreadsheet (Sheet): Reference to spreadsheet instance.
         by_integer (bool): If True, indices are computed using integer value,
             if False, labels (aliases, typically string) are used.
     """
@@ -28,7 +28,7 @@ class _Location(object):
         """Initialise location
 
         Args:
-            spreadsheet (Spreadsheet): Reference to spreadsheet instance.
+            spreadsheet (Sheet): Reference to spreadsheet instance.
             by_integer (bool): If True, indices are computed using integer
             value, if False, labels (aliases, typically string) are used.
         """
@@ -126,13 +126,13 @@ class _Functionality(object):
     """Class encapsulating some shortcuts for functionality.
 
     Attributes:
-        spreadsheet (Spreadsheet): Reference to spreadsheet instance.
+        spreadsheet (Sheet): Reference to spreadsheet instance.
     """
 
     def __init__(self, spreadsheet):
         """
         Args:
-            spreadsheet (Spreadsheet): Reference to spreadsheet instance.
+            spreadsheet (Sheet): Reference to spreadsheet instance.
         """
         self.spreadsheet = spreadsheet
 

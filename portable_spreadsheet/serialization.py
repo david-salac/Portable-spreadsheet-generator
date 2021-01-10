@@ -252,7 +252,7 @@ class Serialization(SerializationInterface, abc.ABC):
                   worksheet: Optional[object] = None,
                   register_variables: bool = True
                   ) -> object:
-        """Export the values inside Spreadsheet instance to the
+        """Export the values inside Sheet instance to the
             Excel 2010 compatible .xslx file
 
         Args:
@@ -427,7 +427,7 @@ class Serialization(SerializationInterface, abc.ABC):
                  column_width: List[float] = [],
                  top_left_corner_text: str = ""
                  ) -> None:
-        """Export the values inside Spreadsheet instance to the
+        """Export the values inside Sheet instance to the
             Excel 2010 compatible .xslx file
 
         Args:
@@ -555,7 +555,7 @@ class Serialization(SerializationInterface, abc.ABC):
                           self.export_offset[1]:self.shape[1]
                           ]
              ]
-        if (x_helptext := self.cell_indices.columns_help_text) is not None:  # noqa E203
+        if (x_helptext := self.cell_indices.columns_help_text) is not None:  # noqa
             # Reflects the column offset for export
             x_helptext = x_helptext[self.export_offset[1]:self.shape[1]]
         x_start_key = 'columns'
@@ -567,7 +567,7 @@ class Serialization(SerializationInterface, abc.ABC):
                           self.export_offset[0]:self.shape[0]
                           ]
              ]
-        if (y_helptext := self.cell_indices.rows_help_text) is not None:  # noqa E203
+        if (y_helptext := self.cell_indices.rows_help_text) is not None:  # noqa
             # Reflects the row offset for export
             y_helptext = y_helptext[self.export_offset[0]:self.shape[0]]
         y_start_key = 'rows'
@@ -581,7 +581,7 @@ class Serialization(SerializationInterface, abc.ABC):
                           self.export_offset[0]:self.shape[0]
                           ]
                  ]
-            if (x_helptext := self.cell_indices.rows_help_text) is not None:  # noqa E203
+            if (x_helptext := self.cell_indices.rows_help_text) is not None:  # noqa
                 # Reflects the row offset for export
                 x_helptext = x_helptext[self.export_offset[0]:self.shape[0]]
             x_start_key = 'rows'
@@ -592,7 +592,7 @@ class Serialization(SerializationInterface, abc.ABC):
                           # Reflects the column offset for export
                           self.export_offset[1]:self.shape[1]
                           ]]
-            if (y_helptext := self.cell_indices.columns_help_text) is not None:  # noqa E203
+            if (y_helptext := self.cell_indices.columns_help_text) is not None:  # noqa
                 # Reflects the column offset for export
                 y_helptext = y_helptext[self.export_offset[1]:self.shape[1]]
             y_start_key = 'columns'
