@@ -161,7 +161,9 @@ class Serialization(SerializationInterface, abc.ABC):
             workbook: Workbook where variables are registered.
         """
         # Just register variables (without writing them to sheet)
-        for name, value in self._get_variables().variables_dict.items():
+        for name, value in self._get_variables().get_variables_dict(
+            False
+        ).items():
             workbook.define_name(name, str(value['value']))
 
     @staticmethod
@@ -200,7 +202,7 @@ class Serialization(SerializationInterface, abc.ABC):
             row_idx += 1
 
         for var_set in variables:
-            for var_n, var_v in var_set.variables_dict.items():
+            for var_n, var_v in var_set.get_variables_dict(True).items():
                 # Format the variable style
                 try:
                     style_var = var_v['excel_format']
@@ -210,10 +212,12 @@ class Serialization(SerializationInterface, abc.ABC):
                 # Insert variables to the sheet
                 variables_sheet.write(row_idx, offset_columns + 0,
                                       var_n)
-                variables_sheet.write_formula(row_idx, offset_columns + 1,
-                                        var_v['cell'].parse['excel'],
-                                        value=var_v['value'],
-                                        cell_format=variable_style)
+                variables_sheet.write_formula(
+                    row_idx, offset_columns + 1,
+                    var_v['cell'].parse['excel'],
+                    value=var_v['value'],
+                    cell_format=variable_style
+                )
                 variables_sheet.write(row_idx, offset_columns + 2,
                                       var_v['description'])
                 # Register variable
@@ -647,7 +651,7 @@ class Serialization(SerializationInterface, abc.ABC):
         data = {'data': values}
 
         # Add variables
-        data['variables'] = self._get_variables().variables_dict
+        data['variables'] = self._get_variables().get_variables_dict(False)
         # Add a row and column labels as arrays
         if not by_row:
             x, y = y, x

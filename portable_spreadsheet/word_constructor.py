@@ -2,14 +2,14 @@ import copy
 from numbers import Number
 from typing import Dict, Set, Tuple, TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from .cell import Cell
-    from .sheet import Sheet
-
 from .grammars import GRAMMARS
 
 from .cell_indices import CellIndices
 from .cell_type import CellType
+
+if TYPE_CHECKING:
+    from .cell import Cell
+    from .sheet import Sheet
 
 # ==== TYPES ====
 # Type for the word of some language, logic: key: language, value: word

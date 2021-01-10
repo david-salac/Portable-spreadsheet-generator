@@ -8,6 +8,7 @@ import numpy as np
 from portable_spreadsheet.cell import Cell
 from portable_spreadsheet.cell_indices import CellIndices
 from portable_spreadsheet.cell_type import CellType
+from portable_spreadsheet.sheet import Sheet
 
 
 class TestCellBasicFunctionality(unittest.TestCase):
@@ -713,6 +714,18 @@ class TestCellUnaryFunctionality(unittest.TestCase):
         self.assertEqual(u_ref_word['excel'], "=" + self.coord_operand_excel)
         self.assertEqual(u_ref_word['python_numpy'], self.coord_operand_python)
 
+    def test_cross_reference(self):
+        """Test the cross-reference (reference to another sheet)"""
+        sheet = Sheet.create_new_sheet(
+            3, 3
+        )
+        with self.assertRaises(ValueError):
+            Cell.cross_reference(self.u_operand, sheet)
+        u_reference = Cell.cross_reference(self.a_operand, sheet)
+        u_ref_word = u_reference.parse
+        self.assertEqual(u_ref_word['excel'], "=" + "$'Results'.F5")
+        self.assertEqual(u_ref_word['python_numpy'], "Results.values[3,4]")
+
     def test_variable(self):
         """Test the variables parsing"""
         with self.assertRaises(ValueError):
@@ -730,6 +743,32 @@ class TestCellUnaryFunctionality(unittest.TestCase):
         u_ref_cell_word = u_ref_cell.parse
         self.assertEqual(u_ref_cell_word['python_numpy'], str(variable_name))
         self.assertEqual(u_ref_cell_word['excel'], '=' + str(variable_name))
+
+    def test_computational_variable(self):
+        """Test the computational variables"""
+        variable_name = "test_var"
+        # Un-anchored variable
+        u_var_cell_a = Cell(None, None, 99, cell_indices=self.cell_indices,
+                            is_variable=True, variable_name="something",
+                            cell_type=CellType.computational)
+        u_var_cell_b = Cell(None, None, 77, cell_indices=self.cell_indices,
+                            is_variable=True, variable_name="xyz",
+                            cell_type=CellType.computational)
+        u_var_cell_sum = u_var_cell_a + u_var_cell_b
+        # Here the following have to be set directly (not a problem, as it
+        # is not accessed directly in production)
+        u_var_cell_sum.is_variable = True
+        u_var_cell_sum.variable_name = variable_name
+
+        self.assertEqual(u_var_cell_sum.value, 99 + 77)
+        # Reference to variable
+        u_ref_cell = Cell.variable(u_var_cell_sum)
+        u_ref_cell_word = u_ref_cell.parse
+        self.assertEqual(u_ref_cell_word['python_numpy'], str(variable_name))
+        self.assertEqual(u_ref_cell_word['excel'], '=' + str(variable_name))
+        # Check the computation strings
+        self.assertEqual(u_var_cell_sum.parse['excel'], '=99+77')
+        self.assertEqual(u_var_cell_sum.parse['python_numpy'], '99+77')
 
     def _check_unary_operation(
             self,

@@ -224,8 +224,7 @@ class TestSerializationToArrays(unittest.TestCase):
         # Check the language export
         sheet = copy.deepcopy(self.sheet)
         sheet.iloc[0, 0] = sheet.iloc[0, 1] * sheet.iloc[1, 0]
-        computed_2d_list = sheet.to_list(skip_labels=True,
-                                            language='excel')
+        computed_2d_list = sheet.to_list(skip_labels=True, language='excel')
         # Regression test
         self.assertEqual(sheet.iloc[0, 0].parse['excel'], '=C2*B3')
         # Test all the values inside

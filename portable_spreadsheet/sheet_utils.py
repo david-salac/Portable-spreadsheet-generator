@@ -1,6 +1,5 @@
 from typing import Dict, Union, Optional, TYPE_CHECKING
 import re
-import copy
 from numbers import Number
 
 from .cell import Cell
@@ -451,6 +450,7 @@ class _SheetVariable(object):
         self.description[name] = description
         if isinstance(value, Cell):
             self._variables[name] = value
+            self._variables[name].is_variable = True
         else:
             self._variables[name] = Cell.variable(
                     Cell(None, None,  # No position
@@ -462,14 +462,28 @@ class _SheetVariable(object):
                          )
                 )
 
-    @property
-    def variables_dict(self) -> dict:
+    def get_variables_dict(self, include_cell: bool = True) -> dict:
+        """Serialize variables to dictionary.
+        Args:
+            include_cell (bool): If true, value 'cell' -> Cell is included.
+        Returns:
+            dict: serialization of variables to dictionary.
+        """
         res = {}
         for _name, _var in self._variables.items():
             res[_name] = {
                 'value': _var.value,
                 'description': self.description[_name],
-                'excel_format': _var.excel_format,
-                'cell': _var
+                'excel_format': _var.excel_format
             }
+            if include_cell:
+                res[_name]['cell'] = _var
         return res
+
+    @property
+    def variables_dict(self) -> dict:
+        """Serialize variables to dictionary.
+        Returns:
+            dict: serialization of variables to dictionary.
+        """
+        return self.get_variables_dict(False)
