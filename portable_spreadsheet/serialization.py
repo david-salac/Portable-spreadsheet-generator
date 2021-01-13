@@ -203,6 +203,11 @@ class Serialization(SerializationInterface, abc.ABC):
 
         for var_set in variables:
             for var_n, var_v in var_set.get_variables_dict(True).items():
+                variable_row_position = var_v['cell'].excel_row_position
+                if variable_row_position is None:
+                    variable_row_position = row_idx
+                    row_idx += 1
+
                 # Format the variable style
                 try:
                     style_var = var_v['cell'].excel_format
@@ -210,26 +215,37 @@ class Serialization(SerializationInterface, abc.ABC):
                 except KeyError:
                     variable_style = None
                 # Insert variables to the sheet
-                variables_sheet.write(row_idx, offset_columns + 0,
+                variables_sheet.write(variable_row_position,
+                                      offset_columns + 0,
                                       var_n)
-                variables_sheet.write_formula(
-                    row_idx, offset_columns + 1,
-                    var_v['cell'].parse['excel'],
-                    value=var_v['value'],
-                    cell_format=variable_style
-                )
-                variables_sheet.write(row_idx, offset_columns + 2,
+                if var_v['cell'].computational_variable:
+                    # In the case that variable contains only the value
+                    variables_sheet.write(
+                        variable_row_position,
+                        offset_columns + 1,
+                        var_v['value'],
+                        variable_style
+                    )
+                else:
+                    # For the case that variable contains computational formula
+                    variables_sheet.write_formula(
+                        variable_row_position,
+                        offset_columns + 1,
+                        var_v['cell'].parse['excel'],
+                        value=var_v['value'],
+                        cell_format=variable_style
+                    )
+                variables_sheet.write(variable_row_position,
+                                      offset_columns + 2,
                                       var_v['description'])
                 # Register variable
                 workbook.define_name(
                     var_n, '={}!${}${}'.format(
                         variables_sheet.name,
                         excel_column(offset_columns + 1),
-                        row_idx + 1
+                        variable_row_position + 1  # now index from 1
                     )
                 )
-                row_idx += 1
-
         return variables_sheet
 
     def _to_excel(self, *,
