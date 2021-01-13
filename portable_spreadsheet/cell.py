@@ -35,6 +35,9 @@ class Cell(object):
         _excel_format (dict): Dictionary defining the Excel format style
             for the cell.
         _description (Optional[str]): Optional description of the cell.
+        _excel_row_position (Optional[int]): Position of the variable in
+            variable sheet in Excel.
+        _is_computational_variable (bool): If True, variable is computational.
     """
     def __init__(self,
                  row: Optional[int] = None,
@@ -76,6 +79,8 @@ class Cell(object):
         self.variable_name: Optional[str] = variable_name
         self._excel_format: dict = {}
         self._description: Optional[str] = None
+        self._excel_row_position: Optional[int] = None
+        self._is_computational_variable: bool = False
 
         if words is not None:
             self._constructing_words: WordConstructor = words
@@ -189,6 +194,44 @@ class Cell(object):
         if not isinstance(new_format, dict):
             raise ValueError("New format has to be a dictionary!")
         self._excel_format = new_format
+
+    @property
+    def excel_row_position(self):
+        """Get the row position of the variable in Excel variable sheet.
+
+        Returns:
+            Optional[int]: row index of the variable.
+        """
+        if self.is_variable:
+            return self._excel_row_position
+        raise CellValueError("This operation is supported only for variables.")
+
+    @excel_row_position.setter
+    def excel_row_position(self, value: Optional[int]):
+        """Set the row position of the variable.
+
+        Args:
+            value (Optional[int]): row index of the variable. If None, the
+                default place is used.
+        """
+        if self.is_variable:
+            self._excel_row_position = value
+        else:
+            raise CellValueError(
+                "This operation is supported only for variables."
+            )
+
+    @property
+    def computational_variable(self):
+        """Return True, if the variable is computational (contains some
+            formulas). False, if it is only value.
+        Returns:
+            bool: True, if the variable is computational (contains some
+                formulas). False, if it is only value.
+        """
+        if self.is_variable:
+            return self._is_computational_variable
+        return False
 
     @property
     def description(self) -> Optional[str]:

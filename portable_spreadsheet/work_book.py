@@ -95,7 +95,9 @@ class WorkBook(SerializationInterface):
             Sheet: Sheet for variables definition.
         """
         # Get the number of variables in all sheets
-        number_of_variables: int = sum([len(sht.var) for sht in self.sheets])
+        number_of_variables: int = sum(
+            [len(sht.var) for sht in self.sheets]
+        )
         if number_of_variables == 0:
             raise ValueError("there has to be at least 1 variable")
         if self.variable_sheet_offset is not None:

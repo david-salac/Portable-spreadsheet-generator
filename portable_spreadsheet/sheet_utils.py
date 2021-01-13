@@ -381,6 +381,21 @@ class _SheetVariable(object):
         """Overload length operator"""
         return len(self._variables)
 
+    @property
+    def excel_count_undocked(self) -> int:
+        """Return the number of variables that does not have set row
+            position in the excel sheet.
+
+        Returns:
+            int: number of variables without set row position in the Excel
+                variable sheet
+        """
+        count = 0
+        for var in self._variables.values():
+            if var.excel_row_position is None:
+                count += 1
+        return count
+
     def __getitem__(self, item):
         """Overloads [item] operator getter"""
         return self.get_variable(item)
@@ -443,7 +458,7 @@ class _SheetVariable(object):
         self.description[name] = description
         if isinstance(value, Cell):
             self._variables[name] = value
-            self._variables[name].is_variable = True
+            self._variables[name]._is_computational_variable = False
         else:
             self._variables[name] = Cell.variable(
                     Cell(None, None,  # No position
@@ -454,6 +469,8 @@ class _SheetVariable(object):
                          cell_indices=self.spreadsheet.cell_indices
                          )
                 )
+            self._variables[name]._is_computational_variable = True
+        self._variables[name].is_variable = True
 
     def get_variables_dict(self, include_cell: bool = True) -> dict:
         """Serialize variables to dictionary.
