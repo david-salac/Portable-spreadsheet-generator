@@ -132,6 +132,26 @@ R_4,17,18,19,20"""
         computed_parsed_dict: dict = json.loads(self.sheet.to_json())
         self.assertDictEqual(expected_parsed_dict, computed_parsed_dict)
 
+    def test_variable_serialization(self):
+        """Test the serialisation of variables"""
+        self.sheet.var['var_a'] = 11
+        self.sheet.var['var_b'] = 22
+        self.sheet.var['var_c'] = (self.sheet.var['var_a'] +
+                                   self.sheet.var['var_b'])
+        vars_to_dict = self.sheet.to_dictionary()
+        vars_to_dict = vars_to_dict['table']['variables']
+        self.assertDictEqual(vars_to_dict, {'var_a': {'value': 11, 'description': None}, 'var_b': {'value': 22, 'description': None}, 'var_c': {'value': 33, 'description': None}})  # noqa
+        # Test computational variable
+        self.assertDictEqual(self.sheet.var['var_c'].parse_variable, {'python_numpy': 'var_a+var_b', 'native': "value of variable 'var_a (=11)' + value of variable 'var_b (=22)'", 'excel': '=var_a+var_b'})  # noqa
+        self.assertDictEqual(self.sheet.var['var_c'].parse, {'excel': '=var_c', 'native': "value of variable 'var_c (=33)'", 'python_numpy': 'var_c'})  # noqa
+
+        # Test words of non-computational variables (value-only variables)
+        self.assertDictEqual(self.sheet.var['var_a'].parse, {'excel': '=var_a', 'native': "value of variable 'var_a (=11)'", 'python_numpy': 'var_a'})  # noqa
+        self.assertDictEqual(self.sheet.var['var_a'].parse_variable, {'python_numpy': 'var_a', 'excel': '=var_a', 'native': "value of variable 'var_a (=11)'"})  # noqa
+
+        self.assertDictEqual(self.sheet.var['var_b'].parse, {'python_numpy': 'var_b', 'native': "value of variable 'var_b (=22)'", 'excel': '=var_b'})  # noqa
+        self.assertDictEqual(self.sheet.var['var_b'].parse_variable, {'excel': '=var_b', 'python_numpy': 'var_b', 'native': "value of variable 'var_b (=22)'"})  # noqa
+
 
 class TestSerializationToArrays(unittest.TestCase):
     """Test to_numpy serializer."""

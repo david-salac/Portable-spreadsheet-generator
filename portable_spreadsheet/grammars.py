@@ -38,13 +38,13 @@ EXCEL = {
             "separator": "",
             "row_first": False
         },
-        # Like $'Sheet 3'.D8
+        # Like 'Sheet 3'!D8 (MS Excel format, LibreOffice Calc can parse it)
         "cross-reference": {
             "cell-prefix": "",
             "cell-suffix": "",
             "cell-separator": "",
-            "sheet-prefix": "$'",
-            "sheet-suffix": "'.",
+            "sheet-prefix": "'",
+            "sheet-suffix": "'!",
             "row-first": False,
             "sheet-first": True
         },

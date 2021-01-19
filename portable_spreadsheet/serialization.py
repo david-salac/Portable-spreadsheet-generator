@@ -218,7 +218,7 @@ class Serialization(SerializationInterface, abc.ABC):
                 variables_sheet.write(variable_row_position,
                                       offset_columns + 0,
                                       var_n)
-                if var_v['cell'].computational_variable:
+                if not var_v['cell'].computational_variable:
                     # In the case that variable contains only the value
                     variables_sheet.write(
                         variable_row_position,
@@ -231,7 +231,7 @@ class Serialization(SerializationInterface, abc.ABC):
                     variables_sheet.write_formula(
                         variable_row_position,
                         offset_columns + 1,
-                        var_v['cell'].parse['excel'],
+                        var_v['cell'].parse_variable['excel'],
                         value=var_v['value'],
                         cell_format=variable_style
                     )

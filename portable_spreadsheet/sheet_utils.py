@@ -457,8 +457,16 @@ class _SheetVariable(object):
 
         self.description[name] = description
         if isinstance(value, Cell):
-            self._variables[name] = value
-            self._variables[name]._is_computational_variable = False
+            self._variables[name] = Cell.variable(
+                Cell(None, None,  # No position
+                     variable_name=name,
+                     value=value.value,
+                     is_variable=True,
+                     cell_type=CellType.computational,
+                     cell_indices=self.spreadsheet.cell_indices
+                     )
+            )
+            self._variables[name]._variable_words = value._constructing_words
         else:
             self._variables[name] = Cell.variable(
                     Cell(None, None,  # No position
@@ -469,7 +477,6 @@ class _SheetVariable(object):
                          cell_indices=self.spreadsheet.cell_indices
                          )
                 )
-            self._variables[name]._is_computational_variable = True
         self._variables[name].is_variable = True
 
     def get_variables_dict(self, include_cell: bool = True) -> dict:
