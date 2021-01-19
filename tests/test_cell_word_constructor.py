@@ -723,7 +723,7 @@ class TestCellUnaryFunctionality(unittest.TestCase):
             Cell.cross_reference(self.u_operand, sheet)
         u_reference = Cell.cross_reference(self.a_operand, sheet)
         u_ref_word = u_reference.parse
-        self.assertEqual(u_ref_word['excel'], "=" + "$'Results'.F5")
+        self.assertEqual(u_ref_word['excel'], "=" + "'Results'!F5")
         self.assertEqual(u_ref_word['python_numpy'], "Results.values[3,4]")
 
     def test_variable(self):
