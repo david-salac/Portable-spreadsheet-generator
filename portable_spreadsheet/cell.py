@@ -40,6 +40,8 @@ class Cell(object):
         _variable_words (WordConstructor): The word defining computational
             operations of (computational) variable. Computational variable is
             variable defined by formulas.
+        excel_data_validation (dict): Define data validation restriction
+            based on xlsxwriter 'data_validation' possibilities.
     """
     def __init__(self,
                  row: Optional[int] = None,
@@ -90,6 +92,7 @@ class Cell(object):
                 WordConstructor.init_from_new_cell(self)
 
         self._variable_words: WordConstructor = None
+        self.excel_data_validation: dict = None
 
     # === CLASS METHODS and PROPERTIES: ===
     @property

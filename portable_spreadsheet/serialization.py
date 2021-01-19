@@ -235,6 +235,15 @@ class Serialization(SerializationInterface, abc.ABC):
                         value=var_v['value'],
                         cell_format=variable_style
                     )
+                if var_v['cell'].excel_data_validation is not None:
+                    variables_sheet.data_validation(
+                        variable_row_position,
+                        offset_columns + 1,
+                        variable_row_position,
+                        offset_columns + 1,
+                        var_v['cell'].excel_data_validation
+                    )
+
                 variables_sheet.write(variable_row_position,
                                       offset_columns + 2,
                                       var_v['description'])
@@ -374,6 +383,16 @@ class Serialization(SerializationInterface, abc.ABC):
                                                 cell.parse['excel'],
                                                 value=cell.value,
                                                 cell_format=cell_format)
+                    # Add excel data validation (from xlsxwriter)
+                    if cell.excel_data_validation is not None:
+                        variables_sheet.data_validation(
+                            row_idx + offset_row,
+                            col_idx + offset_col,
+                            row_idx + offset_row,
+                            col_idx + offset_col,
+                            cell.excel_data_validation
+                        )
+
         # E) Add the labels for rows and columns
         if self.cell_indices.excel_append_column_labels:
             # Add labels of column
