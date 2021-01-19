@@ -7,5 +7,5 @@ from .grammars import GRAMMARS  # noqa
 from .grammar_utils import GrammarUtils  # noqa
 from .skipped_label import SkippedLabel  # noqa
 
-__version__ = "2.1.1"
+__version__ = "2.1.2"
 __status__ = "Production"

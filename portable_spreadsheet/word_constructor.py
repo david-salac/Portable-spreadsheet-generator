@@ -502,12 +502,14 @@ class WordConstructor(object):
         return instance
 
     @staticmethod
-    def parse(cell: 'Cell') -> T_word:
+    def parse(cell: 'Cell', variable_word: bool = False) -> T_word:
         """Parse the cell word. This function is called when the cell should
             be inserted to spreadsheet.
 
         Args:
             cell (Cell): The cell that is the subject of parsing.
+            variable_word (bool): If true, variable construction word
+                is constructed.
 
         Returns:
             T_word: Parsed cell.
@@ -521,6 +523,8 @@ class WordConstructor(object):
         elif cell.cell_type == CellType.computational:
             # Computational type
             words: T_word = copy.deepcopy(cell.constructing_words.words)
+            if variable_word and cell._variable_words is not None:
+                words = copy.deepcopy(cell._variable_words.words)
             for language in cell.constructing_words.languages:
                 prefix = GRAMMARS[language]['cells']['operation']['prefix']
                 suffix = GRAMMARS[language]['cells']['operation']['suffix']
