@@ -480,6 +480,24 @@ class TestCellBinaryOperations(unittest.TestCase):
         }, result.parse)
         self.assertAlmostEqual(self.a_operand_1.value, 7)
 
+    def test_linear_interpolation(self):
+        """Test the linear interpolation"""
+        self.a_operand_1._value = 1
+        self.a_operand_2._value = 3
+        self.u_operand_1._value = 9
+        res = Cell.linear_interpolation(self.a_operand_1,
+                                        self.a_operand_2,
+                                        self.a_operand_2,
+                                        self.u_operand_1,
+                                        self.u_operand_1)
+        self.assertAlmostEqual(res.value, 27)
+        self.assertDictEqual(
+            {'python_numpy': 'np.interp(9, [values[3,4], values[2,4]], '
+                             '[values[2,4], 9])',
+             'excel': '=(9-F4)*((9-F4)/(F4-F5))+9'},
+            res.parse
+        )
+
     def test_concatenate(self):
         """Test string concatenation."""
         # Define grammar rules

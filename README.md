@@ -430,6 +430,20 @@ false.
 
 All the parameters are the instance of `Cell` class.
 
+### Linear interpolation
+There is a support for linear interpolation.
+Functionality is implemented in the property `fn` of the `Sheet`
+instance in the method `linear_interpolation`. 
+It takes five parameters in this order:
+
+1. **x_start**: Where is the x coordinate of the start.
+2. **y_start**: Where is the y OR f(x) coordinate of the start.
+3. **x_end**: Where is the x coordinate of the end.
+4. **y_end**: Where is the y OR f(x) coordinate of the end.
+5. **x**: For what value of x are we interpolating.
+
+All the parameters are the instance of `Cell` class.
+
 #### Example of conditional
 Consider the following example that compares whether two cells are equals,
 if yes, it takes some value in a cell, if not, another value in the

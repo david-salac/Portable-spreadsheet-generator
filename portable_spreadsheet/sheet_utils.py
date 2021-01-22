@@ -320,6 +320,26 @@ class _Functionality(object):
         """
         return Cell.conditional(condition, consequent, alternative)
 
+    @staticmethod
+    def linear_interpolation(x_start: 'Cell',
+                             y_start: 'Cell',
+                             x_end: 'Cell',
+                             y_end: 'Cell',
+                             x: 'Cell') -> Cell:
+        """Return the cell defining linear interpolation at some point.
+
+        Args:
+            x_start (Cell): Where is the x coordinate of the start.
+            y_start (Cell): Where is the y OR f(x) coordinate of the start.
+            x_end (Cell): Where is the x coordinate of the end.
+            y_end (Cell): Where is the y OR f(x) coordinate of the end.
+            x (Cell): For what value of x are we interpolating.
+
+        Returns:
+            Cell: Linear interpolation of values.
+        """
+        return Cell.linear_interpolation(x_start, y_start, x_end, y_end, x)
+
     def offset(self,
                reference: Cell,
                row_skip: Cell,
@@ -422,7 +442,8 @@ class _SheetVariable(object):
     def set_variable(self,
                      name: str,
                      value: Union[str, Number, Cell],
-                     description: Optional[str] = None) -> None:
+                     description: Optional[str] = None,
+                     excel_format: Optional[dict] = None) -> None:
         """Check the name consistency and set the variable.
 
         If the variable with given name is already in the dictionary, it is
@@ -433,6 +454,7 @@ class _SheetVariable(object):
                 alphanumeric value maximally with underscore symbols.
             value (Union[str, Number]): A value to be set.
             description (Optional[str]): Description of the variable
+            excel_format (Optional[dict]): Definition of the Excel cell style.
 
         Raises:
             ValueError: If the structure of the name does not match the
@@ -478,6 +500,8 @@ class _SheetVariable(object):
                          )
                 )
         self._variables[name].is_variable = True
+        if excel_format:
+            self._variables[name].excel_format = excel_format
 
     def get_variables_dict(self, include_cell: bool = True) -> dict:
         """Serialize variables to dictionary.
@@ -503,3 +527,11 @@ class _SheetVariable(object):
             dict: serialization of variables to dictionary.
         """
         return self.get_variables_dict(False)
+
+    def keys(self):
+        """Get the keys (variable names).
+
+        Return:
+            dict_keys: Variable names
+        """
+        return self._variables.keys()

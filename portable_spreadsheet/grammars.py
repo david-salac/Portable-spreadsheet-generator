@@ -294,6 +294,9 @@ EXCEL = {
             "prefix": "",
             "suffix": ""
         }
+    },
+    "linear-interpolation": {
+        "word": "({x}-{x_e})*(({y_e}-{y_s})/({x_e}-{x_s}))+{y_e}"
     }
 }
 NATIVE = {
@@ -593,6 +596,10 @@ NATIVE = {
             "prefix": " else ",
             "suffix": ""
         }
+    },
+    "linear-interpolation": {
+        "word": "linear interpolation at point {x} for "
+                "x values ({x_s}, {x_e}) and f(x) values ({y_s}, {y_e})"
     }
 }
 PYTHON_NUMPY = {
@@ -891,6 +898,9 @@ PYTHON_NUMPY = {
             "prefix": "else (",
             "suffix": ")"
         }
+    },
+    "linear-interpolation": {
+        "word": "np.interp({x}, [{x_s}, {x_e}], [{y_s}, {y_e}])"
     }
 }
 
@@ -1287,5 +1297,17 @@ GRAMMAR_PATTERN: dict = {
             "prefix": str,
             "suffix": str
         }
+    },
+
+    # Linear interpolation
+    "linear-interpolation": {
+        # This require a special format
+        # Word represents the whole word, reserved values in the string are:
+        #   {x_s}: for x value of starting point
+        #   {y_s}: for y value of starting point
+        #   {x_e}: for x value of ending point
+        #   {y_e}: for y value of ending point
+        #   {x}: value where the interpolation is evaluated
+        "word": str
     }
 }

@@ -1029,3 +1029,43 @@ class WordConstructor(object):
                 offset_suffix
 
         return instance
+
+    @staticmethod
+    def linear_interpolation(
+        x_start: 'Cell',
+        y_start: 'Cell',
+        x_end: 'Cell',
+        y_end: 'Cell',
+        x: 'Cell'
+    ) -> 'WordConstructor':
+        """Construct the word for linear interpolation.
+
+        Args:
+            x_start (Cell): Where is the x coordinate of the start.
+            y_start (Cell): Where is the y OR f(x) coordinate of the start.
+            x_end (Cell): Where is the x coordinate of the end.
+            y_end (Cell): Where is the y OR f(x) coordinate of the end.
+            x (Cell): For what value of x are we interpolating.
+
+        Returns:
+            WordConstructor: Word defining linear interpolation.
+        """
+        instance = WordConstructor(cell_indices=x.cell_indices)
+
+        x_s_words = x_start.word.words
+        y_s_words = y_start.word.words
+        x_e_words = x_end.word.words
+        y_e_words = y_end.word.words
+        x_words = x.word.words
+        for language in instance.languages:
+            pattern: str = GRAMMARS[language]['linear-interpolation']['word']
+            word = pattern.format(
+                x_s=x_s_words[language],
+                y_s=y_s_words[language],
+                x_e=x_e_words[language],
+                y_e=y_e_words[language],
+                x=x_words[language],
+            )
+            instance.words[language] = word
+
+        return instance
