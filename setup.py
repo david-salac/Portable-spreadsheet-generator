@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="portable-spreadsheet",
-    version="2.1.4",
+    version="2.1.5",
     author="David Salac",
     author_email="info@davidsalac.eu",
     description="A simple spreadsheet that keeps tracks of each operation of each cell in defined languages. Logic allows exporting sheets to Excel files (and see how each cell is computed), to the JSON strings with a description of computation of each cell (e. g. in the native language). Other formats, like HTML, CSV and Markdown (MD), are also implemented (user can define own format). It also allows reconstructing behaviours in native Python with NumPy.",  # noqa

@@ -1120,3 +1120,43 @@ class Cell(object):
                     cell_type=CellType.computational
                     )
     # ==============
+
+    # === LINEAR REGRESSION ===
+    @staticmethod
+    def linear_interpolation(
+        x_start: 'Cell',
+        y_start: 'Cell',
+        x_end: 'Cell',
+        y_end: 'Cell',
+        x: 'Cell'
+    ) -> 'Cell':
+        """Return the cell defining linear interpolation at some point.
+
+        Args:
+            x_start (Cell): Where is the x coordinate of the start.
+            y_start (Cell): Where is the y OR f(x) coordinate of the start.
+            x_end (Cell): Where is the x coordinate of the end.
+            y_end (Cell): Where is the y OR f(x) coordinate of the end.
+            x (Cell): For what value of x are we interpolating.
+
+        Returns:
+            Cell: Linear interpolation of values.
+        """
+        return Cell(value=Cell._compute_value(
+                        lambda x_s, y_s, x_e, y_e, x_v:
+                        # y = Ax + B
+                        # A:
+                        (y_e.value - y_s.value) / (x_e.value - x_s.value) *
+                        x.value +
+                        # B:
+                        y_e.value - x_e.value *  # A again:
+                        (y_e.value - y_s.value) / (x_e.value - x_s.value),
+                        x_s=x_start, y_s=y_start, x_e=x_end, y_e=y_end, x_v=x
+                    ),
+                    words=WordConstructor.linear_interpolation(
+                        x_start, y_start, x_end, y_end, x
+                    ),
+                    cell_indices=x.cell_indices,
+                    cell_type=CellType.computational
+                    )
+    # =========================
