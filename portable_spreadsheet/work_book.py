@@ -19,9 +19,10 @@ class ExcelParameters(ClassVarsToDict):
     label_column_format: dict = MappingProxyType({'bold': True})
     values_only: bool = False
     skipped_label_replacement: str = ''
-    row_height: Tuple[float] = tuple([])
-    column_width: Tuple[float] = tuple([])
+    row_height: Tuple[float, ...] = tuple([])
+    column_width: Tuple[float, ...] = tuple([])
     top_left_corner_text: str = ""
+    nan_replacement: object = float("NaN")
 
 
 @dataclass()
@@ -129,13 +130,13 @@ class WorkBook(SerializationInterface):
     def to_excel(self,
                  file_path: Union[str, pathlib.Path],
                  /, *,  # noqa: E225
-                 export_parameters: Tuple[ExcelParameters]
+                 export_parameters: Tuple[ExcelParameters, ...]
                  ) -> None:
         """Export to Excel file.
 
         Args:
             file_path (Union[str, pathlib.Path]): Path to file
-            export_parameters (Tuple[ExcelParameters]): Parameters for
+            export_parameters (Tuple[ExcelParameters, ...]): Parameters for
                 exporting each sheet.
         """
         # Quick sanity check
@@ -184,13 +185,13 @@ class WorkBook(SerializationInterface):
 
     def to_dictionary(self,
                       *,
-                      export_parameters: Tuple[DictionaryParameters]
+                      export_parameters: Tuple[DictionaryParameters, ...]
                       ) -> dict:
         """Export sheets as JSON.
 
         Args:
-            export_parameters (Tuple[ListParameters]): Parameters for exporting
-                sheets as dict.
+            export_parameters (Tuple[ListParameters, ...]): Parameters for
+                exporting sheets as dict.
         """
         res: dict = {}
         for idx, sheet in enumerate(self.sheets):
@@ -201,12 +202,12 @@ class WorkBook(SerializationInterface):
 
     def to_json(self,
                 *,
-                export_parameters: Tuple[DictionaryParameters]) -> str:
+                export_parameters: Tuple[DictionaryParameters, ...]) -> str:
         """Export sheets as JSON.
 
         Args:
-            export_parameters (Tuple[ListParameters]): Parameters for exporting
-                sheets as dict.
+            export_parameters (Tuple[ListParameters, ...]): Parameters for
+                exporting sheets as dict.
         """
         return json.dumps(
             self.to_dictionary(export_parameters=export_parameters),
@@ -250,12 +251,12 @@ class WorkBook(SerializationInterface):
 
     def to_list(self,
                 *,
-                export_parameters: Tuple[ListParameters]) -> list:
+                export_parameters: Tuple[ListParameters, ...]) -> list:
         """Export sheets to 3D list.
 
         Args:
-            export_parameters (Tuple[ListParameters]): Parameters for exporting
-                each sheet.
+            export_parameters (Tuple[ListParameters, ...]): Parameters for
+                exporting each sheet.
         """
         res = []
         for idx, sheet in enumerate(self.sheets):
