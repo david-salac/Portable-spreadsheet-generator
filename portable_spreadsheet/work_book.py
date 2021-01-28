@@ -23,6 +23,7 @@ class ExcelParameters(ClassVarsToDict):
     column_width: Tuple[float, ...] = tuple([])
     top_left_corner_text: str = ""
     nan_replacement: object = float("NaN")
+    inf_replacement: object = "#DIV/0!"
 
 
 @dataclass()
