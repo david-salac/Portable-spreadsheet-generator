@@ -276,7 +276,8 @@ class Serialization(SerializationInterface, abc.ABC):
                   workbook: xlsxwriter.Workbook,
                   worksheet: Optional[object] = None,
                   register_variables: bool = True,
-                  nan_replacement: object = numpy.nan
+                  nan_replacement: object = numpy.nan,
+                  inf_replacement: object = "#DIV/0!"
                   ) -> object:
         """Export the values inside Sheet instance to the
             Excel 2010 compatible .xslx file
@@ -313,6 +314,7 @@ class Serialization(SerializationInterface, abc.ABC):
             register_variables (bool): If false, variable registration is
                 skipped.
             nan_replacement (object): Replacement for np.nan value.
+            inf_replacement (object): Replacement for np.inf value.
 
         Return:
             object: Created worksheet.
@@ -352,9 +354,11 @@ class Serialization(SerializationInterface, abc.ABC):
                 if cell.value is not None:
                     cell_value = cell.value
                     # Replace the NaN value
-                    if isinstance(cell_value, Number) \
-                            and numpy.isnan(cell_value):
-                        cell_value = nan_replacement
+                    if isinstance(cell_value, Number):
+                        if numpy.isnan(cell_value):
+                            cell_value = nan_replacement
+                        elif not numpy.isfinite(cell_value):
+                            cell_value = inf_replacement
                     # Offset here is either 0 or 1, indicates if we writes
                     # row/column labels to the first row and column.
                     offset_row = 0
@@ -468,7 +472,8 @@ class Serialization(SerializationInterface, abc.ABC):
                  row_height: List[float] = tuple(),
                  column_width: List[float] = tuple(),
                  top_left_corner_text: str = "",
-                 nan_replacement: object = numpy.nan
+                 nan_replacement: object = numpy.nan,
+                 inf_replacement: object = "#DIV/0!"
                  ) -> None:
         """Export the values inside Sheet instance to the
             Excel 2010 compatible .xslx file
@@ -502,6 +507,7 @@ class Serialization(SerializationInterface, abc.ABC):
             top_left_corner_text (str): Text in the top left corner. Apply
                 only when the row and column labels are included.
             nan_replacement (object): Replacement for np.nan value.
+            inf_replacement (object): Replacement for np.inf value.
         """
         # Quick sanity check
         if ".xlsx" not in pathlib.Path(file_path).suffix:
@@ -525,7 +531,8 @@ class Serialization(SerializationInterface, abc.ABC):
             top_left_corner_text=top_left_corner_text,
             workbook=workbook,
             worksheet=worksheet,
-            nan_replacement=nan_replacement
+            nan_replacement=nan_replacement,
+            inf_replacement=inf_replacement
         )
         workbook.close()
 
