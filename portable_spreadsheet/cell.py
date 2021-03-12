@@ -42,6 +42,8 @@ class Cell(object):
             variable defined by formulas.
         excel_data_validation (dict): Define data validation restriction
             based on xlsxwriter 'data_validation' possibilities.
+        compute_only_values (bool): If true, only values are computed and
+            no word is constructed.
     """
     def __init__(self,
                  row: Optional[int] = None,
@@ -84,12 +86,16 @@ class Cell(object):
         self._excel_format: dict = {}
         self._description: Optional[str] = None
         self._excel_row_position: Optional[int] = None
+        self.compute_only_values: bool = True
 
-        if words is not None:
-            self._constructing_words: WordConstructor = words
+        if not self.compute_only_values:
+            if words is not None:
+                self._constructing_words: WordConstructor = words
+            else:
+                self._constructing_words: WordConstructor = \
+                    WordConstructor.init_from_new_cell(self)
         else:
-            self._constructing_words: WordConstructor = \
-                WordConstructor.init_from_new_cell(self)
+            self._constructing_words: WordConstructor = None
 
         self._variable_words: WordConstructor = None
         self.excel_data_validation: dict = None
@@ -290,6 +296,14 @@ class Cell(object):
             # Maximally generic here is OK
             return CellValueError()
 
+    @staticmethod
+    def _construct_word(source: 'Cell',
+                        function: callable,
+                        *args) -> Optional[WordConstructor]:
+        if not source.compute_only_values:
+            return function(*args)
+        else:
+            return None
     # =====================================
 
     # === BINARY OPERATORS: ===
@@ -304,7 +318,11 @@ class Cell(object):
         """
         return Cell(value=self._compute_value(lambda a, b: a + b,
                                               a=self.value, b=other.value),
-                    words=WordConstructor.add(self, other),
+                    words=self._construct_word(
+                        self,
+                        WordConstructor.add,
+                        self, other
+                    ),
                     cell_indices=other.cell_indices,
                     cell_type=CellType.computational
                     )
@@ -320,7 +338,11 @@ class Cell(object):
         """
         return Cell(value=self._compute_value(lambda a, b: a - b,
                                               a=self.value, b=other.value),
-                    words=WordConstructor.subtract(self, other),
+                    words=self._construct_word(
+                        self,
+                        WordConstructor.subtract,
+                        self, other
+                    ),
                     cell_indices=other.cell_indices,
                     cell_type=CellType.computational
                     )
@@ -336,7 +358,11 @@ class Cell(object):
         """
         return Cell(value=self._compute_value(lambda a, b: a * b,
                                               a=self.value, b=other.value),
-                    words=WordConstructor.multiply(self, other),
+                    words=self._construct_word(
+                        self,
+                        WordConstructor.multiply,
+                        self, other
+                    ),
                     cell_indices=other.cell_indices,
                     cell_type=CellType.computational
                     )
@@ -352,7 +378,11 @@ class Cell(object):
         """
         return Cell(value=self._compute_value(lambda a, b: a / b,
                                               a=self.value, b=other.value),
-                    words=WordConstructor.divide(self, other),
+                    words=self._construct_word(
+                        self,
+                        WordConstructor.divide,
+                        self, other
+                    ),
                     cell_indices=other.cell_indices,
                     cell_type=CellType.computational
                     )
@@ -368,7 +398,11 @@ class Cell(object):
         """
         return Cell(value=self._compute_value(lambda a, b: a % b,
                                               a=self.value, b=other.value),
-                    words=WordConstructor.modulo(self, other),
+                    words=self._construct_word(
+                        self,
+                        WordConstructor.modulo,
+                        self, other
+                    ),
                     cell_indices=other.cell_indices,
                     cell_type=CellType.computational
                     )
@@ -384,7 +418,11 @@ class Cell(object):
         """
         return Cell(value=self._compute_value(lambda a, b: a ** b,
                                               a=self.value, b=other.value),
-                    words=WordConstructor.power(self, other),
+                    words=self._construct_word(
+                        self,
+                        WordConstructor.power,
+                        self, other
+                    ),
                     cell_indices=other.cell_indices,
                     cell_type=CellType.computational
                     )
@@ -400,7 +438,11 @@ class Cell(object):
         """
         return Cell(value=self._compute_value(lambda a, b: a == b,
                                               a=self.value, b=other.value),
-                    words=WordConstructor.equalTo(self, other),
+                    words=self._construct_word(
+                        self,
+                        WordConstructor.equalTo,
+                        self, other
+                    ),
                     cell_indices=other.cell_indices,
                     cell_type=CellType.computational
                     )
@@ -416,7 +458,11 @@ class Cell(object):
         """
         return Cell(value=self._compute_value(lambda a, b: a != b,
                                               a=self.value, b=other.value),
-                    words=WordConstructor.notEqualTo(self, other),
+                    words=self._construct_word(
+                        self,
+                        WordConstructor.notEqualTo,
+                        self, other
+                    ),
                     cell_indices=other.cell_indices,
                     cell_type=CellType.computational
                     )
@@ -432,7 +478,11 @@ class Cell(object):
         """
         return Cell(value=self._compute_value(lambda a, b: a > b,
                                               a=self.value, b=other.value),
-                    words=WordConstructor.greaterThan(self, other),
+                    words=self._construct_word(
+                        self,
+                        WordConstructor.greaterThan,
+                        self, other
+                    ),
                     cell_indices=other.cell_indices,
                     cell_type=CellType.computational
                     )
@@ -448,7 +498,11 @@ class Cell(object):
         """
         return Cell(value=self._compute_value(lambda a, b: a >= b,
                                               a=self.value, b=other.value),
-                    words=WordConstructor.greaterThanOrEqualTo(self, other),
+                    words=self._construct_word(
+                        self,
+                        WordConstructor.greaterThanOrEqualTo,
+                        self, other
+                    ),
                     cell_indices=other.cell_indices,
                     cell_type=CellType.computational
                     )
@@ -464,7 +518,11 @@ class Cell(object):
         """
         return Cell(value=self._compute_value(lambda a, b: a < b,
                                               a=self.value, b=other.value),
-                    words=WordConstructor.lessThan(self, other),
+                    words=self._construct_word(
+                        self,
+                        WordConstructor.lessThan,
+                        self, other
+                    ),
                     cell_indices=other.cell_indices,
                     cell_type=CellType.computational
                     )
@@ -480,7 +538,11 @@ class Cell(object):
         """
         return Cell(value=self._compute_value(lambda a, b: a <= b,
                                               a=self.value, b=other.value),
-                    words=WordConstructor.lessThanOrEqualTo(self, other),
+                    words=self._construct_word(
+                        self,
+                        WordConstructor.lessThanOrEqualTo,
+                        self, other
+                    ),
                     cell_indices=other.cell_indices,
                     cell_type=CellType.computational
                     )
@@ -496,7 +558,11 @@ class Cell(object):
         """
         return Cell(value=self._compute_value(lambda a, b: a and b,
                                               a=self.value, b=other.value),
-                    words=WordConstructor.logicalConjunction(self, other),
+                    words=self._construct_word(
+                        self,
+                        WordConstructor.logicalConjunction,
+                        self, other
+                    ),
                     cell_indices=other.cell_indices,
                     cell_type=CellType.computational
                     )
@@ -512,7 +578,11 @@ class Cell(object):
         """
         return Cell(value=self._compute_value(lambda a, b: a or b,
                                               a=self.value, b=other.value),
-                    words=WordConstructor.logicalDisjunction(self, other),
+                    words=self._construct_word(
+                        self,
+                        WordConstructor.logicalDisjunction,
+                        self, other
+                    ),
                     cell_indices=other.cell_indices,
                     cell_type=CellType.computational
                     )
@@ -528,7 +598,11 @@ class Cell(object):
         """
         return Cell(value=self._compute_value(lambda a, b: str(a.value) +
                                               str(b.value), a=self, b=other),
-                    words=WordConstructor.concatenate(self, other),
+                    words=self._construct_word(
+                        self,
+                        WordConstructor.concatenate,
+                        self, other
+                    ),
                     cell_indices=other.cell_indices,
                     cell_type=CellType.computational
                     )
@@ -798,7 +872,9 @@ class Cell(object):
             cell_value = CellValueError()
 
         return Cell(value=cell_value,
-                    words=WordConstructor.aggregation(
+                    words=Cell._construct_word(
+                        cell_start,
+                        WordConstructor.aggregation,
                         cell_start, cell_end, grammar_method
                     ),
                     cell_indices=cell_start.cell_indices,
@@ -821,7 +897,11 @@ class Cell(object):
             raise ValueError("The referenced cell has to be anchored.")
 
         return Cell(value=Cell._compute_value(lambda x: x.value, x=other),
-                    words=WordConstructor.reference(other),
+                    words=Cell._construct_word(
+                        other,
+                        WordConstructor.reference,
+                        other
+                    ),
                     cell_indices=other.cell_indices,
                     cell_type=CellType.computational
                     )
@@ -842,7 +922,11 @@ class Cell(object):
             raise ValueError("The referenced cell has to be anchored.")
 
         return Cell(value=Cell._compute_value(lambda x: x.value, x=target),
-                    words=WordConstructor.cross_reference(target, sheet),
+                    words=Cell._construct_word(
+                        target,
+                        WordConstructor.cross_reference,
+                        target, sheet
+                    ),
                     cell_indices=target.cell_indices,
                     cell_type=CellType.computational
                     )
@@ -860,7 +944,11 @@ class Cell(object):
             Cell: Expression with defined word
         """
         return Cell(value=Cell._compute_value(lambda x: x.value, x=other),
-                    words=WordConstructor.raw(other, words),
+                    words=Cell._construct_word(
+                        other,
+                        WordConstructor.raw,
+                        other, words
+                    ),
                     cell_indices=other.cell_indices,
                     cell_type=CellType.computational
                     )
@@ -878,7 +966,11 @@ class Cell(object):
         if not other.is_variable:
             raise ValueError("Only the variable type cell is accepted!")
         return Cell(value=Cell._compute_value(lambda x: x.value, x=other),
-                    words=WordConstructor.variable(other),
+                    words=Cell._construct_word(
+                        other,
+                        WordConstructor.variable,
+                        other
+                    ),
                     cell_indices=other.cell_indices,
                     cell_type=CellType.computational
                     )
@@ -894,7 +986,11 @@ class Cell(object):
             Cell: Expression in brackets
         """
         return Cell(value=Cell._compute_value(lambda x: x.value, x=other),
-                    words=WordConstructor.brackets(other),
+                    words=Cell._construct_word(
+                        other,
+                        WordConstructor.brackets,
+                        other
+                    ),
                     cell_indices=other.cell_indices,
                     cell_type=CellType.computational
                     )
@@ -911,7 +1007,11 @@ class Cell(object):
         """
         return Cell(value=Cell._compute_value(lambda x: np.log(x.value),
                                               x=other),
-                    words=WordConstructor.logarithm(other),
+                    words=Cell._construct_word(
+                        other,
+                        WordConstructor.logarithm,
+                        other
+                    ),
                     cell_indices=other.cell_indices,
                     cell_type=CellType.computational
                     )
@@ -928,7 +1028,11 @@ class Cell(object):
         """
         return Cell(value=Cell._compute_value(lambda x: np.exp(x.value),
                                               x=other),
-                    words=WordConstructor.exponential(other),
+                    words=Cell._construct_word(
+                        other,
+                        WordConstructor.exponential,
+                        other
+                    ),
                     cell_indices=other.cell_indices,
                     cell_type=CellType.computational
                     )
@@ -945,7 +1049,11 @@ class Cell(object):
         """
         return Cell(value=Cell._compute_value(lambda x: np.ceil(x.value),
                                               x=other),
-                    words=WordConstructor.ceil(other),
+                    words=Cell._construct_word(
+                        other,
+                        WordConstructor.ceil,
+                        other
+                    ),
                     cell_indices=other.cell_indices,
                     cell_type=CellType.computational
                     )
@@ -962,7 +1070,11 @@ class Cell(object):
         """
         return Cell(value=Cell._compute_value(lambda x: np.floor(x.value),
                                               x=other),
-                    words=WordConstructor.floor(other),
+                    words=Cell._construct_word(
+                        other,
+                        WordConstructor.floor,
+                        other
+                    ),
                     cell_indices=other.cell_indices,
                     cell_type=CellType.computational
                     )
@@ -979,7 +1091,11 @@ class Cell(object):
         """
         return Cell(value=Cell._compute_value(lambda x: np.round(x.value),
                                               x=other),
-                    words=WordConstructor.round(other),
+                    words=Cell._construct_word(
+                        other,
+                        WordConstructor.round,
+                        other
+                    ),
                     cell_indices=other.cell_indices,
                     cell_type=CellType.computational
                     )
@@ -996,7 +1112,11 @@ class Cell(object):
         """
         return Cell(value=Cell._compute_value(lambda x: np.abs(x.value),
                                               x=other),
-                    words=WordConstructor.abs(other),
+                    words=Cell._construct_word(
+                        other,
+                        WordConstructor.abs,
+                        other
+                    ),
                     cell_indices=other.cell_indices,
                     cell_type=CellType.computational
                     )
@@ -1013,7 +1133,11 @@ class Cell(object):
         """
         return Cell(value=Cell._compute_value(lambda x: np.sqrt(x.value),
                                               x=other),
-                    words=WordConstructor.sqrt(other),
+                    words=Cell._construct_word(
+                        other,
+                        WordConstructor.sqrt,
+                        other
+                    ),
                     cell_indices=other.cell_indices,
                     cell_type=CellType.computational
                     )
@@ -1030,7 +1154,11 @@ class Cell(object):
         """
         return Cell(value=Cell._compute_value(lambda x: np.sign(x.value),
                                               x=other),
-                    words=WordConstructor.signum(other),
+                    words=Cell._construct_word(
+                        other,
+                        WordConstructor.signum,
+                        other
+                    ),
                     cell_indices=other.cell_indices,
                     cell_type=CellType.computational
                     )
@@ -1047,7 +1175,11 @@ class Cell(object):
         """
         return Cell(value=Cell._compute_value(lambda x: not x.value,
                                               x=other),
-                    words=WordConstructor.logicalNegation(other),
+                    words=Cell._construct_word(
+                        other,
+                        WordConstructor.logicalNegation,
+                        other
+                    ),
                     cell_indices=other.cell_indices,
                     cell_type=CellType.computational
                     )
@@ -1077,7 +1209,9 @@ class Cell(object):
         return Cell(value=Cell._compute_value(
             lambda cons, cond, alte: cons.value if cond.value else alte.value,
             cons=consequent, cond=condition, alte=alternative),
-                    words=WordConstructor.conditional(
+                    words=Cell._construct_word(
+                        condition,
+                        WordConstructor.conditional,
                         condition, consequent, alternative
                     ),
                     cell_indices=condition.cell_indices,
@@ -1113,7 +1247,9 @@ class Cell(object):
             raise ValueError("Both reference cell and target cell must be"
                              " anchored!")
         return Cell(value=Cell._compute_value(lambda x: x.value, x=target),
-                    words=WordConstructor.offset(
+                    words=Cell._construct_word(
+                        reference,
+                        WordConstructor.offset,
                         reference, row_skip, column_skip
                     ),
                     cell_indices=reference.cell_indices,
@@ -1153,7 +1289,9 @@ class Cell(object):
                         (y_e.value - y_s.value) / (x_e.value - x_s.value),
                         x_s=x_start, y_s=y_start, x_e=x_end, y_e=y_end, x_v=x
                     ),
-                    words=WordConstructor.linear_interpolation(
+                    words=Cell._construct_word(
+                        x_start,
+                        WordConstructor.linear_interpolation,
                         x_start, y_start, x_end, y_end, x
                     ),
                     cell_indices=x.cell_indices,
