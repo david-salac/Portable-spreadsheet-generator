@@ -67,6 +67,35 @@ class TestSheetBasicFunctionality(unittest.TestCase):
         """Test the instance sheet"""
         self.assertTrue(isinstance(self.sheet, Sheet))
 
+    def test_expand_sheet_just_values(self):
+        """Test the expanding of the sheet size if it has only values"""
+        sheet = Sheet.create_new_sheet(
+            self.nr_row, self.nr_col,
+            rows_labels=self.rows_labels,
+            columns_labels=self.columns_labels,
+            rows_help_text=self.rows_help_text,
+            columns_help_text=self.columns_help_text,
+            excel_append_row_labels=True,
+            excel_append_column_labels=True,
+            warning_logger=lambda message: self.warnings.append(message),
+            values_only=True
+        )
+        self.assertTupleEqual(sheet.shape, (20, 30))
+        expand_row = 3
+        expand_col = 5
+        new_rows_labels = [f'LeR_{r_i}' for r_i in range(expand_row)]
+        new_columns_labels = [f'LeC_{c_i}' for c_i in range(expand_col)]
+        new_rows_help_text = [f'HeR_{r_i}' for r_i in range(expand_row)]
+        new_columns_help_text = [f'HeC_{c_i}' for c_i in range(expand_col)]
+        # Test expansion
+        sheet.expand(3, 5,
+                     new_rows_labels=new_rows_labels,
+                     new_columns_labels=new_columns_labels,
+                     new_rows_help_text=new_rows_help_text,
+                     new_columns_help_text=new_columns_help_text
+                     )
+        self.assertTupleEqual(sheet.shape, (23, 35))
+
     def test_expand_sheet(self):
         """Test the expanding of the sheet size"""
         # Try to expand without all parameters
