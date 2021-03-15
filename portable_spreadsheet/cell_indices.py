@@ -146,25 +146,18 @@ class CellIndices(object):
         # assign the help texts
         self.rows_help_text: List[str] = copy.deepcopy(rows_help_text)
         self.columns_help_text: List[str] = copy.deepcopy(columns_help_text)
+        # This set the sheet to store only values and not to constructs words
+        #   it is used by Cell class
+        self.values_only: bool = False
 
     @property
-    def supported_languages(self) -> List[str]:
-        """Returns all languages supported by the indicies.
-
-        Returns:
-            List[str]: All languages supported by this indices.
-        """
-        return [].extend(self.user_defined_languages, system_languages)
-
-    @property
-    def shape(self) -> Tuple[int]:
+    def shape(self) -> Tuple[int, int]:
         """Return the shape of the object in the NumPy logic.
 
         Returns:
-            Tuple[int]: Number of rows, Number of columns
+            Tuple[int, int]: Number of rows, Number of columns
         """
-        language = list(self.columns.keys())[0]
-        return len(self.rows[language]), len(self.columns[language])
+        return self.number_of_rows, self.number_of_columns
 
     @property
     def languages(self) -> List[str]:
