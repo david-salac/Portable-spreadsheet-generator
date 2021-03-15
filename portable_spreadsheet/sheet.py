@@ -81,7 +81,8 @@ class Sheet(Serialization):
             excel_append_row_labels: bool = True,
             excel_append_column_labels: bool = True,
             warning_logger: Optional[Callable[[str], None]] = None,
-            values_only: bool = False
+            values_only: bool = False,
+            system_languages: Tuple[str, ...] = ('excel', 'python_numpy'),
     ) -> 'Sheet':
         """Direct way of creating instance.
 
@@ -108,10 +109,15 @@ class Sheet(Serialization):
             values_only (bool): Set the sheet to store only values and not to
                 constructs words - makes computation faster but disable all
                 export functionality
+            system_languages (Tuple[str, ...]): System languages that are
+                always included.
 
         Returns:
             Sheet: New instance of spreadsheet.
         """
+        if values_only:
+            system_languages = tuple()
+
         class_index = CellIndices(
             number_of_rows,
             number_of_columns,
@@ -122,9 +128,10 @@ class Sheet(Serialization):
             columns_help_text=columns_help_text,
             excel_append_row_labels=excel_append_row_labels,
             excel_append_column_labels=excel_append_column_labels,
-            warning_logger=warning_logger
+            warning_logger=warning_logger,
+            values_only=values_only,
+            system_languages=system_languages
         )
-        class_index.values_only = values_only
         return cls(class_index, warning_logger, name)
 
     def _initialise_array(self) -> T_sheet:
@@ -380,7 +387,9 @@ class Sheet(Serialization):
                new_rows_labels: List[Union[str, SkippedLabel]] = None,
                new_columns_labels: List[Union[str, SkippedLabel]] = None,
                new_rows_help_text: List[str] = None,
-               new_columns_help_text: List[str] = None
+               new_columns_help_text: List[str] = None,
+               values_only: bool = False,
+               system_languages: Tuple[str, ...] = ('excel', 'python_numpy')
                ):
         """Expand the size of the table.
 
@@ -399,6 +408,11 @@ class Sheet(Serialization):
                 be added.
             new_columns_help_text (List[str]): List of help texts for each
                 column to be added.
+            values_only (bool): Set the sheet to store only values and not to
+                constructs words - makes computation faster but disable all
+                export functionality
+            system_languages (Tuple[str, ...]): System languages that are
+                always included.
         """
         self.expand_using_cell_indices(
             self.cell_indices.expand_size(
@@ -409,7 +423,9 @@ class Sheet(Serialization):
                 new_rows_labels=new_rows_labels,
                 new_columns_labels=new_columns_labels,
                 new_rows_help_text=new_rows_help_text,
-                new_columns_help_text=new_columns_help_text
+                new_columns_help_text=new_columns_help_text,
+                values_only=values_only,
+                system_languages=system_languages
             )
         )
 

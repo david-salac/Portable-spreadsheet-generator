@@ -2,7 +2,7 @@ from typing import List, Tuple, Dict, Optional, Callable
 import copy
 
 from .grammars import GRAMMARS
-from .cell_indices_templates import cell_indices_generators, system_languages
+from .cell_indices_templates import cell_indices_generators
 
 # ==== TYPES ====
 # mapping from language to list, used for mapping from language to list rows
@@ -26,7 +26,9 @@ class CellIndices(object):
                  columns_help_text: List[str] = None,
                  excel_append_row_labels: bool = True,
                  excel_append_column_labels: bool = True,
-                 warning_logger: Optional[Callable[[str], None]] = None
+                 warning_logger: Optional[Callable[[str], None]] = None,
+                 values_only: bool = False,
+                 system_languages: Tuple[str, ...] = ('excel', 'python_numpy')
                  ):
         """Create cell indices object.
 
@@ -47,6 +49,11 @@ class CellIndices(object):
                 on the beginning of the sheet as a offset for labels.
             warning_logger (Optional[Callable[[str], None]]): Function that
                 logs the warnings (or None if skipped).
+            values_only (bool): Set the sheet to store only values and not to
+                constructs words - makes computation faster but disable all
+                export functionality
+            system_languages (Tuple[str, ...]): System languages that are
+                always included.
         """
         # Quick sanity check:
         if rows_labels is not None \
@@ -101,33 +108,6 @@ class CellIndices(object):
         self.number_of_columns: int = number_of_columns
         self.excel_append_row_labels: bool = excel_append_row_labels
         self.excel_append_column_labels: bool = excel_append_column_labels
-        self.rows: T_lg_ar = {}
-        self.columns: T_lg_ar = {}
-        # Append the system languages
-        for language, generator in cell_indices_generators.items():
-            if language not in system_languages:
-                continue
-            offset_row = 0
-            offset_column = 0
-            if self.excel_append_row_labels and language == "excel":
-                offset_column = 1
-            if self.excel_append_column_labels and language == "excel":
-                offset_row = 1
-
-            rows, cols = generator(self.number_of_rows,
-                                   self.number_of_columns,
-                                   offset_row,
-                                   offset_column)
-            self.rows[language] = rows
-            self.columns[language] = cols
-        # Append the not-system languages and user defined languages
-        self.user_defined_languages: List[str] = []
-        if rows_columns is not None:
-            for language, values in rows_columns.items():
-                rows, cols = values
-                self.rows[language] = rows
-                self.columns[language] = cols
-                self.user_defined_languages.append(language)
         # Define user defined names for rows and columns
         self.rows_labels: list = copy.deepcopy(rows_labels)
         self.columns_labels: list = copy.deepcopy(columns_labels)
@@ -148,7 +128,41 @@ class CellIndices(object):
         self.columns_help_text: List[str] = copy.deepcopy(columns_help_text)
         # This set the sheet to store only values and not to constructs words
         #   it is used by Cell class
-        self.values_only: bool = False
+        self.values_only: bool = values_only
+
+        self.rows: T_lg_ar = {}
+        self.columns: T_lg_ar = {}
+        self.user_defined_languages: List[str] = []
+
+        if values_only:
+            # Optimisation
+            return
+
+        # Append the system languages
+        for language, generator in cell_indices_generators.items():
+            if language not in system_languages:
+                continue
+            offset_row = 0
+            offset_column = 0
+            if self.excel_append_row_labels and language == "excel":
+                offset_column = 1
+            if self.excel_append_column_labels and language == "excel":
+                offset_row = 1
+
+            rows, cols = generator(self.number_of_rows,
+                                   self.number_of_columns,
+                                   offset_row,
+                                   offset_column)
+            self.rows[language] = rows
+            self.columns[language] = cols
+
+        # Append the not-system languages and user defined languages
+        if rows_columns is not None:
+            for language, values in rows_columns.items():
+                rows, cols = values
+                self.rows[language] = rows
+                self.columns[language] = cols
+                self.user_defined_languages.append(language)
 
     @property
     def shape(self) -> Tuple[int, int]:
@@ -177,6 +191,9 @@ class CellIndices(object):
                     new_columns_labels: List[str] = None,
                     new_rows_help_text: List[str] = None,
                     new_columns_help_text: List[str] = None,
+                    values_only: bool = False,
+                    system_languages: Tuple[str, ...] = ('excel',
+                                                         'python_numpy')
                     ) -> 'CellIndices':
         """Expand the size of the table.
 
@@ -193,6 +210,11 @@ class CellIndices(object):
                 be added.
             new_columns_help_text (List[str]): List of help texts for each
                 column to be added.
+            values_only (bool): Set the sheet to store only values and not to
+                constructs words - makes computation faster but disable all
+                export functionality
+            system_languages (Tuple[str, ...]): System languages that are
+                always included.
         """
         expanded = copy.deepcopy(self)
         # Quick sanity check:
@@ -217,6 +239,9 @@ class CellIndices(object):
             raise ValueError("Number of columns help texts has to be the same "
                              "as number of columns!")
         # -------------------
+        if values_only:
+            system_languages = tuple()
+
         # Append the system languages
         for language, generator in cell_indices_generators.items():
             if language not in system_languages:
