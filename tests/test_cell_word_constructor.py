@@ -738,7 +738,7 @@ class TestCellUnaryFunctionality(unittest.TestCase):
             3, 3
         )
         with self.assertRaises(ValueError):
-            Cell.cross_reference(self.u_operand, sheet)
+            Cell.cross_reference(self.u_operand, sheet, sheet)
         u_reference = Cell.cross_reference(self.a_operand, sheet, sheet)
         u_ref_word = u_reference.parse
         self.assertEqual(u_ref_word['excel'], "=" + "'Results'!F5")
