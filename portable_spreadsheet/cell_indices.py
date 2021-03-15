@@ -146,6 +146,9 @@ class CellIndices(object):
         # assign the help texts
         self.rows_help_text: List[str] = copy.deepcopy(rows_help_text)
         self.columns_help_text: List[str] = copy.deepcopy(columns_help_text)
+        # This set the sheet to store only values and not to constructs words
+        #   it is used by Cell class
+        self.values_only: bool = False
 
     @property
     def shape(self) -> Tuple[int, int]:

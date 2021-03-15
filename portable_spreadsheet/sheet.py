@@ -80,7 +80,8 @@ class Sheet(Serialization):
             columns_help_text: List[str] = None,
             excel_append_row_labels: bool = True,
             excel_append_column_labels: bool = True,
-            warning_logger: Optional[Callable[[str], None]] = None
+            warning_logger: Optional[Callable[[str], None]] = None,
+            values_only: bool = False
     ) -> 'Sheet':
         """Direct way of creating instance.
 
@@ -104,6 +105,9 @@ class Sheet(Serialization):
                 on the beginning of the sheet as a offset for labels.
             warning_logger (Optional[Callable[[str], None]]): Function that
                 logs the warnings (or None if skipped).
+            values_only (bool): Set the sheet to store only values and not to
+                constructs words - makes computation faster but disable all
+                export functionality
 
         Returns:
             Sheet: New instance of spreadsheet.
@@ -120,6 +124,7 @@ class Sheet(Serialization):
             excel_append_column_labels=excel_append_column_labels,
             warning_logger=warning_logger
         )
+        class_index.values_only = values_only
         return cls(class_index, warning_logger, name)
 
     def _initialise_array(self) -> T_sheet:

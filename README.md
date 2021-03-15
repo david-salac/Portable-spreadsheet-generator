@@ -185,6 +185,8 @@ on the beginning of the sheet as a offset for labels.
 added on the beginning of the sheet as a offset for labels.
 8. `warning_logger (Callable[[str], None]])`: Function that logs the warnings
 (or `None` if logging should be skipped).
+9. `values_only (bool)`: If set to True, only values are computed and
+nothing can be exported (makes script run faster)
 
 First two are the most important because they define labels for the columns
 and rows indices. The warnings mention above occurs when the slices are

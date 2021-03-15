@@ -177,8 +177,7 @@ class _Functionality(object):
         """
         return Cell.brackets(body)
 
-    @staticmethod
-    def cross_reference(target: Cell, sheet: 'Sheet') -> Cell:
+    def cross_reference(self, target: Cell, sheet: 'Sheet') -> Cell:
         """Cross reference to other sheet in the workbook.
 
         Args:
@@ -188,7 +187,7 @@ class _Functionality(object):
         Return:
             Cell: reference to the different location.
         """
-        return Cell.cross_reference(target, sheet)
+        return Cell.cross_reference(target, sheet, self.spreadsheet)
 
     @staticmethod
     def ln(value: Cell) -> Cell:

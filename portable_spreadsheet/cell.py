@@ -86,7 +86,7 @@ class Cell(object):
         self._excel_format: dict = {}
         self._description: Optional[str] = None
         self._excel_row_position: Optional[int] = None
-        self.compute_only_values: bool = True
+        self.compute_only_values: bool = self.cell_indices.values_only
 
         if not self.compute_only_values:
             if words is not None:
@@ -907,12 +907,15 @@ class Cell(object):
                     )
 
     @staticmethod
-    def cross_reference(target: 'Cell', sheet: 'Sheet') -> 'Cell':
+    def cross_reference(target: 'Cell',
+                        target_sheet: 'Sheet',
+                        source_sheet: 'Sheet') -> 'Cell':
         """Cross reference to other sheet in the workbook.
 
         Args:
             target (Cell): Target cell in a different sheet.
-            sheet (Sheet): Sheet of the target cell.
+            target_sheet (Sheet): Sheet of the target cell.
+            source_sheet (Sheet): Source sheet (where cell is set to exist).
 
         Return:
             Cell: reference to the different location.
@@ -925,9 +928,9 @@ class Cell(object):
                     words=Cell._construct_word(
                         target,
                         WordConstructor.cross_reference,
-                        target, sheet
+                        target, target_sheet
                     ),
-                    cell_indices=target.cell_indices,
+                    cell_indices=source_sheet.cell_indices,
                     cell_type=CellType.computational
                     )
 
