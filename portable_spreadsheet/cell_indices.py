@@ -136,7 +136,7 @@ class CellIndices(object):
 
         if values_only:
             # Optimisation
-            system_languages = tuple()
+            return
 
         # Append the system languages
         for language, generator in cell_indices_generators.items():
@@ -239,8 +239,46 @@ class CellIndices(object):
             raise ValueError("Number of columns help texts has to be the same "
                              "as number of columns!")
         # -------------------
+        # String representation of indices
+        expanded.rows_labels_str: List[str] = \
+            [str(lb) for lb in expanded.rows_labels]
+        expanded.columns_labels_str: List[str] = \
+            [str(lb) for lb in expanded.columns_labels]
+        # assign the help texts
+        if expanded.rows_help_text is not None and new_number_of_rows > 0:
+            if new_rows_help_text is None:
+                raise ValueError("Rows help texts has to set.")
+            expanded.rows_help_text.extend(new_rows_help_text)
+        if expanded.columns_help_text is not None \
+                and new_number_of_columns > 0:
+            if new_columns_help_text is None:
+                raise ValueError("Columns help texts has to set.")
+            expanded.columns_help_text.extend(new_columns_help_text)
+
+        # Modify the number of rows/columns
+        expanded.number_of_rows += new_number_of_rows
+        expanded.number_of_columns += new_number_of_columns
+
+        # Define user defined names for rows and columns
+        if new_rows_labels is not None:
+            expanded.rows_labels.extend(new_rows_labels)
+        else:
+            expanded.rows_labels = [
+                str(i)
+                for i in range(expanded.number_of_rows + new_number_of_rows)
+            ]
+        if new_columns_labels is not None:
+            expanded.columns_labels.extend(new_columns_labels)
+        else:
+            expanded.columns_labels = [
+                str(i)
+                for i in range(
+                    expanded.number_of_columns + new_number_of_columns
+                )
+            ]
+
         if values_only:
-            system_languages = tuple()
+            return expanded
 
         # Append the system languages
         for language, generator in cell_indices_generators.items():
@@ -258,6 +296,7 @@ class CellIndices(object):
                                    new_number_of_columns + offset_column)
             expanded.rows[language] = rows[offset_row:]
             expanded.columns[language] = cols[offset_column:]
+
         # Append rows to user defined languages
         for language, values in new_rows_columns.items():
             # Does the language include the last cell?
@@ -287,43 +326,6 @@ class CellIndices(object):
 
             expanded.rows[language].extend(rows)
             expanded.columns[language].extend(cols)
-
-        # Define user defined names for rows and columns
-        if new_rows_labels is not None:
-            expanded.rows_labels.extend(new_rows_labels)
-        else:
-            expanded.rows_labels = [
-                str(i)
-                for i in range(expanded.number_of_rows + new_number_of_rows)
-            ]
-        if new_columns_labels is not None:
-            expanded.columns_labels.extend(new_columns_labels)
-        else:
-            expanded.columns_labels = [
-                str(i)
-                for i in range(
-                    expanded.number_of_columns + new_number_of_columns
-                )
-            ]
-        # String representation of indices
-        expanded.rows_labels_str: List[str] = \
-            [str(lb) for lb in expanded.rows_labels]
-        expanded.columns_labels_str: List[str] = \
-            [str(lb) for lb in expanded.columns_labels]
-        # assign the help texts
-        if expanded.rows_help_text is not None and new_number_of_rows > 0:
-            if new_rows_help_text is None:
-                raise ValueError("Rows help texts has to set.")
-            expanded.rows_help_text.extend(new_rows_help_text)
-        if expanded.columns_help_text is not None \
-                and new_number_of_columns > 0:
-            if new_columns_help_text is None:
-                raise ValueError("Columns help texts has to set.")
-            expanded.columns_help_text.extend(new_columns_help_text)
-
-        # Modify the number of rows/columns
-        expanded.number_of_rows += new_number_of_rows
-        expanded.number_of_columns += new_number_of_columns
 
         # Return new expanded indices
         return expanded
