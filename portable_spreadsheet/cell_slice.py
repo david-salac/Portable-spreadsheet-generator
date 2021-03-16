@@ -9,7 +9,9 @@ from .cell_indices import CellIndices
 from .serialization import Serialization
 
 # Acceptable values for the slice
-T_slice = Union[np.ndarray, List[Number], List[Cell], Number, Cell]
+T_slice = Union[np.ndarray,
+                List[Number], List[str], List[Cell],
+                str, Number, Cell]
 
 
 class CellSlice(Serialization):
@@ -293,16 +295,19 @@ class CellSlice(Serialization):
                 from 0).
         """
         if isinstance(other, Cell):
-            # Set the right values
             if other.anchored:
-                self.driving_sheet.iloc[row, col] = \
-                    Cell.reference(other)
+                _value = Cell.reference(other)
+            elif other.is_variable:
+                # Set value
+                _value = Cell.variable(other)
+                # Anchor it:
+                _value.coordinates = (row, col)
             else:
                 # Create a deep copy
-                self.driving_sheet.iloc[row, col] = \
-                    copy.deepcopy(other)
+                _value = copy.deepcopy(other)
                 # Anchor it:
-                self.driving_sheet.iloc[row, col].coordinates = (row, col)
+                _value.coordinates = (row, col)
+            self.driving_sheet.iloc[row, col] = _value
         else:
             # Call the external logic to manage the same
             self.driving_sheet.iloc[row, col] = other

@@ -13,7 +13,7 @@ from .skipped_label import SkippedLabel
 # Type for the sheet (list of the list of the cells)
 T_sheet = List[List[Cell]]
 # Sheet cell value
-T_cell_val = Union[Number, Cell]
+T_cell_val = Union[Number, Cell, str]
 # ===============
 
 
@@ -180,6 +180,11 @@ class Sheet(Serialization):
             if isinstance(value, Cell):
                 if value.anchored:
                     _value = Cell.reference(value)
+                elif value.is_variable:
+                    # Set value
+                    _value = Cell.variable(value)
+                    # Anchor it:
+                    _value.coordinates = (_x, _y)
                 else:
                     # Create a deep copy
                     _value = copy.deepcopy(value)
