@@ -477,6 +477,7 @@ class _SheetVariable(object):
                              "with underscores!")
 
         self.description[name] = description
+
         if isinstance(value, Cell):
             self._variables[name] = Cell.variable(
                 Cell(None, None,  # No position
@@ -498,7 +499,12 @@ class _SheetVariable(object):
                          cell_indices=self.spreadsheet.cell_indices
                          )
                 )
+
+        # Set variables fields
+        self._variables[name].variable_name = name
         self._variables[name].is_variable = True
+
+        # Set excel format for the cell
         if excel_format:
             self._variables[name].excel_format = excel_format
 
